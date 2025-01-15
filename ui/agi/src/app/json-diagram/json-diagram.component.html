@@ -1,0 +1,36 @@
+<div class="container">
+  <app-entity-modal></app-entity-modal>
+  <div class="row mb-3">
+    <div class="col" *ngIf="cProject">
+      <label for="serviceSelect" class="form-label">Select Service</label>
+      <select
+        id="serviceSelect"
+        class="form-select form-control"
+        (change)="onServiceChange($event)"
+      >
+        <option *ngFor="let service of cProject.services" [value]="service.id">
+          {{ service.name }}
+        </option>
+      </select>
+
+      <app-create-entity
+        *ngIf="cServices"
+        (add)="addEntity($event)"
+      ></app-create-entity>
+
+      Zoom {{ scale.toFixed(2) }}x
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="teleporter" #teleporter>
+        <canvas
+          #canvas
+          [width]="canvasX"
+          [height]="canvasY"
+          (wheel)="onWheel($event)"
+        ></canvas>
+      </div>
+    </div>
+  </div>
+</div>
