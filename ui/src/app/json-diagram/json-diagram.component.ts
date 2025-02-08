@@ -1,9 +1,11 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { CanvasBox, VisibilityTypeClass } from '../Entity/CanvasBox';
-import { CanvasBoxAtributes, RelationshipType, VisibilityTypeAttributes } from '../Entity/CanvasBoxAtributes';
-import Service from '../Entity/Services';
-import { TypeAttbutesTypeOrm } from '../Entity/TypeAttributesTypeOrm';
+import { CanvasBox, VisibilityTypeClass } from '../../../../common/Entity/CanvasBox';
+import { CanvasBoxAtributes, RelationshipType, VisibilityTypeAttributes } from '../../../../common/Entity/CanvasBoxAtributes';
+import Service from '../../../../common/Entity/Services';
+import { TypeAttbutesTypeOrm } from '../../../../common/Entity/TypeAttributesTypeOrm';
 import { AddEntityRes, CreateEntityComponent } from '../Modals/create-entity/create-entity.component';
+import { FakeProject,  Project } from '../../../../common/Entity/project';
+
 
 @Component({
   selector: 'app-json-diagram',
@@ -23,7 +25,7 @@ export class JsonDiagramComponent implements AfterViewInit, OnInit {
   stepZoom = 0.05;
   minZoom = 0.1;
   maxZoom = 5;
-  cProject!: Projects;
+  cProject!: Project;
   cServices!: Service;
 
   private isDragging = false;
@@ -135,12 +137,14 @@ export class JsonDiagramComponent implements AfterViewInit, OnInit {
   onServiceChange(event: Event) {
     const selectElement = event.target as HTMLSelectElement;
     const selectedServiceId = selectElement.value;
+    if(this.cProject.services  == undefined) return;
     this.cServices = this.cProject.services.find(service => service.id === selectedServiceId)!;
     this.generateDiagram(true);
   }
 
 
   generateDiagram(pos: boolean = false) {
+      if(this.cProject.services  == undefined) return;
       if (this.cProject.services.length > 0 && !pos) {
          this.cServices = this.cProject.services[0];
       }

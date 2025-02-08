@@ -1,9 +1,9 @@
 import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
 import { Modal } from 'bootstrap';
 import { Subject } from 'rxjs';
-import { CanvasBox, VisibilityTypeClass } from 'src/app/Entity/CanvasBox';
-import { VisibilityTypeAttributes } from 'src/app/Entity/CanvasBoxAtributes';
-import { TypeAttbutesTypeOrm } from 'src/app/Entity/TypeAttributesTypeOrm';
+import { CanvasBox, VisibilityTypeClass } from '../../../../../common/Entity/CanvasBox';
+import { VisibilityTypeAttributes } from '../../../../../common/Entity/CanvasBoxAtributes';
+import { TypeAttbutesTypeOrm } from '../../../../../common/Entity/TypeAttributesTypeOrm';
 export type AddEntityRes = { value: CanvasBox, component: any }
 @Component({
   selector: 'app-create-entity',

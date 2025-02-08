@@ -1,7 +1,13 @@
 import { VisibilityTypeClass } from "./CanvasBox";
 import { VisibilityTypeAttributes, RelationshipType } from "./CanvasBoxAtributes";
+import Service from "./Services";
 import { TypeAttbutesTypeOrm } from "./TypeAttributesTypeOrm";
 
+export interface  Project {
+  id: string;
+  name: string;
+  services?: Service[];
+}
 export const  FakeProject = {
       id: "0a01",
       name: "MonkataRH",
