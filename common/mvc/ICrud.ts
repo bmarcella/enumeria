@@ -4,4 +4,3 @@ export interface ICrud {
   show?:(req: any,res: any)=>{};
   edit?:(req: any,res: any)=>{};
 }
-  

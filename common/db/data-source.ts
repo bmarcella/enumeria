@@ -2,6 +2,7 @@
 
 export const AppDataSource = <DataSource, Entity> (DT: new (...args: any[]) => any, p: any , entities: Entity, subscribers?:[], migrations?:[]) => { 
   return new Promise<DataSource> ((resolve, reject) => {
+   console.log(p);
    new DT({
       type: "postgres",
       host: p.DB_HOST+'',

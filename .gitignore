@@ -1,10 +1,10 @@
 # Ignore node_modules directories
-/api/*/node_modules
-/api/*/dist
-/ui/*/node_modules
-/ui/*/.angular
-/ui/*/dist
-/ui/*/.angular/cache/
+/api/node_modules
+/api/dist
+/ui/node_modules
+/ui/.angular
+/ui/dist
+/ui/.angular/cache/
 /cicd/hold/
 node_modules
 # Ignore operating system files

@@ -15,5 +15,15 @@ endPoint: string;
 constructor(axios: any, ep: string, private formData: any ) {
     this.http = new Http(axios, "");
     this.endPoint = ep;
- }
+}
+  
+
+
+
+
+
+
+
+
+  
 }
