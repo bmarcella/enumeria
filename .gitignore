@@ -1,6 +1,7 @@
 # Ignore node_modules directories
 /api/node_modules
 /api/dist
+/api/.env
 /ui/node_modules
 /ui/.angular
 /ui/dist
@@ -11,3 +12,4 @@ node_modules
 .DS_Store
 aws.txt
 /.metadata/
+
