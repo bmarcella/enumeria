@@ -238,3 +238,31 @@ export function computeBoxRect(scene: EntityScene, index: number) {
     const y = box?.y ?? (startY + index * yOffSet)
     return { x, y, w, h }
 }
+
+
+export function getBoxMenu(scene: EntityScene, hit: Hit & { kind: 'box' }): MenuItem[] {
+  const box = scene.canvasBoxes.find(b => String(b.id) === String(hit.id))
+  if (!box) return []
+  return [
+    {
+      id: 'duplicate',
+      label: 'Duplicate',
+      onClick: ({ scene, close }) => {
+        const copy = { ...box, id: `${box.id}-copy`, x: (box.x ?? 50) + 24, y: (box.y ?? 50) + 24 }
+        scene.canvasBoxes.push(copy)
+        close()
+      },
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      danger: true,
+      shortcut: 'Del',
+      onClick: ({ scene, close }) => {
+        scene.canvasBoxes = scene.canvasBoxes.filter(b => b.id !== box.id)
+        if (scene.selectedBoxId === box.id) scene.selectedBoxId = undefined
+        close()
+      },
+    },
+  ]
+}

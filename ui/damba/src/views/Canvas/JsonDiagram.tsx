@@ -28,16 +28,21 @@ export default function JsonDiagram({
   animateCenterOnFirst = true,
 }: Props) {
 
-  const pointer = useMemo(
+ 
+  const [menu, setMenu] = useState<CtxMenuState>({ open: false })
+
+  const closeMenu = useCallback(() => setMenu({ open: false }), [])
+
+   const pointer = useMemo(
     () => pointerHandlers(
       /* onDrag */ undefined,
       /* onSelect */(id) => { if (scene) { scene.selectedBoxId = id ?? undefined }; api.redraw() },
     ),
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [scene]
   )
 
-  const [menu, setMenu] = useState<CtxMenuState>({ open: false })
 
   const { canvasRef, viewportRef, api, scale, mode } =
     useGenericCanvas<EntityScene, Hit>({

@@ -316,6 +316,16 @@ private onLostPointerCapture = () => { this.cancelInteractions() }
 
   /* ------------------------------ events ------------------------------ */
 
+
+  private onContextMenu = (e: MouseEvent) => {
+  if (this.suppressContextMenu) e.preventDefault()
+  if (!this.canvas) return
+  const { sx, sy, world } = this.getCoords(e)
+  const hit = this.hitTest?.(world.x, world.y, this.bgStateUnsafe()) ?? null
+  const consumed = this.pointer?.onContextMenu?.(e, hit, this.bgStateUnsafe(), { sx, sy }, world)
+  // we already preventDefault() above if suppressContextMenu is true
+  }
+
   private onWheel = (e: WheelEvent) => {
     e.preventDefault()
     const rect = this.canvas!.getBoundingClientRect()
