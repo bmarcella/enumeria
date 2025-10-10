@@ -102,5 +102,5 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true                            /* Skip type checking all .d.ts files. */
   },
-  "include": ["src/**/*", "../keycloak/keycloak-config.ts", "../common/mail/MailService.ts"]
+  "include": ["src/**/*", "../keycloak/keycloak-config.ts", "../common/mail/MailService.ts", "../common/index/Helper.ts", "../common/extractCode.ts"]
 }

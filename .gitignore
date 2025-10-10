@@ -2,14 +2,13 @@
 /api/node_modules
 /api/dist
 /api/.env
-/ui/node_modules
-/ui/.angular
-/ui/dist
-/ui/.angular/cache/
-/cicd/hold/
+/ui/damba/node_modules
+/ui/damba/dist
+/ui/.env
 node_modules
 # Ignore operating system files
 .DS_Store
 aws.txt
 /.metadata/
+/api/.env
 

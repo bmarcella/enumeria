@@ -21,6 +21,8 @@ import { Mail } from '../../common/mail/index';
 import { Test } from './entity/Test';
 import { routes } from './routes';
 import OpenAI from 'openai';
+import { ChatAi } from './entity/ChatAi';
+import { MessageAi } from './entity/MessageAi';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -38,12 +40,11 @@ declare global {
 
 dotenv.config();
 
-const entities = [Test];
-console .log(process.env);
+const entities = [ChatAi, MessageAi];
 AppDataSource<DataSource, Array<any>>(DataSource, process.env, entities).then((DB: DataSource) => {
   const app: Express = express();
-  app.use(cors(corsOptions));
 
+  app.use(cors(corsOptions));
   app.use(session({
     secret: (process.env.SESSION_SECRET + "")?.trim(),
     resave: false,
@@ -66,7 +67,7 @@ AppDataSource<DataSource, Array<any>>(DataSource, process.env, entities).then((D
 
   const port = process.env.PORT;
   app.listen(port, () => {
-    console.log(`[server]: Server ${process.env.SERVICE_NAME} is running at http://localhost:${port}`);
+    console.log(`[server]: Server ${process.env.APP_NAME} is running at http://localhost:${port}`);
   });
 
 })

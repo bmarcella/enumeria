@@ -15,7 +15,10 @@ export const corsOptions = {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      if(Number(process.env.DEV+"") == 0 )  
+        callback(null, true);
+      else
+       callback(new Error('Not allowed by CORS'));
     }
   },
 };
