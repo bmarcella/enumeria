@@ -24,10 +24,14 @@ export type ProjectStatus =
 export type VisibilityScope = "private" | "internal" | "public";
 
 export interface BaseEntity {
-  createdBy?: string;
-  updatedBy?: string;
-  createdAt?: string; // ISO timestamp; keep string for JSON portability
-  updatedAt?: string;
+  created_at?: Date; // Creation date
+  updated_at?: Date; // Last updated date
+  deleted_at?: Date; // Deletion date
+  edit?: boolean;
+  view?: boolean;
+  remove?: boolean;
+  lock?: boolean;
+  archived?: boolean;
 }
 
 export interface Contributor extends BaseEntity {
@@ -315,7 +319,7 @@ export interface Organization extends BaseEntity {
   billing?: {
     customerId?: string
     currency?: string         // "USD", "CAD"
-    cycle?: 'monthly' | 'yearly'
+    cycle?: 'monthly' | 'yearly' | 'free'
     seats?: number
   }
 
@@ -433,8 +437,6 @@ export const FakeProject: Project[] = [{
                 {
                   id: "0a03",
                   entityName: "Employee",
-                  createdBy: "John Doe",
-                  updatedBy: "John Doe",
                   attributes: [
                     {
                       name: "id",
@@ -499,8 +501,6 @@ export const FakeProject: Project[] = [{
                 {
                   id: "0a04",
                   entityName: "Address",
-                  createdBy: "John Doe",
-                  updatedBy: "John Doe",
                   attributes: [
                     {
                       name: "id",
@@ -535,8 +535,6 @@ export const FakeProject: Project[] = [{
                 {
                   id: "0a05",
                   entityName: "Users",
-                  createdBy: "John Doe",
-                  updatedBy: "John Doe",
                   attributes: [
                     {
                       name: "id",
@@ -587,6 +585,6 @@ export const FakeOrg: Organization[] = [{
   ],
   integrations: { githubOrg: 'damba-labs' },
   config: { canvas: { showGrid: true } },
-  createdAt: '2025-09-20T14:32:00Z',
+  created_at: new Date('2025-09-20T14:32:00Z'),
   projects: FakeProject
 }];

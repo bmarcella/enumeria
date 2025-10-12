@@ -1,15 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import classNames from '@/utils/classNames'
 import { HEADER_HEIGHT } from '@/constants/theme.constant'
 import type { ReactNode } from 'react'
 import type { CommonProps } from '@/@types/common'
 
 interface HeaderProps extends CommonProps {
-    headerStart?: ReactNode
     headerEnd?: ReactNode
     orgSwitcher?: ReactNode
     headerMiddle?: ReactNode
     container?: boolean
     wrapperClass?: string
+    headerStart?: ReactNode
 }
 
 const Header = (props: HeaderProps) => {

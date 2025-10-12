@@ -1,31 +1,16 @@
 import { CanvasBox, VisibilityTypeClass } from "../../../../../common/Entity/CanvasBox";
-import { CanvasBoxAtributes, VisibilityTypeAttributes, RelationshipTypeEnum } from "../../../../../common/Entity/CanvasBoxAtributes";
+import { CanvasBoxAtributes, VisibilityTypeAttributes, RelationshipTypeEnum, RelationshipType } from "../../../../../common/Entity/CanvasBoxAtributes";
 import { TypeAttbutesTypeOrm } from "../../../../../common/Entity/TypeAttributesTypeOrm";
 import { DrawCallbacks, HitTest, PointerHandlers } from "./GenericCanvasEngine";
 
 
-export type EntityScene = { canvasBoxes: CanvasBox[]; selectedBoxId?: string | number }
+export type EntityScene = { canvasBoxes: CanvasBox[]; selectedBoxId?: string | number, selectedBox?: CanvasBox  }
 export type Hit = { kind: 'box'; id: string | number } | { kind: 'scene' }
 
 export const DiagramConfig = {
     box: { width: 200, height: 50, headerHeight: 30, attributeHeight: 20, startX: 50, startY: 50, yOffSet: 150 },
     initial: { x: 50, y: 50, yOffset: 150 },
     drawing: { dotRadius: 3, textPadding: 10, textBaseline: 15 },
-}
-
-// entityScene.ts
-export type MenuItem = {
-  id: string
-  label: string
-  danger?: boolean
-  shortcut?: string
-  onClick: (args: {
-    scene: EntityScene
-    hit: Hit & { kind: 'box' }
-    close: () => void
-    centerOn?: (rect: { x: number; y: number; w: number; h: number }) => void
-    fit?: () => void
-  }) => void
 }
 
 const lblClass = (att: VisibilityTypeClass | undefined, name: string) => {
@@ -61,7 +46,7 @@ const lblAttr = (obj: CanvasBoxAtributes, scene: EntityScene) => {
     }
 }
 
-const relText = (t?: any) => {
+const relText = (t?: RelationshipType) => {
     switch (t) {
         case RelationshipTypeEnum.ONE_TO_ONE: return '1 to 1'
         case RelationshipTypeEnum.ONE_TO_MANY: return '1 to N'
@@ -110,9 +95,10 @@ export const drawEntities: DrawCallbacks<EntityScene> = {
             ctx.fillStyle = isSelected ? 'green' : 'lightgray'
             ctx.fillRect(x, y, width, headerHeight)
 
-            ctx.fillStyle = 'black'
+            ctx.fillStyle = 'black';
+            const title = canvasBox.entityName+"_"+canvasBox.id;
             ctx.fillText(
-                lblClass(canvasBox.visibility ?? VisibilityTypeClass.IMPLEMENTATION, canvasBox.entityName ?? ''),
+                lblClass(canvasBox.visibility ?? VisibilityTypeClass.IMPLEMENTATION, title ?? ''),
                 x + drawing.textPadding,
                 y + drawing.textBaseline
             )
@@ -172,13 +158,19 @@ export const hitTestEntities: HitTest<EntityScene, Hit> = (wx, wy, { scene }) =>
 
 export const pointerHandlers = (
     onDrag?: (id: string | number, dx: number, dy: number) => void,
-    onSelect?: (id: string | number | null) => void
+    onSelect?: (id: string | number | null) => void,
+    onContext?: (hit: Hit, screen: { sx: number; sy: number }) => void
 ): PointerHandlers<EntityScene, Hit> => ({
 
 
     onPointerDown: (_e, hit, state) => {
         if (hit?.kind === 'box') {
             onSelect?.(hit.id);
+              // keep scene.selectedBox in sync
+              if (state.scene) {
+                  state.scene.selectedBoxId = hit.id
+                  state.scene.selectedBox = state.scene.canvasBoxes.find(b => b.id === hit.id);
+              }
             state.viewport.style.cursor = 'grabbing'
             return true
         } // consume start of drag
@@ -201,9 +193,20 @@ export const pointerHandlers = (
         state.viewport.style.cursor = 'default'      // 👈 restore cursor
     },
     onClick: (_e, hit, state) => {
-        if (!hit) onSelect?.(null) // deselect when clicking empty
+        if (!hit && state.scene) {
+            onSelect?.(null)
+            state.scene.selectedBoxId = undefined
+            state.scene.selectedBox = undefined
+        } // deselect when clicking empty 
         state.viewport.style.cursor = 'default'
     },
+   onContextMenu: (_e, hit, _state, screen) => {
+    if (hit) { 
+        onContext?.(hit, screen); 
+        return true
+     }
+    return false
+  },
 })
 
 
@@ -239,22 +242,75 @@ export function computeBoxRect(scene: EntityScene, index: number) {
     return { x, y, w, h }
 }
 
+// entityScene.ts
+export type MenuItem = {
+  id: MenuItemAction
+  label: string
+  danger?: boolean
+  shortcut?: string
+  onClick: (args: {
+    scene: EntityScene
+    hit: Hit & { kind: 'box' }
+    close: () => void
+    centerOn?: (rect: { x: number; y: number; w: number; h: number }) => void
+    fit?: () => void
+  }) => void
+}
 
+export enum MenuItemAction {
+    DELETEBOX,
+    DUPLICATEBOX,
+    CREATEDTO,
+    PROPERTIES
+}
+
+/**
+ * Adds a random offset between 50 and 100 to x and y.
+ * Useful for offsetting duplicated boxes or auto-layout placement.
+ */
+export function offsetXY(x: number, y: number): { x: number; y: number } {
+  const randBetween = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min
+  const offset = randBetween(50, 100)
+  const angle = Math.random() * Math.PI * 2 // random direction
+  return {
+    x: x + Math.cos(angle) * offset,
+    y: y + Math.sin(angle) * offset,
+  }
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getBoxMenu(scene: EntityScene, hit: Hit & { kind: 'box' }): MenuItem[] {
   const box = scene.canvasBoxes.find(b => String(b.id) === String(hit.id))
   if (!box) return []
   return [
     {
-      id: 'duplicate',
-      label: 'Duplicate',
+      id: MenuItemAction.CREATEDTO,
+      label: 'Create DTO',
       onClick: ({ scene, close }) => {
-        const copy = { ...box, id: `${box.id}-copy`, x: (box.x ?? 50) + 24, y: (box.y ?? 50) + 24 }
+        const i = scene.canvasBoxes.length;
+        const offSet = offsetXY(box.x!, box.y!);
+        const copy = { ...box, id: `${box.id}-copy-${i}`, x: offSet.x , y: offSet.y}
         scene.canvasBoxes.push(copy)
         close()
+        return scene;
       },
     },
     {
-      id: 'delete',
+      id: MenuItemAction.DUPLICATEBOX,
+      label: 'Duplicate',
+      onClick: ({ scene, close }) => {
+        const i = scene.canvasBoxes.length;
+        const offSet = offsetXY(box.x!, box.y!);
+        const copy = { ...box, id: `${box.id}-copy-${i}`, x: offSet.x , y: offSet.y}
+        scene.canvasBoxes.push(copy)
+        close()
+        return scene;
+      },
+    },
+    {
+      id: MenuItemAction.DELETEBOX,
       label: 'Delete',
       danger: true,
       shortcut: 'Del',
@@ -262,6 +318,18 @@ export function getBoxMenu(scene: EntityScene, hit: Hit & { kind: 'box' }): Menu
         scene.canvasBoxes = scene.canvasBoxes.filter(b => b.id !== box.id)
         if (scene.selectedBoxId === box.id) scene.selectedBoxId = undefined
         close()
+      },
+    },
+     {
+      id: MenuItemAction.PROPERTIES,
+      label: 'Properties',
+      onClick: ({ scene, close }) => {
+        const i = scene.canvasBoxes.length;
+        const offSet = offsetXY(box.x!, box.y!);
+        const copy = { ...box, id: `${box.id}-copy-${i}`, x: offSet.x , y: offSet.y}
+        scene.canvasBoxes.push(copy)
+        close()
+        return scene;
       },
     },
   ]

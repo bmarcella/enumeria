@@ -1,3 +1,7 @@
+import endpointConfig from "@/configs/endpoint.config"
+import ApiService from "./ApiService"
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type OAuthResponse = {
     token: string
     user: {
@@ -22,9 +26,15 @@ async function placeholderFunction(): Promise<OAuthResponse> {
     })
 }
 
-export async function apiGoogleOauthSignIn(): Promise<OAuthResponse> {
-    return await placeholderFunction()
+
+export async function apiGoogleOauthSignIn( code: any ) {
+    return ApiService.fetchDataWithAxios({
+        url: endpointConfig.signInWithGoogle,
+        method: 'post',
+        data : { code }
+    })
 }
+   
 
 export async function apiGithubOauthSignIn(): Promise<OAuthResponse> {
     return await placeholderFunction()

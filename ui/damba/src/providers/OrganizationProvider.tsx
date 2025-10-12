@@ -12,19 +12,17 @@ const OrganizationContext = createContext<OrgCtx | undefined>(undefined)
 
 type Props = {
   children: React.ReactNode
-  fetchOrganizationsByUser: (userId: string ) => Promise<Organization[]>
+  fetchOrganizations: () => Promise<Organization[]>
   /** If true, auto-select the single org returned (nice DX for single-tenant users) */
   autoSelectSingle?: boolean,
-  byPassLogin: boolean
 }
 
 export function OrganizationProvider({
   children,
-  fetchOrganizationsByUser,
+  fetchOrganizations,
   autoSelectSingle = true,
-  byPassLogin
 }: Props) {
-   const { user } = useSessionUser((state) => state);
+  const { user } = useSessionUser((state) => state);
 
   const setUser = useOrganizationStore((s) => s.setUser)
   const setOrganizations = useOrganizationStore((s) => s.setOrganizations)
@@ -36,32 +34,31 @@ export function OrganizationProvider({
   useEffect(() => {
     let cancelled = false
     async function init() {
-      if (!user.userId && !byPassLogin) return;
-      setUser(user.userId)
-      const orgs = await fetchOrganizationsByUser(user.userId || 0);
+      setUser(user.id)
+      const orgs = await fetchOrganizations();
       if (cancelled) return;
       setOrganizations(orgs)
-
       // Optional: auto-select the only org available
       if (autoSelectSingle && orgs.length === 1 && !organizationId) {
-          const o = orgs[0]
-          setOrganization(o.id || o.slug || o.name)
+        const o = orgs[0]
+        setOrganization(o.id || o.slug || o.name)
       }
+
       setInitialized(true);
     }
 
     init()
     return () => { cancelled = true }
-  }, [user?.userId, setUser, setOrganizations, setOrganization, organizationId, fetchOrganizationsByUser, autoSelectSingle])
+  }, [setUser, setOrganizations, setOrganization, organizationId, fetchOrganizations, autoSelectSingle])
 
   // Hard gate: must be logged in to see anything under this provider (optional)
-  if (!user?.userId && !byPassLogin) {
-      return <PreLoginLayout>{children}</PreLoginLayout>
+  if (!user?.id) {
+    return <PreLoginLayout>{children}</PreLoginLayout>
   }
 
   return (
     <OrganizationContext.Provider value={{ initialized }}>
-        {children}
+      {children}
     </OrganizationContext.Provider>
   )
 }

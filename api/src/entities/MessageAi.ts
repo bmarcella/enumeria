@@ -1,9 +1,9 @@
-import { Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { BaseEntity } from "./BaseEntity";
+import { Column, Entity,  ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { AppBaseEntity } from "./BaseEntity";
 import { ChatAi } from "./ChatAi";
 
 @Entity()
-export class MessageAi extends BaseEntity {
+export class MessageAi extends AppBaseEntity {
 
      @PrimaryGeneratedColumn()
      id?: number;

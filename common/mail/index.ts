@@ -7,7 +7,7 @@ export class Mail {
   sender: string ;
   constructor(nodemailer: any, email: string, pass: string) {
    this.nodemailer = nodemailer;
-   this.sender = email+'@monkata.com';
+   this.sender = email;
    this.pass = pass;
    this.setTransporter();
   }

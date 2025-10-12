@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
-import { BaseEntity } from "./BaseEntity";
 import { MessageAi } from "./MessageAi";
+import { AppBaseEntity } from "./BaseEntity";
 
 export enum Service_tier {
     default = "default",
@@ -8,7 +8,7 @@ export enum Service_tier {
   }
 
 @Entity()
-export class ChatAi extends BaseEntity {
+export class ChatAi extends AppBaseEntity {
 
     @PrimaryColumn()
     id?: string;

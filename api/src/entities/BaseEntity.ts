@@ -1,6 +1,7 @@
 import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Column } from "typeorm";
 
-export class BaseEntity {
+export class AppBaseEntity  {
+  
   @CreateDateColumn({ nullable: true })
   created_at?: Date; // Creation date
 
@@ -12,4 +13,16 @@ export class BaseEntity {
 
   @Column({ default: false })
   edit?: boolean;
+
+  @Column({ default: false })
+  view?: boolean;
+
+  @Column({ default: false })
+  remove?: boolean;
+
+  @Column({ default: false })
+  lock?: boolean;
+
+  @Column({ default: false })
+  archived?: boolean;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type InteractionMode = 'idle' | 'dragBox' | 'pan'
@@ -163,7 +164,10 @@ export class GenericCanvasEngine<TScene = unknown, THit = unknown> {
 
   /* ------------------------------- scene / view ------------------------ */
 
-  setScene(scene: TScene | null) { this.scene = scene; this.requestRedraw() }
+  setScene(scene: TScene | null) { 
+    this.scene = scene; this.requestRedraw() 
+  }
+
 
   private notifyState() {
     if (!this.canvas) return
@@ -316,16 +320,6 @@ private onLostPointerCapture = () => { this.cancelInteractions() }
 
   /* ------------------------------ events ------------------------------ */
 
-
-  private onContextMenu = (e: MouseEvent) => {
-  if (this.suppressContextMenu) e.preventDefault()
-  if (!this.canvas) return
-  const { sx, sy, world } = this.getCoords(e)
-  const hit = this.hitTest?.(world.x, world.y, this.bgStateUnsafe()) ?? null
-  const consumed = this.pointer?.onContextMenu?.(e, hit, this.bgStateUnsafe(), { sx, sy }, world)
-  // we already preventDefault() above if suppressContextMenu is true
-  }
-
   private onWheel = (e: WheelEvent) => {
     e.preventDefault()
     const rect = this.canvas!.getBoundingClientRect()
@@ -341,7 +335,7 @@ private onLostPointerCapture = () => { this.cancelInteractions() }
   private onPointerDown = (e: PointerEvent) => {
     if (!this.canvas) return
     if (e.button !== 0) return // only primary button starts interactions
-    try { (e.target as Element).setPointerCapture?.(e.pointerId) } catch { }
+    try { (e.target as Element).setPointerCapture?.(e.pointerId) } catch { /* empty */ }
 
     this.isPrimaryDown = true
     const { world } = this.getCoords(e)
@@ -406,7 +400,7 @@ private onLostPointerCapture = () => { this.cancelInteractions() }
   private onPointerUp = (e: PointerEvent) => {
     if (!this.canvas) return
     if (e.button !== 0) return
-    try { (e.target as Element).releasePointerCapture?.(e.pointerId) } catch { }
+    try { (e.target as Element).releasePointerCapture?.(e.pointerId) } catch { /* empty */ }
 
     // If we ended in drag mode, send the up with the original hit (box)
     const hitForUp = this.mode === 'dragBox'
@@ -440,6 +434,14 @@ private onLostPointerCapture = () => { this.cancelInteractions() }
 
   private onContextMenu = (e: MouseEvent) => {
     if (this.suppressContextMenu) e.preventDefault()
+    if (!this.canvas) return;
+
+    const rect = this.canvas.getBoundingClientRect()
+    const sx = e.clientX - rect.left
+    const sy = e.clientY - rect.top
+    const world = this.toWorld(sx, sy)
+    const hit = this.hitTest?.(world.x, world.y, this.bgStateUnsafe()) ?? null;
+    this.pointer?.onContextMenu?.(e, hit, this.bgStateUnsafe(), { sx, sy }, world)
   }
 
 

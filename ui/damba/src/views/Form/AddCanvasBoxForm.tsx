@@ -3,8 +3,6 @@ import { useFieldArray, Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormItem, Input, Select, Checkbox, Button } from '@/components/ui'
-import type { CanvasBox } from '@/models/CanvasBox'
-import type { CanvasBoxAtributes } from '@/models/CanvasBoxAtributes'
 
 type Option = { value: string; label: string }
 

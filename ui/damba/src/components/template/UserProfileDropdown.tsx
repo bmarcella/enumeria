@@ -2,10 +2,10 @@ import Avatar from '@/components/ui/Avatar'
 import Dropdown from '@/components/ui/Dropdown'
 import withHeaderItem from '@/utils/hoc/withHeaderItem'
 import { useSessionUser } from '@/stores/authStore'
-import { Link } from 'react-router-dom'
-import { PiUserDuotone, PiSignOutDuotone } from 'react-icons/pi'
+import { PiSignOutDuotone, PiUserDuotone } from 'react-icons/pi'
 import { useAuth } from '@/auth'
-import type { JSX } from 'react'
+import { type JSX } from 'react'
+import { Link } from 'react-router-dom'
 
 type DropdownList = {
     label: string
@@ -16,18 +16,15 @@ type DropdownList = {
 const dropdownItemList: DropdownList[] = []
 
 const _UserDropdown = () => {
-    const {  authority } = useSessionUser((state) => state.user);
-    const role = (authority) ? authority[0]  : "user"; 
-    const { avatar, userName, email } = useSessionUser((state) => state.user)
-    const { signOut } = useAuth()
+    const user = useSessionUser((state) => state.user);
+    const { signOut } = useAuth();
     const handleSignOut = () => {
         signOut()
     }
 
     const avatarProps = {
-        ...(avatar ? { src: avatar } : { icon: <PiUserDuotone /> }),
+        ...(user?.picture ? { src: user?.picture } : { icon: <PiUserDuotone /> }),
     }
-
     return (
         <Dropdown
             className="flex"
@@ -39,24 +36,24 @@ const _UserDropdown = () => {
             }
             placement="bottom-end"
         >
-            <Dropdown.Item variant="header">
-                <div className="py-2 px-3 flex items-center gap-3">
+
+            {user && <Dropdown.Item variant="header">
+                <div className="py-2 px-3 flex items-center gap-3" >
                     <Avatar {...avatarProps} />
                     <div>
                         <div className="font-bold text-gray-900 dark:text-gray-100">
-                            {userName || 'Anonymous'}
+                            {user.firstName! || ''}   {user.lastName! || 'Anonymous'}
                         </div>
                         <div className="text-xs">
-                            {email || 'No email available'}
+                            {user.email || 'No email available'}
                         </div>
-                        <div className="text-xs uppercase text-gray-500 dark:text-gray-400 mt-2">
-                            {role || 'No role available'}
-                        </div>
-                        
-
                     </div>
                 </div>
-            </Dropdown.Item>
+            </Dropdown.Item>}
+
+
+
+
             <Dropdown.Item variant="divider" />
             {dropdownItemList.map((item) => (
                 <Dropdown.Item
@@ -72,7 +69,6 @@ const _UserDropdown = () => {
                     </Link>
                 </Dropdown.Item>
             ))}
-            
             <Dropdown.Item
                 eventKey="Sign Out"
                 className="gap-2"
@@ -81,8 +77,12 @@ const _UserDropdown = () => {
                 <span className="text-xl">
                     <PiSignOutDuotone />
                 </span>
-                <span>Déconnexion</span>
+                <span>Logout</span>
             </Dropdown.Item>
+
+
+
+
         </Dropdown>
     )
 }

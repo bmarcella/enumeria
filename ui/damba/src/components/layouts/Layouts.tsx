@@ -9,7 +9,7 @@ import PreLoginLayout from './PreLoginLayout'
 const Layout = ({ children }: CommonProps) => {
     const layoutType = useThemeStore((state) => state.layout.type)
  
-    const { authenticated, byPassLogin } = useAuth();
+    const { authenticated } = useAuth();
     return (
         <Suspense
             fallback={
@@ -18,10 +18,9 @@ const Layout = ({ children }: CommonProps) => {
                 </div>
             }
         >
-            {authenticated || byPassLogin ? (
+            {authenticated ? (
                 <PostLoginLayout layoutType={layoutType}>
                     {children}
-                  
                 </PostLoginLayout>
             ) : (
                 <PreLoginLayout>{children}</PreLoginLayout>

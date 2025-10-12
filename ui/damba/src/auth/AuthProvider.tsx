@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useRef, useImperativeHandle, useState } from 'react'
 import AuthContext from './AuthContext'
 import appConfig from '@/configs/app.config'
 import { useSessionUser, useToken } from '@/stores/authStore'
-import { apiSignIn, apiSignOut, apiSignUpWithVerification } from '@/services/AuthService'
+import { apiSignOut } from '@/services/AuthService'
 import { REDIRECT_URL_KEY } from '@/constants/app.constant'
 import { useNavigate } from 'react-router-dom'
 import type {
@@ -11,8 +12,7 @@ import type {
     AuthResult,
     OauthSignInCallbackPayload,
     User,
-    Token,
-    SignUpResponse,
+    Token
 } from '@/@types/auth'
 import type { ReactNode, Ref } from 'react'
 import type { NavigateFunction } from 'react-router-dom'
@@ -42,6 +42,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     const setSessionSignedIn = useSessionUser(
         (state) => state.setSessionSignedIn,
     )
+
     const { token, setToken } = useToken()
     const [byPassLogin, setByPassLogin] = useState<boolean>(false);
 
@@ -59,19 +60,8 @@ function AuthProvider({ children }: AuthProviderProps) {
         )
     }
 
-     const redirectOTP = () => {
-        const search = window.location.search
-        const params = new URLSearchParams(search)
-        const redirectUrl = params.get(REDIRECT_URL_KEY)
-
-        navigatorRef.current?.navigate(
-            redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath,
-        )
-    }
-    
-
     const handleSignIn = (tokens: Token, user?: User) => {
-        setToken(tokens.accessToken)
+        setToken(tokens.access_token)
         setSessionSignedIn(true)
         if (user) {
             setUser(user)
@@ -84,19 +74,17 @@ function AuthProvider({ children }: AuthProviderProps) {
         setSessionSignedIn(false)
     }
 
-
-
     const signIn = async (values: SignInCredential): AuthResult => {
         try {
-            const resp = await apiSignIn(values)
-            if (resp) {
-                handleSignIn({ accessToken: resp.token }, resp.user)
-                redirect()
-                return {
-                    status: 'success',
-                    message: '',
-                }
-            }
+            // const resp = await apiSignIn(values)
+            // if (resp) {
+            //     handleSignIn({ accessToken: resp.token }, resp.user)
+            //     redirect()
+            //     return {
+            //         status: 'success',
+            //         message: '',
+            //     }
+            // }
             return {
                 status: 'failed',
                 message: 'Unable to sign in',
@@ -116,16 +104,16 @@ function AuthProvider({ children }: AuthProviderProps) {
 
     const signUp = async (values: SignUpCredential): AuthResult => {
         try {
-            const resp = await apiSignUpWithVerification(values) as SignUpResponse
-            if (!resp.error) {
-                handleSignIn({ accessToken: resp.token }, resp.user)
-                redirectOTP()
-                return {
-                    status: 'success',
-                    message: 'Please verified your email , you have receive and email with a link to validate your email address. ',
-                    data : resp.data
-                }
-            }
+            // const resp = await apiSignUpWithVerification(values) as SignUpResponse
+            // if (!resp.error) {
+            //     handleSignIn({ accessToken: resp.token }, resp.user)
+            //     redirectOTP()
+            //     return {
+            //         status: 'success',
+            //         message: 'Please verified your email , you have receive and email with a link to validate your email address. ',
+            //         data : resp.data
+            //     }
+            // }
             return {
                 status: 'failed',
                 message: 'Unable to sign up',

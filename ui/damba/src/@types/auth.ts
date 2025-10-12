@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Profil } from "@/views/Entity"
-
+import { ClientTokenDTO, UserDto } from "../../../../common/Entity/UserDto"
 
 export type SignInCredential = {
     email: string
@@ -50,21 +49,9 @@ export type AuthResult = Promise<{
     data?: any
 }>
 
-export type User = {
-    userId?: string;
-    avatar?: string ;
-    userName?: string;
-    email?: string | undefined | null
-    authority?: string[],
-    profilId?: string | null
-    profil?: Profil;
-    active?: boolean;
-}
+export type User = UserDto;
 
-export type Token = {
-    accessToken: string
-    refereshToken?: string
-}
+export type Token = ClientTokenDTO;
 
 export type OauthSignInCallbackPayload = {
     onSignIn: (tokens: Token, user?: User) => void

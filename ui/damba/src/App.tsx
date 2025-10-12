@@ -5,7 +5,7 @@ import { AuthProvider } from '@/auth'
 import Views from '@/views'
 import appConfig from './configs/app.config'
 import { OrganizationProvider } from './providers/OrganizationProvider'
-import { fetchApplicationsByProject, fetchModulesByApplication, fetchOrganizationsByUser, fetchProject } from './services/Organization'
+import { fetchApplicationsByProject, fetchModulesByApplication, fetchOrganizations, fetchProject } from './services/Organization'
 import { ProjectProvider } from './providers/ProjectProvider'
 import { ApplicationProvider } from './providers/ApplicationProvider'
 import { ModuleProvider } from './providers/ModuleProvider'
@@ -20,14 +20,14 @@ function App() {
         <Theme>
             <BrowserRouter>
                 <AuthProvider>
-                    <OrganizationProvider  fetchOrganizationsByUser={fetchOrganizationsByUser} byPassLogin={byPassLogin}>
+                    <OrganizationProvider fetchOrganizations={fetchOrganizations} >
                         <ProjectProvider fetchProjectsByUserAndOrg={fetchProject} autoSelectSingle={true} byPassLogin={byPassLogin} >
                             <ApplicationProvider fetchApplicationsByProject={fetchApplicationsByProject} autoSelectSingle={true} byPassLogin={byPassLogin}>
-                               <ModuleProvider fetchModulesByApplication={fetchModulesByApplication} byPassLogin={byPassLogin} autoSelectSingle={true} >
-                                  <Layout>
-                                    <Views />
-                                </Layout>
-                               </ModuleProvider>
+                                <ModuleProvider fetchModulesByApplication={fetchModulesByApplication} byPassLogin={byPassLogin} autoSelectSingle={true} >
+                                    <Layout>
+                                        <Views />
+                                    </Layout>
+                                </ModuleProvider>
                             </ApplicationProvider>
                         </ProjectProvider>
                     </OrganizationProvider>

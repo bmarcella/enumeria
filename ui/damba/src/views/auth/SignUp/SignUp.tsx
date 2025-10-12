@@ -4,7 +4,6 @@ import SignUpForm from './components/SignUpForm'
 import ActionLink from '@/components/shared/ActionLink'
 import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
 import { useThemeStore } from '@/stores/themeStore'
-import Split from '@/components/layouts/AuthLayout/Split'
 
 type SignUpProps = {
     disableSubmit?: boolean

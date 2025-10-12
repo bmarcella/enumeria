@@ -11,4 +11,5 @@ node_modules
 aws.txt
 /.metadata/
 /api/.env
+/ui/template
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Header from '@/components/template/Header'
 import UserProfileDropdown from '@/components//template/UserProfileDropdown'
 import HeaderLogo from '@/components/template/HeaderLogo'
@@ -16,7 +17,7 @@ import { AppSwitcher } from '../../AppSwitcher'
 const TopBarClassic = ({ children }: CommonProps) => {
     const { larger, smaller } = useResponsive();
     const { initialized } = useOrganizationContext();
-    const {initProject } = useProjectContext()
+    const { initProject } = useProjectContext()
     return (
         <LayoutBase
             type={LAYOUT_TOP_BAR_CLASSIC}
@@ -33,7 +34,7 @@ const TopBarClassic = ({ children }: CommonProps) => {
                                 <HeaderLogo />
                             </>
                         }
-                        orgSwitcher = {
+                        orgSwitcher={
                             <>
                                 <InputGroup className="mt-6 mb-6">
                                     <OrgSwitcher initialized={initialized} ></OrgSwitcher>
@@ -44,9 +45,7 @@ const TopBarClassic = ({ children }: CommonProps) => {
                         }
                         headerMiddle={<>{larger.lg && <HorizontalNav />}</>}
                         headerEnd={
-                            <>
-                                <UserProfileDropdown hoverable={false} />
-                            </>
+                            <UserProfileDropdown hoverable={false} />
                         }
                     />
                     {children}

@@ -2,14 +2,16 @@ import { useMemo } from 'react';
 import Select from '../ui/Select';
 import { useProjectStore, selectProjects, selectProjectId } from '@/stores/useProjectStore';
 import { useProjectActions } from '@/stores/useProjectSelectors';
+import { Button } from '../ui/Button';
+import { HiPlusCircle } from 'react-icons/hi';
 
 type Props = { initialized: boolean };
 type Option = { value: string; label: string };
 
 export const ProjSwitcher = ({ initialized }: Props) => {
-const projects = useProjectStore(selectProjects);
-const projectId = useProjectStore(selectProjectId);
-const { setProject } = useProjectActions()
+  const projects = useProjectStore(selectProjects);
+  const projectId = useProjectStore(selectProjectId);
+  const { setProject } = useProjectActions()
 
   const options: Option[] = useMemo(
     () =>
@@ -26,31 +28,36 @@ const { setProject } = useProjectActions()
   );
 
   if (!initialized) return <div>Loading projects…</div>;
-  if (options.length === 0) return <div>No organizations available</div>;
-
+  if (options.length === 0) return (<div className="mr-4 mb-1" >
+    <span className="opacity-60 ml-1 text-xs ">
+      <Button className="mr-2" icon={<HiPlusCircle />}>
+        <span>Project</span>
+      </Button>
+    </span>
+  </div>);
   return (
-     <div className="mr-4 mb-1">
-       {projects && projects.length > 1 ?
+    <div className="mr-4 mb-1">
+      {projects && projects.length > 1 ?
         (
-        <>
-           <span className="opacity-60 ml-1 text-xs ">Project</span>
-            <Select
-            size="sm"
-            placeholder="Please Select"
-            options={options}
-            value={selected}
-            onChange={(opt: Option | null) => setProject(opt?.value ?? '') }
-          />
-        </>
-         ) : 
-         (
           <>
-          <span className="opacity-60 text-xs block">Project</span>{' '}
-           <span className="text-sm font-medium">{options[0].label}</span>
+            <span className="opacity-60 ml-1 text-xs ">Project</span>
+            <Select
+              size="sm"
+              placeholder="Please Select"
+              options={options}
+              value={selected}
+              onChange={(opt: Option | null) => setProject(opt?.value ?? '')}
+            />
           </>
-         )
-         }
-    </div> 
+        ) :
+        (
+          <>
+            <span className="opacity-60 text-xs block">Project</span>{' '}
+            <span className="text-sm font-medium">{options[0].label}</span>
+          </>
+        )
+      }
+    </div>
   );
 };
 

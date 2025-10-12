@@ -7,10 +7,17 @@ import LayoutBase from '@/components//template/LayoutBase'
 import useResponsive from '@/utils/hooks/useResponsive'
 import { LAYOUT_COLLAPSIBLE_SIDE } from '@/constants/theme.constant'
 import type { CommonProps } from '@/@types/common'
+import { InputGroup } from '@/components/ui/InputGroup'
+import { AppSwitcher } from '../../AppSwitcher'
+import { OrgSwitcher } from '../../OrgSwitcher'
+import { ProjSwitcher } from '../../ProjSwitcher'
+import { useOrganizationContext } from '@/providers/OrganizationProvider'
+import { useProjectContext } from '@/providers/ProjectProvider'
 
 const CollapsibleSide = ({ children }: CommonProps) => {
     const { larger, smaller } = useResponsive()
-
+    const { initialized } = useOrganizationContext();
+    const { initProject } = useProjectContext()
     return (
         <LayoutBase
             type={LAYOUT_COLLAPSIBLE_SIDE}
@@ -25,6 +32,15 @@ const CollapsibleSide = ({ children }: CommonProps) => {
                             <>
                                 {smaller.lg && <MobileNav />}
                                 {larger.lg && <SideNavToggle />}
+                            </>
+                        }
+                        orgSwitcher={
+                            <>
+                                <InputGroup className="mt-6 mb-6">
+                                    <OrgSwitcher initialized={initialized} ></OrgSwitcher>
+                                    <ProjSwitcher initialized={initProject}></ProjSwitcher>
+                                    <AppSwitcher ></AppSwitcher>
+                                </InputGroup>
                             </>
                         }
                         headerEnd={

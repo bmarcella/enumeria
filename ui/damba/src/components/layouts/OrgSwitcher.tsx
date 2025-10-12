@@ -1,54 +1,94 @@
-import { useMemo } from 'react';
-import Select from '../ui/Select';
-import { useOrganizationActions, useOrganizationId, useOrganizations } from '@/utils/hooks/useOrganization';
+import { useEffect, useMemo, useState } from 'react'
+import Select from '../ui/Select'
+import {
+  useOrganizationActions,
+  useOrganizationId,
+  useOrganizations,
+} from '@/utils/hooks/useOrganization'
+import { useSessionUser } from '@/stores/authStore'
 
-type Props = { initialized: boolean };
-type Option = { value: string; label: string };
+type Option = { value: string; label: string }
 
-export const OrgSwitcher = ({ initialized }: Props) => {
-  const orgs = useOrganizations();
-  const orgId = useOrganizationId();
-  const { setOrganization } = useOrganizationActions();
+export const OrgSwitcher = () => {
+  const orgs = useOrganizations()               // [] | undefined while loading
+  const orgId = useOrganizationId()             // string | undefined
+  const { setOrganization } = useOrganizationActions()
+  const user = useSessionUser((s) => s.user)
+  const [defaultOrgName, setDefaultOrgName] = useState<string>();
+  const loading = orgs == null                  // treat null/undefined as loading
+  const hasData = Array.isArray(orgs) && orgs.length > 0
 
-  const options: Option[] = useMemo(
-    () =>
-      orgs.map((org) => ({
-        value: org.id || org.slug || org.name, // fallback if id missing
-        label: org.name,
-      })),
-    [orgs]
-  );
+  const options: Option[] = useMemo(() => {
+    if (!hasData) return []
+    const fallbackName =
+      (user?.firstName && user?.lastName)
+        ? `${user.firstName} ${user.lastName}`
+        : 'My Organization';
 
-  const selected: Option | null = useMemo(
-    () => options.find((o) => o.value === orgId) ?? null,
-    [options, orgId]
-  );
+    setDefaultOrgName(fallbackName)
+    return orgs!.map((org) => ({
+      value: String(org.id ?? org.slug ?? org.name ?? ''),
+      label: org?.name != "" && org?.name != undefined ? org?.name : fallbackName,
+    }))
+  }, [hasData, orgs, user?.firstName, user?.lastName])
 
-  if (!initialized) return <div>Loading organizations…</div>;
-  if (options.length === 0) return <div>No organizations available</div>;
+  console.log(options);
 
+  const selected: Option | null = useMemo(() => {
+    if (!hasData) return null
+    const idStr = String(orgId ?? '')
+    return options.find((o) => o.value === idStr) ?? null
+  }, [hasData, options, orgId])
+
+  // Auto-select the single org if none selected yet
+  useEffect(() => {
+    if (!hasData) return
+    if (!orgId && orgs!.length === 1) {
+      const only = orgs![0]
+      const nextId = String(only.id ?? only.slug ?? only.name ?? '')
+      if (nextId) setOrganization(nextId)
+    }
+  }, [hasData, orgId, orgs, setOrganization])
+
+  if (loading) {
+    return (
+      <div className="mr-4 mb-1">
+        <span className="opacity-60 text-xs block mb-1">Organization</span>
+        <span className="text-sm opacity-70">Loading…</span>
+      </div>
+    )
+  }
+
+  if (!hasData) {
+    return (
+      <div className="mr-4 mb-1">
+        <span className="opacity-60 text-xs block mb-1">Organization</span>
+        <span className="text-sm opacity-70">No organizations found</span>
+      </div>
+    )
+  }
+
+  // ✅ Always show the Select when we have at least one organization
   return (
-    <>
+    <div className="mr-4 mb-1">
+      <span className="opacity-60 text-xs block mb-1">Organization</span>
       {orgs && orgs.length > 1 ? (
-        <div className="mr-4 mb-1">
-            <span className="opacity-60 text-xs block mb-1">Organization</span>
-            <Select
-            size="sm"
-            placeholder="Please Select"
-            options={options}
-            value={selected}
-            onChange={(opt: Option | null) => setOrganization(opt?.value ?? '')}
-            />
-        </div>
-        ) : orgs && orgs.length === 1 ? (
-        <div className="mr-4 mb-1">
-            <span className="opacity-60 text-xs block ml-1">Organization:</span>{' '}
-            <span className="text-sm font-medium ml-1">{orgs[0].name}</span>
-        </div>
-        ) : null }
-    </>
-
-  );
-};
-
-
+        <Select
+          size="sm"
+          placeholder="Please Select"
+          options={options}
+          value={selected}
+          onChange={(opt: Option | null) => {
+            const next = opt?.value ?? ''
+            if (next && next !== String(orgId ?? '')) {
+              setOrganization(next)
+            }
+          }}
+        />
+      ) :
+        orgs && orgs.length == 1 ?
+          (<span className="text-sm font-medium">{orgs[0]?.name != "" && orgs[0]?.name != undefined ? orgs[0]?.name : defaultOrgName}</span>)
+          : null}
+    </div>
+  )
+}

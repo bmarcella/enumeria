@@ -9,8 +9,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { ZodType } from 'zod'
 import type { CommonProps } from '@/@types/common'
-import FirebaseAuth from '@/services/firebase/FirebaseAuth'
-import { onAuthStateChanged, reload, sendEmailVerification } from 'firebase/auth'
 import ResendEmailVerification from '../../SharedComponents/ResendEmailVerification'
 
 interface SignUpFormProps extends CommonProps {
