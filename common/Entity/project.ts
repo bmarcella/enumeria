@@ -170,7 +170,6 @@ export interface Application extends BaseEntity {
   description?: string;
   modules: AppModule[];
   config?: Config<AppCanvasSetting>;
-
   type?: "web" | "mobile" | "api" | "cli" | "library";
   runtime?: string;
   language?: string;

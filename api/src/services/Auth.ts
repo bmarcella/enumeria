@@ -1,5 +1,8 @@
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import  jwt  from 'jsonwebtoken';
 import { ErrorMessage } from '../../../common/error/error';
 import {
   Request,
@@ -10,24 +13,28 @@ import { User } from '../entities/User';
 import { Role, RoleName } from '../entities/Role';
 import { Organization } from '../entities/Organization';
 import { SessionUser } from '../../../common/Entity/UserDto';
-import { createService } from '../Damba/service/DambaService';
+import { createService, DEvent } from '../Damba/service/DambaService';
+import { GenTokenJwt } from '../../../common/keycloak/AuthMiddleware';
 const api = createService("/auth");
-api.DPost("/google/exchange", async (req, res) => {
+api.DPost("/google/exchange", async (e: DEvent) => {
+  const req = e.in as Request;
+  const res = e.out as Response;
   try {
-    const { code } = req.body as { code: string };
-    const { tokens } = await req.oauth2Google.getToken({ code });
-    if (!tokens.id_token) return res.status(400).json({ error: ErrorMessage.NO_ID_TOKEN });
-    const ticket = await req.oauth2Google.verifyIdToken({
+    const { code } = e.in.body as { code: string };
+    const { tokens } = await e.in.oauth2Google.getToken({ code });
+    if (!tokens.id_token) return e.out.status(400).json({ error: ErrorMessage.NO_ID_TOKEN });
+    const ticket = await e.in.oauth2Google.verifyIdToken({
       idToken: tokens.id_token!,
       audience: process.env.GOOGLE_CLIENT_ID!,
     });
     const payload = ticket.getPayload()!;
+
     let user: User = await req.DRepository.DGet(User, {
       where: {
         email: payload.email!,
       },
       relations: ['authority'], // load related roles
-    });
+    }, false)  as User;
 
     if (user && user?.disabled) {
       return res.status(403).json({ error: ErrorMessage.ACCOUNT_DISABLED });
@@ -49,10 +56,15 @@ api.DPost("/google/exchange", async (req, res) => {
     if (!user) return res.status(401).json({ error: ErrorMessage.USER_NOT_FOUND });
     // Regenerate session to prevent fixation
     req.session.regenerate(err => {
+
       if (err) return res.status(500).json({ error: ErrorMessage.SESSION_ERROR });
+
       const auth = user.authority?.map(r => { return { name: r.name }; });
       const userDTO = { ...user, authority: auth, organizations: user.organizations, currentOrgId: user.currentOrgId }
       req.session.user = req.extras?.toSessionUser(user, 'google');
+
+      const dToken = GenTokenJwt(jwt, userDTO, process.env.JWT_PUBLIC_KEY!);
+
       req.session.tokens = {
         access_token: tokens.access_token!,
         refresh_token: tokens.refresh_token!,
@@ -60,9 +72,12 @@ api.DPost("/google/exchange", async (req, res) => {
         expiry_date: tokens.expiry_date!,
         scope: tokens.scope,
       };
+
+     
+
       req.session.save(() => res.status(200).json({
         user: userDTO, tokens: {
-          access_token: tokens.access_token,
+          access_token: `google|${dToken}|${tokens.access_token}`,
           refresh_token: tokens.refresh_token!,
           expiry_date: tokens.expiry_date,
           scope: tokens.scope
@@ -102,11 +117,20 @@ api.DPost("/google/exchange", async (req, res) => {
       return await req.DRepository.DSave(User, user) as unknown as Promise<User>;
     },
     initiateUser: async (req: Request, payload: any): Promise<any> => {
-      // Create default role and organization for new user
-      const new_role = await req.DRepository.DSave(Role, {
+
+    let new_role: Role = await req.DRepository.DGet(Role, {
+      where: {
+        name:RoleName.USER,
+      }
+    }, false)  as Role;
+
+    if(!new_role){
+       // Create default role and organization for new user
+       new_role = await req.DRepository.DSave(Role, {
         name: RoleName.USER,
         description: 'Default role for new user'
-      } as Role) as unknown as Role;
+      } as Role) as Role;
+    }
 
       const new_user = await req.DRepository.DSave(User, {
         googleSub: payload.sub,
@@ -138,12 +162,16 @@ api.DPost("/google/exchange", async (req, res) => {
   }
 );
 
-api.DGet("/logout", (req, res) => {
+api.DGet("/logout", (e: DEvent) => {
+   const req = e.in as Request;
+  const res = e.out as Response;
   req.session.destroy(() => res.clearCookie('connect.sid').sendStatus(204));
 })
 
 api.DGet("/refreshToken",
-  async (req: Request, res: Response) => {
+  async (e: DEvent) => {
+    const req = e.in as Request;
+    const res = e.out as Response;
     try {
       const rt = req.session.tokens?.refresh_token;
       if (!rt) return res.status(400).json({ error: ErrorMessage.REFRESH_TOKEN_MISSING });

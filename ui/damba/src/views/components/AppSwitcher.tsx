@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import Select from '../ui/Select'
+import Select from '../../components/ui/Select'
 import { useApplicationStore } from '@/stores/useApplicationStore'
 import { useApplicationActions } from '@/utils/hooks/useApplication';
 
@@ -22,13 +22,13 @@ export const AppSwitcher = () => {
 
   if (options.length === 0) return <div className="opacity-60 text-xs">No applications available</div>
   const changeApp = (appId: string) => {
-  if (!appId) return
+    if (!appId) return
 
-  const cApp = apps.find((o) => o.id === appId)
-  if (!cApp) return
+    const cApp = apps.find((o) => o.id === appId)
+    if (!cApp) return
 
-  setApplication(cApp) // store expects an id string, not the full object
-}
+    setApplication(cApp) // store expects an id string, not the full object
+  }
   return (
     <div className="mr-4 mb-1">
       <span className="opacity-60 text-xs block mb-1">Application</span>
@@ -41,12 +41,12 @@ export const AppSwitcher = () => {
           onChange={(opt: Option | null) => changeApp(opt?.value || '')}
         />
       ) : (
-       
-         <>
-             <span className="text-sm font-medium">{options[0].label}</span>
-         </>
-            
-    
+
+        <>
+          <span className="text-sm font-medium">{options[0].label}</span>
+        </>
+
+
       )}
     </div>
   )

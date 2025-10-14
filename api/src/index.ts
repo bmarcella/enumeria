@@ -18,7 +18,6 @@ import { JwtPayload } from 'jsonwebtoken';
 import OpenAI from 'openai';
 import { Mail } from '../../common/mail';
 import { DambaRepository } from '../../common/mvc/CrudService';
-import { _SPS_ } from './routes/ServiceProvider';
 import { DambaServices } from './Damba/Index';
 
 dotenv.config();

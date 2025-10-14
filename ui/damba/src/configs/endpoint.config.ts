@@ -7,7 +7,8 @@ const endpointConfig = {
     forgotPassword: '/forgot-password',
     resetPassword: '/reset-password',
     signInWithGoogle: '/auth/google/exchange',
-    getMyOrganizations: '/organizations'
+    organizations: '/organizations',
+    projects: '/projects'
 }
 
 export default endpointConfig

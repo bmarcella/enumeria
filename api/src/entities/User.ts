@@ -1,13 +1,13 @@
 
 import { AppBaseEntity } from "./BaseEntity";
 import { Organization } from './Organization';
-import { Role } from "./Role";
-import { OneToMany } from "typeorm";
+import { JoinTable, ManyToMany, OneToMany } from "typeorm";
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column
 } from 'typeorm';
+import { Role } from "./Role";
 
 @Entity({ name: 'users' })
 
@@ -44,7 +44,8 @@ export class User extends AppBaseEntity {
   audience?: string; // aud (audience / client ID)
 
 
-  @OneToMany(() => Role, role => role.user)
+  @ManyToMany(() => Role, role => role.users, { cascade: true })
+  @JoinTable() // creates a join table like "user_roles_user_role"
   authority!: Role[];
 
   @Column({ nullable: false, default: false })
@@ -62,6 +63,9 @@ export class User extends AppBaseEntity {
 
   @OneToMany(() => Organization, org => org.user)
   organizations?: Organization[];
+
+  // @OneToMany(() => ApplicationEntity, org => org.user)
+  // applications?: ApplicationEntity[];
 
 
 }

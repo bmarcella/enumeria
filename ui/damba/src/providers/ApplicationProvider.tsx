@@ -25,12 +25,12 @@ export function ApplicationProvider({ children, fetchApplicationsByProject, auto
   useEffect(() => {
     let cancelled = false
     async function init() {
-      const userId = user?.userId;
-      const orgId = org?.id
-      const projectId = project?.id
+      const userId = user?.id || "";
+      const orgId = org?.id!
+      const projectId = project?.id!;
       setScope(userId, orgId, projectId)
 
-      if ((!userId || !orgId || !projectId) && !byPassLogin ) {
+      if ((!userId || !orgId || !projectId) && !byPassLogin) {
         setApplications([])
         return
       }

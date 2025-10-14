@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
-import { ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
 import { User } from './User';
+import { AppBaseEntity } from './BaseEntity';
 
 export  enum RoleName {
     SUPER_ADMIN = 'super_admin',
@@ -10,7 +10,7 @@ export  enum RoleName {
 }
 
 @Entity()
-export class Role extends BaseEntity{
+export class Role extends AppBaseEntity{
 
     @PrimaryGeneratedColumn()
     id!: number;
@@ -20,7 +20,8 @@ export class Role extends BaseEntity{
 
     @Column({ nullable: true })
     description?: string;
-    
-    @ManyToOne(() => User, user => user.authority)
-    user!: User;
+     // Many-to-Many: A role can be assigned to many users
+    @ManyToMany(() => User, user => user.authority)
+    users?: User[];
+
 }

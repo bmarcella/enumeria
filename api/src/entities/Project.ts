@@ -10,9 +10,6 @@ export class Project extends AppBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string
 
-  @Index()
-  @Column('uuid')
-  organizationId!: string
 
   @ManyToOne(() => Organization, (o) => o.projects, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'organizationId' })

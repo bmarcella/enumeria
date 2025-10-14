@@ -5,7 +5,7 @@ import { useOrganizationStore, selectSelectedOrganization } from '@/stores/useOr
 import { useProjectStore } from '@/stores/useProjectStore';
 import { Project } from '../../../../common/Entity/project';
 type ProjCtx = { initProject: boolean }
-const ProjectContext = createContext<ProjCtx | undefined>(undefined) 
+const ProjectContext = createContext<ProjCtx | undefined>(undefined)
 type Props = {
   children: React.ReactNode;
   /** Must return ONLY the projects for this user in this org */
@@ -33,13 +33,13 @@ export function ProjectProvider({
   useEffect(() => {
     let cancelled = false;
     async function init() {
-      const userId = authUser?.userId || "";
+      const userId = authUser?.id || "";
       const orgId = org?.id || "";
       setScope(userId, orgId);
 
       if ((!userId || !orgId) && !byPassLogin) {
-            setProjects([]); // no org or user -> empty list
-            return;
+        setProjects([]); // no org or user -> empty list
+        return;
       }
 
       const projects = await fetchProjectsByUserAndOrg(userId, orgId);
@@ -58,11 +58,11 @@ export function ProjectProvider({
     return () => {
       cancelled = true;
     };
-  }, [authUser?.userId, org?.id, setScope, setProjects, projectId, setProject, fetchProjectsByUserAndOrg, autoSelectSingle]);
+  }, [authUser?.id, org?.id, setScope, setProjects, projectId, setProject, fetchProjectsByUserAndOrg, autoSelectSingle]);
 
-  return (<ProjectContext.Provider value={ { initProject } }>
-        {children}
-    </ProjectContext.Provider>);
+  return (<ProjectContext.Provider value={{ initProject }}>
+    {children}
+  </ProjectContext.Provider>);
 }
 
 export function useProjectContext() {

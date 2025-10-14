@@ -1,5 +1,4 @@
-import { protect } from './../../../common/keycloak/AuthMiddleware';
-import jwt from 'jsonwebtoken';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // config/app-config.ts
 import dotenv from 'dotenv';
@@ -82,8 +81,5 @@ export const AppConfig = {
       req.oauth2Google = googleAuth.getAuth;
       next();
     }
-  },
-  protect: (roles: string[]) => {
-    return protect(jwt, process.env, roles);
   }
 } as const;

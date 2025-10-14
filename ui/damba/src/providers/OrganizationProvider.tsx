@@ -12,7 +12,7 @@ const OrganizationContext = createContext<OrgCtx | undefined>(undefined)
 
 type Props = {
   children: React.ReactNode
-  fetchOrganizations: () => Promise<Organization[]>
+  fetchOrganizations: (id: string) => Promise<Organization[]>
   /** If true, auto-select the single org returned (nice DX for single-tenant users) */
   autoSelectSingle?: boolean,
 }
@@ -34,8 +34,9 @@ export function OrganizationProvider({
   useEffect(() => {
     let cancelled = false
     async function init() {
-      setUser(user.id)
-      const orgs = await fetchOrganizations();
+      setUser(user.id);
+      if (!user.id) return
+      const orgs = await fetchOrganizations(user?.id);
       if (cancelled) return;
       setOrganizations(orgs)
       // Optional: auto-select the only org available
@@ -43,11 +44,9 @@ export function OrganizationProvider({
         const o = orgs[0]
         setOrganization(o.id || o.slug || o.name)
       }
-
       setInitialized(true);
     }
-
-    init()
+    if (user.id && user.id != undefined) init()
     return () => { cancelled = true }
   }, [setUser, setOrganizations, setOrganization, organizationId, fetchOrganizations, autoSelectSingle])
 

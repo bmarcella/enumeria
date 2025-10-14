@@ -3,10 +3,10 @@ import endpointConfig from "@/configs/endpoint.config";
 import { Application, AppModule, FakeOrg, Organization, Project } from "../../../../common/Entity/project";
 import ApiService from "./ApiService";
 
-export const fetchOrganizations = (): Promise<Organization[]> => {
+export const fetchOrganizations = (id: string): Promise<Organization[]> => {
 
    return ApiService.fetchDataWithAxios({
-      url: endpointConfig.getMyOrganizations,
+      url: `${endpointConfig.organizations}/${id}/user`,
       method: 'get',
    })
 }

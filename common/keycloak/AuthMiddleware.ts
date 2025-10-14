@@ -1,4 +1,5 @@
 
+import { DEvent } from '../../api/src/Damba/service/DambaService';
 import { ErrorMessage } from './../error/error';
 export const secretKeyCommon = '08V5J1vven';
 export interface JwtPayload {
@@ -37,18 +38,21 @@ const CheckTokenForDamba = (jwt: any, token: string, key: string): any => {
   try {
     const payload = getPayload(jwt, token, key);
     return { payload, valid: true };
-  } catch (error) {
+   } catch (error) {
     return false;
   }
 }
 
-const CheckTokenForGoogle = async (req: any, token: string): Promise<any> => {
-  try {
-    const payload = await req.oauth2Google.getTokenInfo(token);
-    return { payload, valid: true };
+const CheckTokenForGoogle =  async (req: any, token: string): Promise<any> => {
+  const check = async ()=>{
+     try {
+     const payload = await req.oauth2Google.getTokenInfo(token);
+     return { payload, valid: true };
   } catch (err) {
-    return false;
-  }
+      return false;
+   }
+  };
+  return await check();
 }
 
 const getTokenFromHeader = (req: any): string | null => {
@@ -64,29 +68,49 @@ const getTokenFromHeader = (req: any): string | null => {
   }
 }
 
-export const protect = async (jwt: any, p: any, roles?: string[]) => {
-  return async (req: any, res: any, next: any) => {
+const getTokenInfo = (token: string) : string [] => {
+   try {
+      return token.split('|');
+     } catch (error) {
+      return []
+   }
+}
+
+export const protect =  (roles: string[], public_key: string, jwt?: any, frontent_strategie = 'localstorage'  ) => {
+
+  return async (e: DEvent) => {
+     const req = e.in;
+     const res = e.out; 
+     const next = e.go;
     try {
       const token = getTokenFromHeader(req);
+
       if (!token) return res.status(401).send(ErrorMessage.NO_TOKEN);
       req.token = token;
-      const strategie = req.session.user.loginStragtegy;
+      const info = getTokenInfo(token); // info[0] = strategie, info[1] = token, info[2] = google token
+      if (info.length < 2) return res.status(401).send(ErrorMessage.INVALID_TOKEN);
+      // if no session user, the strategie is the first part of the token
+      // if session user, the strategie is the one saved in session
+      const strategie = (frontent_strategie == "localstorage" || !req.session.user?.loginStragtegy ) ?  info [0] :  req.session.user?.loginStragtegy;
+
+      if (!strategie) return res.status(401).send(ErrorMessage.LOGIN_STRATEGIE_NOT_FOUND);
       let payload = undefined;
 
       if (strategie === 'local' || !strategie) {
-        payload = CheckTokenForDamba(jwt, token, p.PUBLIC_KEY!).payload;
-        if (!payload) return res.status(401).send(ErrorMessage.INVALID_LOCAL_TOKEN);
+          payload = CheckTokenForDamba(jwt, info[1] , public_key).payload;
+          if (!payload) return res.status(401).send(ErrorMessage.INVALID_LOCAL_TOKEN);
       }
 
-      if (strategie && strategie === 'google') {
-        const data = await CheckTokenForGoogle(req, token);
-        payload = data.payload;
-        if (!payload) return res.status(401).send(ErrorMessage.INVALID_GOOGLE_TOKEN);
+      if (strategie && strategie === 'google' && info[2]) {
+         const data =  await CheckTokenForGoogle(req, info[2]);
+         const gpayload = data.payload;
+         if (!gpayload) return res.status(401).send(ErrorMessage.INVALID_GOOGLE_TOKEN);
       }
 
-      if (!payload) return res.status(401).send(ErrorMessage.INVALID_TOKEN)
-      if (roles && (!req.session.user || !req.session.user.authority || !roles.some(r => req.session.user.authority.includes(r)))) {
-        return res.status(403).send(ErrorMessage.NOT_ATHORIZED);
+      if (!payload) return res.status(401).send(ErrorMessage.INVALID_TOKEN);
+
+      if (roles && (!payload.authority || !roles.some(r => payload.authority.includes(r)))) {
+          return res.status(403).send(ErrorMessage.NOT_ATHORIZED);
       }
       next();
     } catch (err: any) {
@@ -101,14 +125,19 @@ export const protect = async (jwt: any, p: any, roles?: string[]) => {
   };
 };
 
-export const free = (jwt: any, p: any, role?: string) => {
-  return (req: any, res: any, next: any) => {
+export const free = (public_key: string , jwt: any, ) => {
+  return (e: DEvent) => {
+    const req = e.in;
+    const res = e.out; 
+    const next = e.go;
     try {
-      let token = req?.headers.Authorization?.split(' ')[1];
-      if (!token) token = req?.headers.authorization?.split(' ')[1];
+      let token = typeof req?.headers.Authorization === 'string' ? req.headers.Authorization.split(' ')[1] : undefined;
+      if (!token) token = typeof req?.headers.authorization === 'string' ? req.headers.authorization.split(' ')[1] : undefined;
+
       if (token) {
-        req.token = token;
-        req.payload = getPayload(jwt, token, p.PUBLIC_KEY!);
+        const info = getTokenInfo(token); // info[0] = strategie, info[1] = token, info[2] = google token
+        req.token = info[1];
+        req.payload = getPayload(jwt, token, public_key);
       }
       next();
     } catch (err: any) {
@@ -123,7 +152,7 @@ export const getPayload = (jwt: any, token: string, PK: string): JwtPayload | an
 
 
 
-export const GenToken = (jwt: any, payload: any, PK: string, ex: string): string => {
+export const GenTokenJwt = (jwt: any, payload: any, PK: string, ex: string = ( 3600*24*31).toString()): string => {
   return jwt.sign(payload, PK, { expiresIn: ex });
 }
 
@@ -145,26 +174,5 @@ export const VerifyRefreshToken = (jwt: any, token: string, PK: string) => {
       return { error: true, message: `Access Denied: ${err.message}` };
     }
   }
-
 }
 
-export const protectEnt = (jwt: any, p: any, role?: string) => {
-  return (req: any, res: any, next: any) => {
-    try {
-      let token = req?.headers.Enttoken;
-      if (!token) {
-        token = req?.headers.enttoken;
-        if (!token) return res.status().send('Access Denied: No token provided.');
-      }
-      req.tokenEnt = token;
-      req.payloadEnt = getPayload(jwt, token, secretKeyCommon);
-      if (role && (!req.payload.roles || !req.payload.roles.includes(role))) {
-        return res.status(403).send('Access Denied: Insufficient permissions.');
-      }
-      next();
-    } catch (err: any) {
-      console.log(err);
-      next();
-    }
-  };
-};

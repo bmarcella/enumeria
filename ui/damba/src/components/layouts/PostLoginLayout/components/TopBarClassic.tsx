@@ -8,15 +8,13 @@ import LayoutBase from '@/components//template/LayoutBase'
 import useResponsive from '@/utils/hooks/useResponsive'
 import { LAYOUT_TOP_BAR_CLASSIC } from '@/constants/theme.constant'
 import type { CommonProps } from '@/@types/common'
-import { OrgSwitcher } from '../../OrgSwitcher'
-import { useOrganizationContext } from '@/providers/OrganizationProvider'
 import { useProjectContext } from '@/providers/ProjectProvider'
-import { ProjSwitcher } from '../../ProjSwitcher'
 import { InputGroup } from '@/components/ui/InputGroup'
-import { AppSwitcher } from '../../AppSwitcher'
+import { AppSwitcher } from '../../../../views/components/AppSwitcher'
+import { OrgSwitcher } from '@/views/components/OrgSwitcher'
+import { ProjSwitcher } from '@/views/components/ProjSwitcher'
 const TopBarClassic = ({ children }: CommonProps) => {
     const { larger, smaller } = useResponsive();
-    const { initialized } = useOrganizationContext();
     const { initProject } = useProjectContext()
     return (
         <LayoutBase
@@ -37,7 +35,7 @@ const TopBarClassic = ({ children }: CommonProps) => {
                         orgSwitcher={
                             <>
                                 <InputGroup className="mt-6 mb-6">
-                                    <OrgSwitcher initialized={initialized} ></OrgSwitcher>
+                                    <OrgSwitcher ></OrgSwitcher>
                                     <ProjSwitcher initialized={initProject}></ProjSwitcher>
                                     <AppSwitcher ></AppSwitcher>
                                 </InputGroup>

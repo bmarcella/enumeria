@@ -9,6 +9,7 @@ import { fetchApplicationsByProject, fetchModulesByApplication, fetchOrganizatio
 import { ProjectProvider } from './providers/ProjectProvider'
 import { ApplicationProvider } from './providers/ApplicationProvider'
 import { ModuleProvider } from './providers/ModuleProvider'
+import { DialogProvider } from './providers/DialogProvider'
 const byPassLogin = appConfig.byPassLogin;
 
 if (appConfig.enableMock) {
@@ -24,9 +25,11 @@ function App() {
                         <ProjectProvider fetchProjectsByUserAndOrg={fetchProject} autoSelectSingle={true} byPassLogin={byPassLogin} >
                             <ApplicationProvider fetchApplicationsByProject={fetchApplicationsByProject} autoSelectSingle={true} byPassLogin={byPassLogin}>
                                 <ModuleProvider fetchModulesByApplication={fetchModulesByApplication} byPassLogin={byPassLogin} autoSelectSingle={true} >
-                                    <Layout>
-                                        <Views />
-                                    </Layout>
+                                    <DialogProvider>
+                                        <Layout>
+                                            <Views />
+                                        </Layout>
+                                    </DialogProvider>
                                 </ModuleProvider>
                             </ApplicationProvider>
                         </ProjectProvider>

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import Select from '../ui/Select'
 import {
   useOrganizationActions,
   useOrganizationId,
   useOrganizations,
 } from '@/utils/hooks/useOrganization'
 import { useSessionUser } from '@/stores/authStore'
+import Select from '@/components/ui/Select';
 
 type Option = { value: string; label: string }
 
