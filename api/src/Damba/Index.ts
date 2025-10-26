@@ -1,9 +1,11 @@
-import { _SPS_ } from "../routes/ServiceProvider";
-import { DambaRoute } from "./route/DambaRoute";
-import { ServiceRegistry } from "./service/DambaService";
 
-export const DambaServices = () => {
+import { DambaRoute } from "./route/DambaRoute";
+import { IServiceProvider, ServiceRegistry } from "./service/DambaService";
+import { NextFunction, Request, Response } from "express";
+
+
+
+export const DambaServices = (_SPS_ : IServiceProvider<Request, Response, NextFunction>) => {
     ServiceRegistry._init();
-    // console.log(registry);
     return DambaRoute(_SPS_);
 }

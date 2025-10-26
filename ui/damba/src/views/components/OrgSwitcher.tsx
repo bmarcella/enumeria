@@ -31,9 +31,7 @@ export const OrgSwitcher = () => {
       label: org?.name != "" && org?.name != undefined ? org?.name : fallbackName,
     }))
   }, [hasData, orgs, user?.firstName, user?.lastName])
-
-  console.log(options);
-
+  
   const selected: Option | null = useMemo(() => {
     if (!hasData) return null
     const idStr = String(orgId ?? '')

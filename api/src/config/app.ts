@@ -67,8 +67,9 @@ export const AppConfig = {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   },
-  helper: <T>(DB: T) => {
+  helper: <T>(DB: T, extras: any) => {
     return (req: Request, res: Response, next: NextFunction) => {
+      req.extras = extras;
       req.DB = DB;
       req.DRepository = DambaRepository.init(DB) as any;
       req.AI = new OpenAI({ apiKey: process.env.OPENAI_API_KEY!.toString() });

@@ -1,6 +1,6 @@
-import { createService, DEvent } from "../Damba/service/DambaService";
+import { createBehaviors, DEvent } from "../../Damba/service/DambaService";
 
-const api = createService('/modules');
+const api = createBehaviors('/modules');
 api.DGet('/:idApp/appplication', async (e: DEvent) => {
     // yourcode here
     return e.out.json();

@@ -1,4 +1,4 @@
-import { SessionUser } from './../../common/Entity/UserDto';
+import { SessionUser } from '../../common/Entity/UserDto';
 import 'reflect-metadata';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import bodyParser from 'body-parser';
@@ -19,7 +19,8 @@ import OpenAI from 'openai';
 import { Mail } from '../../common/mail';
 import { DambaRepository } from '../../common/mvc/CrudService';
 import { DambaServices } from './Damba/Index';
-
+import { ExtrasMap } from './Damba/service/DambaService';
+import { _SPS_ } from './services/Index';
 dotenv.config();
 
 declare global {
@@ -34,7 +35,8 @@ declare global {
       AI: OpenAI
       oauth2Google: OAuth2Client | any,
       DRepository: DambaRepository<DataSource>,
-      extras?: Record<string, (...args: any[]) => any>
+      extras: ExtrasMap,
+      data: any;
     }
   }
 }
@@ -59,8 +61,9 @@ AppDataSource<DataSource, Array<any>>(DataSource, process.env, DBConfig.entities
   app.use(bodyParser.json(AppConfig.json));
   app.use(bodyParser.urlencoded(AppConfig.urlencoded));
   app.use(session(AppConfig.session));
-  app.use(AppConfig.helper<DataSource>(DB))
-  app.use(AppConfig.base_path, DambaServices());
+  const {route , extras } = DambaServices(_SPS_);
+  app.use(AppConfig.helper<DataSource>(DB, extras))
+  app.use(AppConfig.base_path, route);
   app.listen(AppConfig.port, () => {
     console.log(`[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`);
   });

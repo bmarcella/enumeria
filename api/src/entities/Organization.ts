@@ -89,8 +89,6 @@ export class OrgBilling {
  * Organization entity
  */
 @Entity('organizations')
-@Index(['slug'], { unique: true, where: 'slug IS NOT NULL' })
-@Index(['key'], { unique: true, where: 'key IS NOT NULL' })
 export class Organization extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string
@@ -98,12 +96,6 @@ export class Organization extends BaseEntity {
   /** Identity */
   @Column({ type: 'varchar', length: 160, nullable: true })
   name!: string
-
-  @Column({ type: 'varchar', length: 16, nullable: true })
-  key?: string | null
-
-  @Column({ type: 'varchar', length: 190, nullable: true })
-  slug?: string | null
 
   @Column({ type: 'text', nullable: true })
   description?: string | null

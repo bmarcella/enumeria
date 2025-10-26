@@ -62,8 +62,13 @@ export const DGet = (DB: any, T: new (...args: any[]) => any, preds?: any, all: 
 export class DambaRepository<DS> {
   private DataSource: DS;
   public static _instance: DambaRepository<any>;
+  private entity :  any;
   constructor(private ds: DS) {
     this.DataSource = ds;
+  }
+
+  setEntity(T: any){
+      this.entity(T)
   }
 
   public static init(DS: any): DambaRepository<typeof DS> {
@@ -79,8 +84,9 @@ export class DambaRepository<DS> {
       const statement = await crud.save(data) as typeof T;
       resolve(statement);
     });
-
   };
+
+
 
 
   /**

@@ -1,6 +1,9 @@
 import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Column } from "typeorm";
 
 export class AppBaseEntity  {
+
+  @Column({ nullable: true })
+  created_by?: string; // Creation date
   
   @CreateDateColumn({ nullable: true })
   created_at?: Date; // Creation date

@@ -3,19 +3,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import  jwt  from 'jsonwebtoken';
-import { ErrorMessage } from '../../../common/error/error';
+import { ErrorMessage } from '../../../../common/error/error';
 import {
   Request,
   Response,
 } from 'express';
 
-import { User } from '../entities/User';
-import { Role, RoleName } from '../entities/Role';
-import { Organization } from '../entities/Organization';
-import { SessionUser } from '../../../common/Entity/UserDto';
-import { createService, DEvent } from '../Damba/service/DambaService';
-import { GenTokenJwt } from '../../../common/keycloak/AuthMiddleware';
-const api = createService("/auth");
+import { User } from '../../entities/User';
+import { Role, RoleName } from '../../entities/Role';
+import { Organization } from '../../entities/Organization';
+import { SessionUser } from '../../../../common/Entity/UserDto';
+import { createBehaviors, DEvent } from '../../Damba/service/DambaService';
+import { GenTokenJwt } from '../../../../common/keycloak/AuthMiddleware';
+const api = createBehaviors("/auth");
 api.DPost("/google/exchange", async (e: DEvent) => {
   const req = e.in as Request;
   const res = e.out as Response;
@@ -41,7 +41,7 @@ api.DPost("/google/exchange", async (e: DEvent) => {
     }
 
     if (!user) {
-      user = await req.extras?.initiateUser?.(req, payload);
+      user = await req.extras?.auth.initiateUser?.(req, payload);
     }
 
     if (user && user?.googleSub && user?.googleSub !== payload.sub) {
@@ -50,7 +50,7 @@ api.DPost("/google/exchange", async (e: DEvent) => {
 
     if (user && !user?.googleSub) {
       user.googleSub = payload.sub!;
-      user = await req.extras?.SaveUser(req, user);
+      user = await req.extras?.auth.SaveUser(req, user);
     }
 
     if (!user) return res.status(401).json({ error: ErrorMessage.USER_NOT_FOUND });
@@ -59,12 +59,10 @@ api.DPost("/google/exchange", async (e: DEvent) => {
 
       if (err) return res.status(500).json({ error: ErrorMessage.SESSION_ERROR });
 
-      const auth = user.authority?.map(r => { return { name: r.name }; });
+      const auth = user.authority?.map(r => { return  r.name  });
       const userDTO = { ...user, authority: auth, organizations: user.organizations, currentOrgId: user.currentOrgId }
-      req.session.user = req.extras?.toSessionUser(user, 'google');
-
+      req.session.user = req.extras?.auth.toSessionUser(user, 'google');
       const dToken = GenTokenJwt(jwt, userDTO, process.env.JWT_PUBLIC_KEY!);
-
       req.session.tokens = {
         access_token: tokens.access_token!,
         refresh_token: tokens.refresh_token!,
@@ -76,7 +74,8 @@ api.DPost("/google/exchange", async (e: DEvent) => {
      
 
       req.session.save(() => res.status(200).json({
-        user: userDTO, tokens: {
+        user: userDTO, 
+        tokens: {
           access_token: `google|${dToken}|${tokens.access_token}`,
           refresh_token: tokens.refresh_token!,
           expiry_date: tokens.expiry_date,
@@ -161,6 +160,13 @@ api.DPost("/google/exchange", async (e: DEvent) => {
     }
   }
 );
+
+api.DGet("/test", (e: DEvent) => {
+   const req = e.in as Request;
+   const res = e.out as Response;
+   res.send(req);
+})
+
 
 api.DGet("/logout", (e: DEvent) => {
    const req = e.in as Request;

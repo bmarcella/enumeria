@@ -2,6 +2,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, NextFunction } from 'express';
+export type ExtrasMap = Record<string,  Record<string, (...args: any[]) => any>>
 
 /** Adjust this to your repository expectations. If you use TypeORM, use EntityTarget from typeorm. */
 export type EntityCtor<T = any> = abstract new (...args: any[]) => T
@@ -46,6 +47,7 @@ export interface IServiceProvider<REQ, RES, NEXT> {
 export interface IServiceComplete<REQ = Request, RES = Response, NEXT = NextFunction> {
     service: IServicesMap<REQ, RES, NEXT>;
     middleware?: ((req: REQ, res: RES, next: NEXT) => any[]) | [];
+    dbEntity?: new (...args: any[]) => any | any
 }
 
 export class ServiceRegistry {
@@ -86,7 +88,7 @@ export interface DEvent {
 }
 
 
-export const createService = <T, REQ = Request, RES = Response, NEXT = NextFunction>
+export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFunction>
     (name: string,
         entity?: new (...args: any[]) => any,
         config: ServiceConfig = {
@@ -111,15 +113,16 @@ export const createService = <T, REQ = Request, RES = Response, NEXT = NextFunct
         routes[path] = { behavior, middleware, extras }
     }
 
-    const getMiddlewares  = (_middleware?: ((de: DEvent) => any)[] | []) : any => {
-         _middleware && _middleware.length > 0
+    const getMiddlewares  = (_middleware?: ((de: DEvent) => any) [] | [] ) : any => {
+        return _middleware && _middleware.length > 0
             ? _middleware.map((_mw) => {
                 return (req: REQ, res: RES, next: NEXT) => {
                     const de = {
-                    in: req,
-                    out: res,
-                    go: next,
+                        in: req,
+                        out: res,
+                        go: next,
                     } as DEvent;
+
                     return _mw(de);
                 };
                 })
@@ -128,9 +131,9 @@ export const createService = <T, REQ = Request, RES = Response, NEXT = NextFunct
     }
 
     
-    const getBehaviors  = (_middleware?: ((de: DEvent) => any)[] | []) : any => {
-         _middleware && _middleware.length > 0
-            ? _middleware.map((_mw) => {
+    const getBehaviors  = (_middleware?: ((de: DEvent) => any) [] | []) : any => {
+        return _middleware && _middleware.length > 0
+            ?  _middleware.map((_mw) => {
                 return (req: REQ, res: RES, next: NEXT) => {
                     const de = {
                     in: req,
@@ -191,8 +194,8 @@ export const createService = <T, REQ = Request, RES = Response, NEXT = NextFunct
         return (
         path: string,
         _behavior: ServiceFn [] | ServiceFn,
-        extras?: Record<string, (...args: any[]) => any>,
-        _middleware?: ((de: DEvent) => any)[] | [],
+         extras?: Record<string, (...args: any[]) => any>,
+        _middleware?: ((de: DEvent) => any) [],
         ) => {
         const middleware = getMiddlewares(_middleware);
         const behavior =Array.isArray(_behavior) ? getBehaviors(_behavior) :  getBehavior(_behavior);
@@ -288,12 +291,14 @@ export const createService = <T, REQ = Request, RES = Response, NEXT = NextFunct
             return (middleware && middleware.length > 0) ? {
                 [service_name]: {
                     service: routes,
-                    middleware
+                    middleware,
+                    dbEntity: entity
                 }
              } :
                 {
                     [service_name]: {
-                        service: routes
+                        service: routes,
+                        dbEntity: entity
                     }
                 };
         },

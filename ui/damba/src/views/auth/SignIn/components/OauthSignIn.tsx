@@ -22,7 +22,6 @@ const OauthSignIn = ({ setMessage, disableSubmit }: OauthSignInProps) => {
                     try {
                         const auth = await apiGoogleOauthSignIn(resp.code!) as AuthResponseDTO;
                         const { user, tokens } = auth;
-                        user.authority = user.authority?.map((r: any) => r.name);
                         // TODO: Remove this console log in production
                         console.log('Google OAuth response:', auth);
                         if (auth.tokens && user) {

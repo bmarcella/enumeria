@@ -1,61 +1,102 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { NextFunction, Request, Response, Router } from 'express';
 import { Http, IServiceComplete, IServiceProvider, toHttpEnum } from '../service/DambaService';
-import { ErrorMessage } from '../../../../common/error/error';
 import { AppConfig } from '../../config/app';
 
-const _routes = express.Router();
-export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFunction>): Router => {
+export type ExtrasMap = Record<string, (...args: any[]) => any>
 
-    for (const _ks in _SPS_) {
-        // tODO: remove this log
-        console.log(_ks);
-        const _isc = _SPS_[_ks as keyof typeof _SPS_] as IServiceComplete<Request, Response, NextFunction>;
-        const _ = _isc.service;
-        const _mw = _isc.middleware;
-        const _r = express.Router();
-        for (const _k in _) {
-            if (Object.prototype.hasOwnProperty.call(_, _k)) {
-                const _v = _[_k as keyof typeof _];
-                if (!_v) continue;
-                const setExtras = (req: Request, res: Response, next: NextFunction) => {
-                    const _vkeys = Object.keys(_v?.extras ?? {});
-                    const _rkeys = Object.keys(req?.extras ?? {});
-                    const _eKey = (_vkeys.length > 0 && _rkeys.length > 0) ? _vkeys.every(key => key in _rkeys) : false;
-                    if (_eKey) {
-                        const _sKeys = _vkeys.filter(key => !(key in _rkeys));
-                        return res.status(500).send({
-                            error: ErrorMessage.SAME_EXTRA_NAME,
-                            duplicateKeys: _sKeys
-                        })
-                    }
-                    req.extras = { ...req.extras, ..._v?.extras };
-                    next();
-                }
-                const _frs = _k.toString().split("@");
-                _v.method = toHttpEnum(_frs[0])!
-                const _path = _frs[1];
-                // tODO: remove this log
-                console.log(_v.method, ":", AppConfig.base_path + _ks + _path)
-                switch (_v?.method) {
-                    case Http.GET:
-                        !_v?.middleware ? _r.get(_path, setExtras, _v.behavior) : _r.get(_path, [..._v.middleware, setExtras], _v.behavior)
-                        break;
-                    case Http.POST:
-                        !_v?.middleware ? _r.post(_path, setExtras, _v.behavior) : _r.get(_path, [..._v.middleware, setExtras], _v.behavior)
-                        break;
-                    case Http.DELETE:
-                        !_v?.middleware ? _r.delete(_path, setExtras, _v.behavior) : _r.delete(_path, [..._v.middleware, setExtras], _v.behavior)
-                        break;
-                    case Http.PUT:
-                        !_v?.middleware ? _r.put(_path, setExtras, _v.behavior) : _r.put(_path, [..._v.middleware, setExtras], _v.behavior)
-                        break;
-                }
-            }
 
-        }
-        (_mw && _mw.length > 0) ? _routes.use(_ks, _mw, _r) : _routes.use(_ks, _r);
+const normalizePath = (p?: string) => {
+  if (!p || p === '/') return '/';
+  // strip leading slashes then re-add one
+  const clean = p.replace(/^\/+/, '');
+  return `/${clean}`;
+};
+
+const toArray = <T>(m?: T | T[]) => (Array.isArray(m) ? m : m ? [m] : []);
+
+const asyncWrap =
+  (fn: (req: Request, res: Response, next: NextFunction) => any) =>
+  (req: Request, res: Response, next: NextFunction) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
+
+const makeExtrasMiddleware = (extras : any, name: string, routeExtras?: any ) => {
+    const incoming =  routeExtras  ?? {};
+    const existing =  extras?.[name] ?? {}
+    // compute duplicate keys (intersection)
+   // const duplicates = Object.keys(incoming).filter((k) => k in existing);
+   return { ...extras ,
+        [name]:  {...existing, ...incoming } };
+}
+        
+
+/**
+ * Mounts the service provider into a router at:
+ *   `${AppConfig.base_path}${serviceMount}${routePath}`
+ */
+export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFunction>): { route: Router, extras: any}  => {
+  const root = express.Router();
+  let extras = {};
+  for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
+    // eslint-disable-next-line no-console
+    console.log('Mount service:', serviceMount);
+
+    const { service, middleware } = serviceComplete as IServiceComplete<Request, Response, NextFunction>;
+    const sub = express.Router();
+
+    for (const [key, value] of Object.entries(service)) {
+      if (!value) continue;
+
+      // Key like: "GET@/users" | "POST@users" | "PATCH@/users/:id"
+      const [rawMethod, rawPath] = String(key).split('@');
+      const method = toHttpEnum(rawMethod);
+      if (!method) {
+        // eslint-disable-next-line no-console
+        console.warn(`Unknown HTTP verb "${rawMethod}" for route key "${key}" — skipping.`);
+        continue;
+      }
+
+      const routePath = normalizePath(rawPath); // ensure leading slash
+      const name = serviceMount.replace("/", "").toLowerCase(); 
+
+      extras = makeExtrasMiddleware(extras, name, value.extras);
+
+      const mws = [...toArray(value.middleware)];
+      const handler = value?.behavior;
+
+      // eslint-disable-next-line no-console
+      console.log(method, ':', `${AppConfig.base_path}${serviceMount}${routePath}`);
+
+      switch (method) {
+        case Http.GET:
+          sub.get(routePath, ...mws, handler);
+          break;
+        case Http.POST:
+          sub.post(routePath, ...mws, handler);
+          break;
+        case Http.DELETE:
+          sub.delete(routePath, ...mws, handler);
+          break;
+        case Http.PUT:
+          sub.put(routePath, ...mws, handler);
+          break;
+        case Http.PATCH:
+          sub.patch(routePath, ...mws, handler);
+          break;
+        default:
+          // eslint-disable-next-line no-console
+          console.warn(`Unhandled HTTP method "${method}" for route key "${key}"`);
+      }
     }
 
-    return _routes;
-}
+    // mount service-level middlewares (array or single), then sub-router
+    const topLevel = toArray(middleware).map(asyncWrap);
+    if (topLevel.length) {
+      root.use(serviceMount, ...topLevel, sub);
+    } else {
+      root.use(serviceMount, sub);
+    }
+  }
 
+  return { route: root, extras };
+};

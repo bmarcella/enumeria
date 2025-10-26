@@ -60,10 +60,11 @@ const getTokenFromHeader = (req: any): string | null => {
     let token = req?.headers.Authorization?.split(' ')[1];
     if (!token) {
       token = req?.headers.authorization?.split(' ')[1];
-      if (!token) return null;
+      if (!token) return '';
     }
     return token;
   } catch (error) {
+     console.log(error);
     return null;
   }
 }
@@ -85,41 +86,50 @@ export const protect =  (roles: string[], public_key: string, jwt?: any, fronten
     try {
       const token = getTokenFromHeader(req);
 
-      if (!token) return res.status(401).send(ErrorMessage.NO_TOKEN);
+      if (!token) return res.sendStatus(402).send( { error: ErrorMessage.NO_TOKEN});
+
       req.token = token;
+
       const info = getTokenInfo(token); // info[0] = strategie, info[1] = token, info[2] = google token
-      if (info.length < 2) return res.status(401).send(ErrorMessage.INVALID_TOKEN);
-      // if no session user, the strategie is the first part of the token
-      // if session user, the strategie is the one saved in session
+    
+     
+      if (info.length < 2) return res.sendStatus(402).send({error : ErrorMessage.INVALID_TOKEN});
+      // // if no session user, the strategie is the first part of the token
+      // // if session user, the strategie is the one saved in session
       const strategie = (frontent_strategie == "localstorage" || !req.session.user?.loginStragtegy ) ?  info [0] :  req.session.user?.loginStragtegy;
 
-      if (!strategie) return res.status(401).send(ErrorMessage.LOGIN_STRATEGIE_NOT_FOUND);
+     
+      
+      if (!strategie) return res.sendStatus(404).send(ErrorMessage.LOGIN_STRATEGIE_NOT_FOUND);
       let payload = undefined;
 
-      if (strategie === 'local' || !strategie) {
-          payload = CheckTokenForDamba(jwt, info[1] , public_key).payload;
-          if (!payload) return res.status(401).send(ErrorMessage.INVALID_LOCAL_TOKEN);
-      }
+   
+       payload = CheckTokenForDamba(jwt, info[1] , public_key).payload;
+       if (!payload) return res.sendStatus(401).send(ErrorMessage.INVALID_LOCAL_TOKEN);
+   
+      
+
+      let gpayload = undefined;
 
       if (strategie && strategie === 'google' && info[2]) {
          const data =  await CheckTokenForGoogle(req, info[2]);
-         const gpayload = data.payload;
-         if (!gpayload) return res.status(401).send(ErrorMessage.INVALID_GOOGLE_TOKEN);
+             gpayload = data.payload;
+         if (!gpayload) return res.sendStatus(401).send(ErrorMessage.INVALID_GOOGLE_TOKEN);
       }
 
-      if (!payload) return res.status(401).send(ErrorMessage.INVALID_TOKEN);
-
-      if (roles && (!payload.authority || !roles.some(r => payload.authority.includes(r)))) {
-          return res.status(403).send(ErrorMessage.NOT_ATHORIZED);
+      if (roles.length==0) next()
+      if (payload.authority.length==0 || !roles.some(r => payload.authority.includes(r))) {
+          return res.sendStatus(401).send(ErrorMessage.NOT_ATHORIZED);
       }
       next();
     } catch (err: any) {
+       console.log(err);
       if (err instanceof jwt.TokenExpiredError) {
-        return res.status(403).send(ErrorMessage.TOKEN_EXPIRED);
+        return res.sendStatus(403).send(ErrorMessage.TOKEN_EXPIRED);
       } else if (err instanceof jwt.JsonWebTokenError) {
-        return res.status(401).send(ErrorMessage.INVALID_TOKEN);
+        return res.sendStatus(401).send(ErrorMessage.INVALID_TOKEN);
       } else {
-        return res.status(401).send(ErrorMessage.INTERNAL_SERVER_ERROR);
+        return res.sendStatus(401).send(ErrorMessage.INTERNAL_SERVER_ERROR);
       }
     }
   };
