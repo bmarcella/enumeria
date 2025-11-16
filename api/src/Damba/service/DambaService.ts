@@ -73,11 +73,26 @@ export class ServiceRegistry {
 
 export interface ServiceConfig {
     crud?: {
-        delete?: boolean,
-        post?: boolean,
-        get: boolean;
-        patch?: boolean,
-        put?: boolean,
+        delete?: {
+            active : boolean,
+            middlewares:  ((de: DEvent) => any)[] 
+        },
+        post?: {
+            active : boolean,
+            middlewares:  ((de: DEvent) => any)[] 
+        },
+        get: {
+            active : boolean,
+            middlewares:  ((de: DEvent) => any)[] 
+        };
+        patch?: {
+            active : boolean,
+            middlewares:  ((de: DEvent) => any)[] 
+        },
+        put?: {
+            active : boolean,
+            middlewares:  ((de: DEvent) => any)[] 
+        },
     }
 }
 
@@ -93,11 +108,26 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
         entity?: new (...args: any[]) => any,
         config: ServiceConfig = {
             crud: {
-                delete: true,
-                post: true,
-                get: true,
-                patch: true,
-                put: true,
+                delete: {
+                    active: true,
+                    middlewares: []
+                },
+                post: {
+                    active: true,
+                    middlewares: []
+                },
+                get: {
+                    active: true,
+                    middlewares: []
+                },
+                patch: {
+                    active: true,
+                    middlewares: []
+                },
+                put: {
+                    active: true,
+                    middlewares: []
+                },
             }
         },
     _fmiddleware?: ((de: DEvent) => any)[] | []) => {
@@ -210,7 +240,7 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
     const DPut = makeRoute('PUT')
 
     if (entity) {
-        if (config?.crud?.get)
+        if (config?.crud?.get.active)
             DGet("", async (e:DEvent) => {
                 const req = e.in as Request;
                 const res = e.out as Response;
@@ -218,8 +248,8 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                     entity, {}, true
                 );
                 return res.json(entities);
-            }, {})
-        if (config?.crud?.post)
+            }, {}, config?.crud?.get.middlewares)
+        if (config?.crud?.post?.active)
             DPost("", async (e:DEvent) =>                {
                 const req = e.in as Request;
                 const res = e.out as Response;
@@ -229,8 +259,9 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                     object
                 );
                 return res.json(entities);
-            }, {})
-        if (config?.crud?.patch)
+            }, {}, config?.crud?.post?.middlewares)
+
+        if (config?.crud?.patch?.active)
             DPatch("/:id", async (e:DEvent) => {
                 const req = e.in as Request;
                 const res = e.out as Response;
@@ -244,9 +275,9 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                     object,
                 );
                 return res.status(200).json(entities);
-            }, {})
+            }, {}, config?.crud?.patch?.middlewares)
 
-        if (config?.crud?.patch)
+        if (config?.crud?.patch?.active)
             DPut("/:id", async (e:DEvent) => {
                 const req = e.in as Request;
                 const res = e.out as Response; 
@@ -260,8 +291,9 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                     object,
                 );
                 return res.status(200).json(entities);
-            }, {})
-        if (config?.crud?.delete)
+            }, {}, config?.crud?.patch?.middlewares)
+
+        if (config?.crud?.delete?.active)
             DDelete("/:id", async (e:DEvent) => {
                 const req = e.in as Request;
                 const res = e.out as Response;
@@ -276,10 +308,44 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                     }
                 );
                 return res.json(entities);
-            }, {})
+            }, {}, config?.crud?.delete?.middlewares)
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const DSave = async (e: DEvent, obj: any): Promise<any> => {
+          try {
+            if (!entity) throw new Error('Entity class not provided to createBehaviors');
+            return await e.in.DRepository.DSave(entity, obj);
+          } catch (error) {
+            console.error('DSave failed:', error);
+            throw error;
+          }
+    };
+
+     const DFindOne = async (e: DEvent, where: any): Promise<any> => {
+          try {
+            if (!entity) throw new Error('Entity class not provided to createBehaviors');
+            return await e.in.DRepository.DGet(entity, where, false);
+          } catch (error) {
+            console.error('DSave failed:', error);
+            throw error;
+          }
+    };
+
+     const DFindAll = async (e: DEvent, where: any): Promise<any> => {
+          try {
+            if (!entity) throw new Error('Entity class not provided to createBehaviors');
+            return await e.in.DRepository.DGet(entity, where, true);
+          } catch (error) {
+            console.error('DSave failed:', error);
+            throw error;
+          }
+    };
+
     return {
+        DFindOne,
+        DFindAll,
+        DSave,
         DGet,
         DPost,
         DDelete,

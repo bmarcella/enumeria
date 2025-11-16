@@ -13,7 +13,6 @@ const OrganizationContext = createContext<OrgCtx | undefined>(undefined)
 type Props = {
   children: React.ReactNode
   fetchOrganizations: (id: string) => Promise<Organization[]>
-  /** If true, auto-select the single org returned (nice DX for single-tenant users) */
   autoSelectSingle?: boolean,
 }
 
@@ -46,9 +45,9 @@ export function OrganizationProvider({
       }
       setInitialized(true);
     }
-    if (user.id && user.id != undefined) init()
+    if (user.id && user.id != undefined) init();
     return () => { cancelled = true }
-  }, [setUser, setOrganizations, setOrganization, organizationId, fetchOrganizations, autoSelectSingle])
+  }, [user, setUser, setOrganizations, setOrganization, organizationId, fetchOrganizations, autoSelectSingle])
 
   // Hard gate: must be logged in to see anything under this provider (optional)
   if (!user?.id) {

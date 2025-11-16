@@ -10,6 +10,8 @@ export const AppSwitcher = () => {
   const app = useApplicationStore((s) => s.cApp)
   const { setApplication } = useApplicationActions()
 
+  
+ 
   const options: Option[] = useMemo(
     () => apps.map((app) => ({ value: app.id ?? app.name, label: app.name })),
     [apps],
@@ -21,7 +23,8 @@ export const AppSwitcher = () => {
   )
 
   if (options.length === 0) return <div className="opacity-60 text-xs">No applications available</div>
-  const changeApp = (appId: string) => {
+
+   const changeApp = (appId: string) => {
     if (!appId) return
 
     const cApp = apps.find((o) => o.id === appId)
@@ -29,8 +32,12 @@ export const AppSwitcher = () => {
 
     setApplication(cApp) // store expects an id string, not the full object
   }
-  return (
-    <div className="mr-4 mb-1">
+
+  
+
+  return (<>
+  
+     <div className="mr-4 mb-1">
       <span className="opacity-60 text-xs block mb-1">Application</span>
       {options.length > 1 ? (
         <Select
@@ -49,5 +56,7 @@ export const AppSwitcher = () => {
 
       )}
     </div>
+  </>
+ 
   )
 }

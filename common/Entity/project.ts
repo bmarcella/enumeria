@@ -1,6 +1,6 @@
 
-import { CanvasBox, VisibilityTypeClass } from "./CanvasBox";
-import { VisibilityTypeAttributes, RelationshipType } from "./CanvasBoxAtributes";
+import { CanvasBox, RelationshipType, VisibilityTypeAttributes, VisibilityTypeClass } from "./CanvasBox";
+import { DambaEnvironmentType } from "./env";
 import { TypeAttbutesTypeOrm } from "./TypeAttributesTypeOrm";
 
 
@@ -24,6 +24,7 @@ export type ProjectStatus =
 export type VisibilityScope = "private" | "internal" | "public";
 
 export interface BaseEntity {
+  created_by?: string;
   created_at?: Date; // Creation date
   updated_at?: Date; // Last updated date
   deleted_at?: Date; // Deletion date
@@ -168,18 +169,15 @@ export interface Application extends BaseEntity {
   id?: string;
   name: string;
   description?: string;
-  modules: AppModule[];
+  modules: AppModule[] | [];
   config?: Config<AppCanvasSetting>;
   type?: "web" | "mobile" | "api" | "cli" | "library";
   runtime?: string;
   language?: string;
   version?: string;
-
-  ownerId?: string;
-  contributors?: Contributor[];
-  dependencies?: string[];
-  environments?: Environments;
-  tags?: string[];
+  // contributors?: Contributor[];
+  // dependencies?: string[];
+  // tags?: string[];
 }
 
 /* -------------------------------- Project ------------------------------------------- */
@@ -207,7 +205,8 @@ export interface Project extends BaseEntity {
   dueDate?: string;   // ISO
 
   // Execution surface
-  environments?: Environments;
+  environments?:  DambaEnvironmentType[];
+  selectedEnv?: DambaEnvironmentType;
   repoUrls?: string[]; // monorepo + extra repos
   docsUrl?: string;    // main doc/home
   roadmapUrl?: string;
@@ -346,7 +345,8 @@ export interface SimpleOptionType {
 }
 
 
-export const FakeProject: Project[] = [{
+export const FakeProject: Project[] = [
+  {
   id: 'proj_hr',
   name: 'HR Platform',
   key: 'HR',
@@ -360,7 +360,7 @@ export const FakeProject: Project[] = [{
     { id: 'user_124', name: 'Bob Smith', role: 'Backend' }
   ],
   tags: ['internal', 'platform'],
-  environments: { dev: 'dev.hr.local', prod: 'hr.example.com' },
+  environments: [],
   repoUrls: ['https://github.com/acme/monorepo'],
   docsUrl: 'https://docs.example.com/projects/hr',
   issueTracker: { system: 'linear', projectKey: 'HR' },
@@ -380,18 +380,7 @@ export const FakeProject: Project[] = [{
       language: "typescript",
       runtime: "node18",
       version: "1.0.0",
-      ownerId: "user_123",
-      contributors: [
-        { id: "user_123", name: "Alice Johnson", role: "Lead Developer" },
-        { id: "user_124", name: "Bob Smith", role: "Backend Engineer" }
-      ],
-      dependencies: ["Payroll API"],
-      tags: ["HR", "internal", "monorepo"],
-      environments: {
-        dev: "https://dev.hr.example.com",
-        staging: "https://staging.hr.example.com",
-        prod: "https://hr.example.com"
-      },
+      created_by: "user_123",
       modules: [
         {
           id: "mod_01",

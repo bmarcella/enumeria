@@ -7,14 +7,14 @@ type ProjectState = {
   // scope
   userId?: string;
   orgId?: string;
-
   // data
   projects: Project[];
-
+  cProject?: Project;
   // selections
   projectId: string;
   applicationIds: string[];
   moduleIds: string[];
+  env: string
 };
 
 type ProjectActions = {
@@ -24,10 +24,15 @@ type ProjectActions = {
   /** Replace project list, reconciling persisted selections to remain valid. */
   setProjects: (projects: Project[]) => void;
 
+  addProject: (project: Project) => void;
+
   /** Cascading selections */
   setProject: (projectId: string) => void;
+  getCProject: () => Project | undefined;
   setApplications: (applicationIds: string[]) => void;
   setModules: (moduleIds: string[]) => void;
+  setEnv: (env:string) => void
+  
 
   /** Reset (keeps current scope) */
   reset: () => void;
@@ -44,6 +49,8 @@ const initial: ProjectState = {
   projectId: '',
   applicationIds: [],
   moduleIds: [],
+  cProject: undefined,
+  env: 'dev'
 };
 
 export const useProjectStore = create<ProjectState & ProjectActions>()(
@@ -85,10 +92,40 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
           set({ applicationIds: nextAppIds, moduleIds: nextModIds });
         },
 
-        setProject: (projectId) => set({ projectId, applicationIds: [], moduleIds: [] }),
+        addProject: (project) => {
+          const projects = get().projects;
+          projects.push(project);
+          set({ projects });
+          // Reconcile selections with new list
+          const { projectId, applicationIds, moduleIds } = get();
+
+          const proj = findProject(projects, projectId);
+          if (!proj) {
+            set({ projectId: '', applicationIds: [], moduleIds: [] });
+            return;
+          }
+
+          const validApps = (proj.applications ?? []).map(a => a.id ?? a.name);
+          const nextAppIds = applicationIds.filter(id => validApps.includes(id));
+
+          const validMods = nextAppIds
+            .flatMap(id => (proj.applications ?? []).find(a => (a.id ?? a.name) === id)?.modules ?? [])
+            .map(m => m.id ?? m.name);
+          const nextModIds = moduleIds.filter(id => validMods.includes(id));
+
+          set({ applicationIds: nextAppIds, moduleIds: nextModIds });
+        },
+
+        setProject: (projectId) => { 
+          const project  = get().projects.find((p)=> p.id==projectId)
+          set({ projectId, cProject: project, applicationIds: [], moduleIds: [] })
+        },
+        getCProject: () => { 
+          return get().cProject ;
+        },
         setApplications: (applicationIds) => set({ applicationIds, moduleIds: [] }),
         setModules: (moduleIds) => set({ moduleIds }),
-
+        setEnv: (env: string) => set({ env }),
         reset: () => set({ ...initial, userId: get().userId, orgId: get().orgId }),
 
         selectAllApplicationsForCurrentProject: () => {
@@ -115,6 +152,7 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
           projectId: s.projectId,
           applicationIds: s.applicationIds,
           moduleIds: s.moduleIds,
+          cProject: s.cProject
         }),
       }
     )
@@ -129,6 +167,7 @@ export const selectProjects = (s: ProjectState) => s.projects;
 export const selectProjectId = (s: ProjectState) => s.projectId;
 export const selectApplicationIds = (s: ProjectState) => s.applicationIds;
 export const selectModuleIds = (s: ProjectState) => s.moduleIds;
+export const selectCProject = (s: ProjectState) => s.cProject;
 
 export const selectSelectedProject = (s: ProjectState): Project | undefined =>
   findProject(s.projects, s.projectId);

@@ -1,5 +1,6 @@
 import { SessionUser } from '../../common/Entity/UserDto';
 import 'reflect-metadata';
+import 'tsconfig-paths/register';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -9,7 +10,6 @@ import express, {
 } from 'express';
 import session from 'express-session';
 import { DataSource } from 'typeorm';
-import { corsOptions } from '../../common/cors/index';
 import { AppDataSource } from '../../common/db/data-source';
 import { AppConfig } from './config/app';
 import { DBConfig } from './config/db';
@@ -20,7 +20,8 @@ import { Mail } from '../../common/mail';
 import { DambaRepository } from '../../common/mvc/CrudService';
 import { DambaServices } from './Damba/Index';
 import { ExtrasMap } from './Damba/service/DambaService';
-import { _SPS_ } from './services/Index';
+import { _SPS_ } from './services';
+import { corsConfig } from 'config/cors';
 dotenv.config();
 
 declare global {
@@ -56,20 +57,17 @@ declare module "express-session" {
 
 AppDataSource<DataSource, Array<any>>(DataSource, process.env, DBConfig.entities).then((DB: DataSource) => {
   const app: Express = express();
-  app.use(cors(corsOptions));
+  app.use(cors(corsConfig.corsOptions));
   // body-parser
   app.use(bodyParser.json(AppConfig.json));
   app.use(bodyParser.urlencoded(AppConfig.urlencoded));
   app.use(session(AppConfig.session));
-  const {route , extras } = DambaServices(_SPS_);
+  const {route , extras } = DambaServices(_SPS_, AppConfig);
   app.use(AppConfig.helper<DataSource>(DB, extras))
   app.use(AppConfig.base_path, route);
-  app.listen(AppConfig.port, () => {
-    console.log(`[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`);
-  });
+  app.listen(AppConfig.port, AppConfig.launch );
 
-})
-  .catch((error: any) => console.log(error));
+}).catch((error: any) => console.log(error));
 
 
 

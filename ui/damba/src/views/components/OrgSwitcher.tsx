@@ -23,7 +23,7 @@ export const OrgSwitcher = () => {
     const fallbackName =
       (user?.firstName && user?.lastName)
         ? `${user.firstName} ${user.lastName}`
-        : 'My Organization';
+        : 'Default Organization';
 
     setDefaultOrgName(fallbackName)
     return orgs!.map((org) => ({

@@ -16,11 +16,15 @@ export const useSelectedModules = () => {
 
 
 export function useProjectActions() {
+  const addProject = useProjectStore((s) => s.addProject)
+  const getCProject = useProjectStore((s) => s.getCProject)
   const setProject = useProjectStore((s) => s.setProject)
   const setApplications = useProjectStore((s) => s.setApplications)
   const setModules = useProjectStore((s) => s.setModules)
   const reset = useProjectStore((s) => s.reset)
   const selectAllApps = useProjectStore((s) => s.selectAllApplicationsForCurrentProject)
   const selectAllModules = useProjectStore((s) => s.selectAllModulesForSelectedApplications)
-  return { setProject, setApplications, setModules, reset, selectAllApps, selectAllModules }
+  const setEnv = useProjectStore((s) => s.setEnv)
+  const env = useProjectStore((s) => s.env)
+  return { setProject, setApplications, setModules, reset, selectAllApps, selectAllModules, getCProject, addProject, setEnv, env }
 }

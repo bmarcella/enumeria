@@ -1,5 +1,4 @@
-import { CanvasBox, VisibilityTypeClass } from "../../../../../common/Entity/CanvasBox";
-import { CanvasBoxAtributes, VisibilityTypeAttributes, RelationshipTypeEnum, RelationshipType } from "../../../../../common/Entity/CanvasBoxAtributes";
+import { CanvasBox, CanvasBoxAtributes, RelationshipType, RelationshipTypeEnum, VisibilityTypeAttributes, VisibilityTypeClass } from "../../../../../common/Entity/CanvasBox";
 import { TypeAttbutesTypeOrm } from "../../../../../common/Entity/TypeAttributesTypeOrm";
 import { DrawCallbacks, HitTest, PointerHandlers } from "./GenericCanvasEngine";
 
@@ -96,7 +95,7 @@ export const drawEntities: DrawCallbacks<EntityScene> = {
             ctx.fillRect(x, y, width, headerHeight)
 
             ctx.fillStyle = 'black';
-            const title = canvasBox.entityName+"_"+canvasBox.id;
+            const title = canvasBox.entityName;
             ctx.fillText(
                 lblClass(canvasBox.visibility ?? VisibilityTypeClass.IMPLEMENTATION, title ?? ''),
                 x + drawing.textPadding,

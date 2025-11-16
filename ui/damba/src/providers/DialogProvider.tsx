@@ -4,13 +4,14 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 type DialogContextProps = {
   setTitle: (title: string) => void
   setIsOpen: (isOpen: boolean) => void
-  configDialog: (config: DialogConfig) => void
+  configDialog: (config: DialogConfig) => void,
+  closeDialog: () => void
 }
 
 export type DialogConfig = {
-  title: string,
+  title?: string,
   isOpen: boolean,
-  children: ReactNode
+  children?: ReactNode
 }
 
 const DialogContext = createContext<DialogContextProps | undefined>(undefined)
@@ -26,15 +27,15 @@ export function DialogProvider({
   const [dialogChildren, setDialogChildren] = useState<ReactNode>("");
 
   const configDialog = (config: DialogConfig) => {
-    setTitle(config.title);
+    setTitle(config.title!);
     setIsOpen(config.isOpen)
-    setDialogChildren(config.children)
+    setDialogChildren(config.children!)
   }
   const closeDialog = () => {
     setIsOpen(false)
   }
 
-  return (<DialogContext.Provider value={{ setTitle, setIsOpen, configDialog }}>
+  return (<DialogContext.Provider value={{ setTitle, setIsOpen, configDialog, closeDialog }}>
     {children}
     <DambaDialog title={title}  isOpen={dialogIsOpen} close={closeDialog}>
       {dialogChildren}

@@ -59,6 +59,5 @@ export const convertToHTML = (text: string): string => {
 
     // Remove symbols
     html = html.replace(/[*#`-]/g, '');
-
     return html;
 };

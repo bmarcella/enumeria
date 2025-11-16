@@ -4,5 +4,14 @@
     "example": {
       "key": "values"
     }
+  },
+  "envs": {
+    "dev": "Development",
+    "qa": "Quality Assurance",
+    "staging": "Staging",
+    "prod": "Production"
+  },
+  "common" : {
+    "select": "Please select"
   }
 }

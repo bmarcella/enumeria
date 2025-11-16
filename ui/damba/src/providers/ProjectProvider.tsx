@@ -9,19 +9,17 @@ const ProjectContext = createContext<ProjCtx | undefined>(undefined)
 type Props = {
   children: React.ReactNode;
   /** Must return ONLY the projects for this user in this org */
-  fetchProjectsByUserAndOrg: (userId: string, orgId: string) => Promise<Project[]>;
+  fetchProjectsByUserAndOrg: (idProj: string, env: string) => Promise<Project[]>;
   /** Auto-select the single project (DX nice-to-have) */
   autoSelectSingle?: boolean;
-  byPassLogin: boolean
 };
 
 export function ProjectProvider({
   children,
   fetchProjectsByUserAndOrg,
-  autoSelectSingle = true,
-  byPassLogin
+  autoSelectSingle = true
 }: Props) {
-  const authUser = useSessionUser((s) => s.user);
+  const user = useSessionUser((s) => s.user);
   const org = useOrganizationStore(selectSelectedOrganization);
   const setScope = useProjectStore((s) => s.setScope);
   const setProjects = useProjectStore((s) => s.setProjects);
@@ -33,15 +31,14 @@ export function ProjectProvider({
   useEffect(() => {
     let cancelled = false;
     async function init() {
-      const userId = authUser?.id || "";
+      const userId = user?.id || "";
       const orgId = org?.id || "";
       setScope(userId, orgId);
 
-      if ((!userId || !orgId) && !byPassLogin) {
+      if ((!userId || !orgId)) {
         setProjects([]); // no org or user -> empty list
         return;
       }
-
       const projects = await fetchProjectsByUserAndOrg(userId, orgId);
       if (cancelled) return;
 
@@ -58,7 +55,7 @@ export function ProjectProvider({
     return () => {
       cancelled = true;
     };
-  }, [authUser?.id, org?.id, setScope, setProjects, projectId, setProject, fetchProjectsByUserAndOrg, autoSelectSingle]);
+  }, [user.id, org?.id, setScope, setProjects, projectId, setProject, fetchProjectsByUserAndOrg, autoSelectSingle]);
 
   return (<ProjectContext.Provider value={{ initProject }}>
     {children}

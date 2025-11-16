@@ -8,6 +8,7 @@ type AppState = {
   projectId?: string
   applications: Application[]
   applicationId: string,
+  env: string,
   cApp?: Application,
 }
 
@@ -16,6 +17,7 @@ type AppActions = {
   setApplications: (apps: Application[]) => void
   setApplicationById: (id: string) => void
   setApplication: (app: Application) => void
+  setEnv: (env:string) => void
   reset: () => void
 }
 
@@ -25,7 +27,8 @@ const initial: AppState = {
   projectId: undefined,
   applications: [],
   applicationId: '',
-  cApp: undefined
+  cApp: undefined,
+  env: 'dev'
 }
 
 export const useApplicationStore = create<AppState & AppActions>()(
@@ -33,7 +36,6 @@ export const useApplicationStore = create<AppState & AppActions>()(
     persist(
       (set, get) => ({
         ...initial,
-
         setScope: (userId, orgId, projectId) => {
           const changed =
             get().userId !== userId ||
@@ -52,6 +54,7 @@ export const useApplicationStore = create<AppState & AppActions>()(
         },
         setApplicationById: (applicationId) => set({ applicationId }),
         setApplication: (cApp) => set({ cApp }),
+        setEnv: (env: string) => set({ env }),
         reset: () => set({ ...initial, userId: get().userId, orgId: get().orgId, projectId: get().projectId }),
       }),
       {
@@ -61,7 +64,8 @@ export const useApplicationStore = create<AppState & AppActions>()(
           orgId: s.orgId,
           projectId: s.projectId,
           applicationId: s.applicationId,
-          cApp: s.cApp
+          cApp: s.cApp,
+          env: s.env
         }),
       },
     ),

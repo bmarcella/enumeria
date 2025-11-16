@@ -65,19 +65,19 @@ const getTokenFromHeader = (req: any): string | null => {
     return token;
   } catch (error) {
      console.log(error);
-    return null;
+     return null;
   }
 }
 
 const getTokenInfo = (token: string) : string [] => {
-   try {
-      return token.split('|');
+    try {
+       return token.split('|');
      } catch (error) {
       return []
    }
 }
 
-export const protect =  (roles: string[], public_key: string, jwt?: any, frontent_strategie = 'localstorage'  ) => {
+export const protect =  (roles: string[], public_key: string, jwt?: any, frontent_strategie = 'localstorage' ) => {
 
   return async (e: DEvent) => {
      const req = e.in;
@@ -138,7 +138,6 @@ export const protect =  (roles: string[], public_key: string, jwt?: any, fronten
 export const free = (public_key: string , jwt: any, ) => {
   return (e: DEvent) => {
     const req = e.in;
-    const res = e.out; 
     const next = e.go;
     try {
       let token = typeof req?.headers.Authorization === 'string' ? req.headers.Authorization.split(' ')[1] : undefined;
@@ -160,9 +159,7 @@ export const getPayload = (jwt: any, token: string, PK: string): JwtPayload | an
   return jwt.verify(token, PK);
 }
 
-
-
-export const GenTokenJwt = (jwt: any, payload: any, PK: string, ex: string = ( 3600*24*31).toString()): string => {
+export const GenTokenJwt = (jwt: any, payload: any, PK: string, ex: string = ( 3600*24*31).toString() ): string => {
   return jwt.sign(payload, PK, { expiresIn: ex });
 }
 

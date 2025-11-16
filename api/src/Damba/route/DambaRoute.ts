@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { NextFunction, Request, Response, Router } from 'express';
 import { Http, IServiceComplete, IServiceProvider, toHttpEnum } from '../service/DambaService';
-import { AppConfig } from '../../config/app';
+import { IAppConfig } from '@Damba/config/IAppConfig';
 
 export type ExtrasMap = Record<string, (...args: any[]) => any>
 
@@ -34,11 +34,12 @@ const makeExtrasMiddleware = (extras : any, name: string, routeExtras?: any ) =>
  * Mounts the service provider into a router at:
  *   `${AppConfig.base_path}${serviceMount}${routePath}`
  */
-export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFunction>): { route: Router, extras: any}  => {
+export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFunction>, AppConfig?: IAppConfig): { route: Router, extras: any}  => {
   const root = express.Router();
   let extras = {};
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
     // eslint-disable-next-line no-console
+    if(AppConfig?.logRoute)
     console.log('Mount service:', serviceMount);
 
     const { service, middleware } = serviceComplete as IServiceComplete<Request, Response, NextFunction>;
@@ -52,6 +53,7 @@ export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFuncti
       const method = toHttpEnum(rawMethod);
       if (!method) {
         // eslint-disable-next-line no-console
+        if(AppConfig?.logRoute)
         console.warn(`Unknown HTTP verb "${rawMethod}" for route key "${key}" — skipping.`);
         continue;
       }
@@ -65,7 +67,8 @@ export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFuncti
       const handler = value?.behavior;
 
       // eslint-disable-next-line no-console
-      console.log(method, ':', `${AppConfig.base_path}${serviceMount}${routePath}`);
+      if(AppConfig?.logRoute)
+      console.log(method, ':', `${AppConfig?.base_path}${serviceMount}${routePath}`);
 
       switch (method) {
         case Http.GET:
@@ -85,6 +88,7 @@ export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFuncti
           break;
         default:
           // eslint-disable-next-line no-console
+          if(AppConfig?.logRoute)
           console.warn(`Unhandled HTTP method "${method}" for route key "${key}"`);
       }
     }

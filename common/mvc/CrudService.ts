@@ -1,3 +1,4 @@
+import { where } from 'firebase/firestore';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -5,6 +6,9 @@ const Crud = {
   init: (DB: any, T: new (...args: any[]) => any, tree = false) => {
     const repo = DB.getRepository(T);
     return (!tree) ? new ORM<typeof T>(repo) : new ORMTREE<typeof T>(repo);
+  },
+  getRepository: (DB: any, T: new (...args: any[]) => any) => {
+    return DB.getRepository(T);
   }
 };
 
@@ -22,6 +26,9 @@ class ORM<T> {
   async count(pred?: any): Promise<Awaited<any>> {
     return (pred) ? this.repository.count(pred) : this.repository.count();
   }
+  async update(where: any, data: T): Promise<Awaited<T>> {
+    return this.repository.update(where, data);
+  }
 }
 
 class ORMTREE<T> {
@@ -38,6 +45,9 @@ class ORMTREE<T> {
   }
   async count(pred?: any): Promise<Awaited<any>> {
     return (pred) ? this.repository.count(pred) : this.repository.count();
+  }
+  async update(where: any, data: T): Promise<Awaited<T>> {
+    return this.repository.update(where, data);
   }
 }
 
@@ -59,12 +69,26 @@ export const DGet = (DB: any, T: new (...args: any[]) => any, preds?: any, all: 
   });
 };
 
+export const DCount = (DB: any, T: new (...args: any[]) => any, preds?: any ): Promise<any> => {
+  return new Promise<any>(async (resolve) => {
+    const crud = Crud.init(DB, T, false);
+    const statement = ((preds) ? crud.count(preds): crud.count())
+    resolve(statement);
+  });
+};
+
 export class DambaRepository<DS> {
   private DataSource: DS;
   public static _instance: DambaRepository<any>;
   private entity :  any;
+
   constructor(private ds: DS) {
     this.DataSource = ds;
+  }
+
+  public  QueryBuilder (T: new (...args: any[]) => any, name?: string) {
+     return (name) ? Crud.getRepository(this.DataSource, T).createQueryBuilder(name) : 
+     Crud.getRepository(this.DataSource, T).createQueryBuilder() ;
   }
 
   setEntity(T: any){
@@ -85,6 +109,23 @@ export class DambaRepository<DS> {
       resolve(statement);
     });
   };
+
+ public  DCount = ( T: new (...args: any[]) => any, preds?: any ): Promise<any> => {
+  return new Promise<any>(async (resolve) => {
+    const crud = Crud.init(this.DataSource, T, false);
+    const statement = ((preds) ? crud.count(preds): crud.count())
+    resolve(statement);
+  });
+};
+
+  public DUpdate = (T: new (...args: any[]) => any, where: any, data: InstanceType<typeof T>): Promise<typeof T> | unknown => {
+    return new Promise<typeof T>(async (resolve) => {
+      const crud = Crud.init(this.DataSource, T, false) as ORM<InstanceType<typeof T>> ;
+      const statement = await crud.update(where, data) as typeof T;
+      resolve(statement);
+    });
+  };
+
 
 
 
@@ -140,6 +181,26 @@ export class DambaRepository<DS> {
       resolve(statement);
     });
   };
+
+  async QBGetAll(T: new (...args: any[]) => any, name?: string, select?: any[], where?: { value: string , data : any }){
+    let QB = this.QueryBuilder(T, name);
+    if(select) {
+      QB = QB.select(select)
+    }
+    if(where) {
+      QB = QB.where(where.value, where.data)
+    }
+   return  await QB.getRawMany();
+  }
+
+   async QBUpdate(T: new (...args: any[]) => any, set: any,  where?: { value: string , data : any } ){
+    let QB = this.QueryBuilder(T).update().set(set);
+    if(where) {
+      QB = QB.where(where.value, where.data);
+    }
+   return  await QB.execute();
+  }
+
 
 
 }

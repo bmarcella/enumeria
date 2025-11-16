@@ -47,6 +47,8 @@ const SESSION_SAMESITE =
 export const AppConfig = {
   base_path: (process.env.BASE_PATH) ? process.env.BASE_PATH!.toString() : '/',
   port: process.env.PORT!.toString(),
+  logRoute: true,
+  version : 1, 
   json: {
     limit: '50mb',
     type: 'application/json' as const,
@@ -82,5 +84,8 @@ export const AppConfig = {
       req.oauth2Google = googleAuth.getAuth;
       next();
     }
+  },
+  launch: () => {
+    console.log(`[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`);
   }
 } as const;

@@ -1,0 +1,24 @@
+{
+  "name": "damba",
+  "version": "1.0.0",
+  "description": "CLI for generating service scaffolds",
+  "bin": {
+    "dam": "dist/cli.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts"
+  },
+  "keywords": ["cli", "scaffold", "services"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  }
+}

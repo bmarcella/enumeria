@@ -25,7 +25,7 @@ export class DambaGoogleAuth<A> {
     }
     return DambaGoogleAuth._instance as DambaGoogleAuth<T>;
   }
-
+  
   /** Returns the underlying auth instance */
   public get getAuth(): A {
     return this.auth;

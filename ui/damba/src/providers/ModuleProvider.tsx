@@ -3,7 +3,6 @@
 
 import { useModuleStore } from "@/stores/useModuleStore"
 import { useState, useEffect } from "react"
-import { AppModule } from "../../../../common/Entity/project"
 import { useSessionUser } from "@/stores/authStore"
 import { useApplicationStore } from "@/stores/useApplicationStore"
 import { selectSelectedOrganization, useOrganizationStore } from "@/stores/useOrganizationStore"
@@ -11,17 +10,13 @@ import { useProjectStore, selectSelectedProject } from "@/stores/useProjectStore
 
 type Props = {
   children: React.ReactNode
-  fetchModulesByApplication: ( AppId: string) => Promise<AppModule[]>
-  autoSelectSingle?: boolean,
-  byPassLogin: boolean
+  autoSelectSingle?: boolean
 }
 
 
 export function ModuleProvider({
   children,
-  fetchModulesByApplication,
-  autoSelectSingle = true,
-  byPassLogin
+  autoSelectSingle = true
 }: Props) {
 
   const user = useSessionUser((s) => s.user);
@@ -42,13 +37,8 @@ export function ModuleProvider({
       const orgId = org?.id
       const projectId = project?.id
       setScope(userId, orgId, projectId, cApp?.id)
-      if (!cApp?.id && !byPassLogin) {
-            setModules([])
-            setInitialized(true)
-            return
-         }
 
-      const mods = await fetchModulesByApplication(cApp?.id || "")
+      const mods = cApp?.modules || []
       if (cancelled) return
 
       setModules(mods)
@@ -60,7 +50,7 @@ export function ModuleProvider({
     }
     init()
     return () => { cancelled = true }
-  }, [user?.id, org?.id, project?.id, cApp, module, setScope, setModules, setModule, fetchModulesByApplication, autoSelectSingle])
+  }, [user?.id, org?.id, project?.id, cApp, module, setScope, setModules, setModule, autoSelectSingle])
 
   if (!initialized) return <div>Loading modules…</div>
   return <>{children}</>

@@ -30,4 +30,4 @@ export interface ChatMessage{
    message:  CodeText []; 
    state: AIState;
    type: AIType
-  }
+}
