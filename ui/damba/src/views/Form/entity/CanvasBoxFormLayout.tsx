@@ -29,7 +29,7 @@ export function Field({ label, children, errors }: FieldProps) {
   );
 }
 
-export function Section({ title, children }: { title: string; children: React.ReactNode, shadow?:boolean }) {
+export function Section({ title, children, shadow }: { title: string; children: React.ReactNode, shadow?:boolean }) {
   return (
     <Card className="shadow-sm rounded-2xl p-4 space-y-3 overflow-y-auto max-h-[570px]">
       <h5 className="text-lg font-semibold mb-2">{title}</h5>
