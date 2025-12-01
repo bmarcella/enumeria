@@ -1,17 +1,17 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createBehaviors, DEvent } from "@Damba/service/DambaService";
+import { createBehaviors, DEvent } from "@Damba/service/v1/DambaService";
 import { Project } from "../entities/Project";
-import { CheckIfOrgAndUserExist, GetCurrentOrg } from "../middlewares";
+import { CheckEnv, CheckIfOrgAndUserExist, GetCurrentOrg } from "../middlewares";
 import { AuthConfig } from '../../../config/auth';
 import { Application } from "services/Application/entities/Application";
 import { DambaEnvironmentType } from "../../../../../common/Entity/env";
 import { ProjectDto } from "../dtos/ProjectsDto";
+import { Modules } from "services/Modules/entities/Modules";
+import { AppServices } from "services/AppService/entities/AppServices";
+import { CurrentSetting } from "../../../../../common/Entity/UserDto";
+import { ErrorMessage } from "../../../../../common/error/error";
 
-// Type guard for DambaEnvironmentType
-const isDambaEnvironmentType = (value: any): value is DambaEnvironmentType => {
-    return Object.values(DambaEnvironmentType).includes(value);
-};
 
 const api = createBehaviors("/projects", Project, undefined, [
     AuthConfig.protect(['user'])
@@ -54,6 +54,7 @@ api.DGet("/:id_org/organization/:id_user/user", async (e: DEvent) => {
 
 // SAVE NEW PROJECT
 api.DPost("/:id_org/organization/:id_user/user", async (e: DEvent) => {
+    try {
     const { userId } = e.in.data;
     const form = e.in.body as ProjectDto;
     const  org =  await e.in.data.organization;
@@ -61,48 +62,54 @@ api.DPost("/:id_org/organization/:id_user/user", async (e: DEvent) => {
         name : form.name,
         description: form.description,
         environments: form.envs as DambaEnvironmentType[],
-        selectedEnv: form.envs[0],
         organization: org,
         created_by: userId,
     } as Project;
 
+    proj  =  await api.DSave(proj) as any; 
+    if(!proj) return e.out.status(500).send({message: ErrorMessage.INTERNAL_SERVER_ERROR});
+   
     // Save template App
-    const app = e.in.extras.applications.getAppTemplate(userId, proj.environments) as Application
-    proj.applications = [app];
-    proj  =  await e.in.DRepository.DSave(Project, proj) as any; 
-    e.in.extras.user.setCurrentProject(userId, proj.id, e);
-    return e.out.json(proj);
+    const app =  await e.in.extras.applications.saveAppTemplate(e, proj) as Application;
+    if(!app) return e.out.status(500).send({message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Application'}); 
+    const mod =  await e.in.extras.modules.saveModuleTemplate(e, app) as Modules;
+    if(!mod) return e.out.status(500).send({message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Module'}); 
+    const serv = await e.in.extras.services.saveServicesTemplate(e, mod) as AppServices;
+    if(!serv) return e.out.status(500).send({message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Service'}); 
+    proj  =  await api.DSave(proj) as any;
+
+    const setting : CurrentSetting = {
+        env: DambaEnvironmentType.DEV,
+        orgId: org.id,
+        projId: proj.id,
+        appId: app.id,
+        moduleId: mod.id,
+        servId: serv.id
+    }
+    e.in.extras.users.setCurrentSetting(e, userId, setting);
+    return e.out.json( { project: proj, setting } ); 
+    } catch (error) {
+        console.log(error);
+        return e.out.status(500).json( { message: ErrorMessage.INTERNAL_SERVER_ERROR, error } ); 
+    }
 }, 
  {
    
-} , 
+ } , 
   [CheckIfOrgAndUserExist, GetCurrentOrg ]
 );
 
-
-
-// SAVE NEW PROJECT
-api.DGet("/:id_proj/:new_env", async (e: DEvent) => {
-    const id = e.in.params.id_proj;
-    const env = e.in.params.new_env;
-
-    // Verify env is a valid DambaEnvironmentType
-    if (!isDambaEnvironmentType(env)) {
-        return e.out.status(400).json({ error: `Invalid environment: ${env}` });
-    }
-    // update selected env
-    let obj = await  api.DFindOne(e, {
-            where :{
-                id: id
-            }
-         });
+// UPDATE ENV OF PROJECTS
+api.DGet("/:id/:env", async (e: DEvent) => {
+    const env = e.in.params.env;
+    let obj = await  api.data().projects;
     obj.selectedEnv = env as DambaEnvironmentType;
-    obj = await api.DSave(e, obj);
+    obj = await api.DSave(obj);
     return e.out.json(obj);
-}, 
+ }, 
  {
 
-} , 
-  [ ]
+ } , 
+  [ api.middlewares.DCheckIfExist, CheckEnv]
 )
 export default api.done();

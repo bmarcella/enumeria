@@ -2,7 +2,7 @@
 
 import { AuthConfig } from "../../../config/auth";
 import { ErrorMessage } from "../../../../../common/error/error";
-import { createBehaviors, DEvent } from "../../../Damba/service/DambaService";
+import { createBehaviors, DEvent } from "../../../Damba/service/v1/DambaService";
 import { Organization } from "../entities/Organization";
 
 const api = createBehaviors("/organizations", Organization, undefined, [ AuthConfig.protect(['user'])]);

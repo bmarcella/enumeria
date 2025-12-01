@@ -1,5 +1,5 @@
 
-import { DEvent } from '../../api/src/Damba/service/DambaService';
+import { DEvent } from '../../api/src/Damba/service/v1/DambaService';
 import { ErrorMessage } from './../error/error';
 export const secretKeyCommon = '08V5J1vven';
 export interface JwtPayload {
@@ -85,30 +85,22 @@ export const protect =  (roles: string[], public_key: string, jwt?: any, fronten
      const next = e.go;
     try {
       const token = getTokenFromHeader(req);
-
       if (!token) return res.sendStatus(402).send( { error: ErrorMessage.NO_TOKEN});
-
       req.token = token;
-
       const info = getTokenInfo(token); // info[0] = strategie, info[1] = token, info[2] = google token
-    
-     
+  
       if (info.length < 2) return res.sendStatus(402).send({error : ErrorMessage.INVALID_TOKEN});
       // // if no session user, the strategie is the first part of the token
       // // if session user, the strategie is the one saved in session
       const strategie = (frontent_strategie == "localstorage" || !req.session.user?.loginStragtegy ) ?  info [0] :  req.session.user?.loginStragtegy;
-
-     
-      
+ 
       if (!strategie) return res.sendStatus(404).send(ErrorMessage.LOGIN_STRATEGIE_NOT_FOUND);
       let payload = undefined;
 
-   
        payload = CheckTokenForDamba(jwt, info[1] , public_key).payload;
        if (!payload) return res.sendStatus(401).send(ErrorMessage.INVALID_LOCAL_TOKEN);
    
-      
-
+       e.in.payload = payload;
       let gpayload = undefined;
 
       if (strategie && strategie === 'google' && info[2]) {
@@ -122,7 +114,7 @@ export const protect =  (roles: string[], public_key: string, jwt?: any, fronten
           return res.sendStatus(401).send(ErrorMessage.NOT_ATHORIZED);
       }
       next();
-    } catch (err: any) {
+     } catch (err: any) {
        console.log(err);
       if (err instanceof jwt.TokenExpiredError) {
         return res.sendStatus(403).send(ErrorMessage.TOKEN_EXPIRED);
@@ -146,7 +138,7 @@ export const free = (public_key: string , jwt: any, ) => {
       if (token) {
         const info = getTokenInfo(token); // info[0] = strategie, info[1] = token, info[2] = google token
         req.token = info[1];
-        req.payload = getPayload(jwt, token, public_key);
+        e.in.payload = getPayload(jwt, token, public_key);
       }
       next();
     } catch (err: any) {

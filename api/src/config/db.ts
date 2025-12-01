@@ -10,7 +10,10 @@ import { Project } from "../services/Projects/entities/Project";
 import { Invitation } from "../services/Invitations/entities/Invitation";
 import { Application } from "services/Application/entities/Application";
 import { Role } from "services/User/entities/Role";
+import { Modules } from "services/Modules/entities/Modules";
+import { AppServices } from "services/AppService/entities/AppServices";
+import { Entities } from "services/CanvasBox/entities/CanvasBox";
 
 export const DBConfig = {
-   entities:  [User, Role, ChatAi, MessageAi, Organization, OrgMember, OrgDomain, Contributor, Project, Application, Invitation],
+   entities:  [User, Role, ChatAi, MessageAi, Organization, OrgMember, OrgDomain, Contributor, Project, Application, Modules, AppServices, Entities, Invitation],
 }

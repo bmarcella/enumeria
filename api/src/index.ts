@@ -19,7 +19,7 @@ import OpenAI from 'openai';
 import { Mail } from '../../common/mail';
 import { DambaRepository } from '../../common/mvc/CrudService';
 import { DambaServices } from './Damba/Index';
-import { ExtrasMap } from './Damba/service/DambaService';
+import { ExtrasMap } from './Damba/service/v1/DambaService';
 import { _SPS_ } from './services';
 import { corsConfig } from 'config/cors';
 dotenv.config();
@@ -64,6 +64,7 @@ AppDataSource<DataSource, Array<any>>(DataSource, process.env, DBConfig.entities
   app.use(session(AppConfig.session));
   const {route , extras } = DambaServices(_SPS_, AppConfig);
   app.use(AppConfig.helper<DataSource>(DB, extras))
+  app.use(AppConfig.extras_path, AppConfig.extrasDoc(extras));
   app.use(AppConfig.base_path, route);
   app.listen(AppConfig.port, AppConfig.launch );
 

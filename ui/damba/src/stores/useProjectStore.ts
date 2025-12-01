@@ -14,7 +14,6 @@ type ProjectState = {
   projectId: string;
   applicationIds: string[];
   moduleIds: string[];
-  env: string
 };
 
 type ProjectActions = {
@@ -31,11 +30,11 @@ type ProjectActions = {
   getCProject: () => Project | undefined;
   setApplications: (applicationIds: string[]) => void;
   setModules: (moduleIds: string[]) => void;
-  setEnv: (env:string) => void
   
-
   /** Reset (keeps current scope) */
   reset: () => void;
+
+  updateProject: (project: Project) => void;
 
   /** Helpers */
   selectAllApplicationsForCurrentProject: () => void;
@@ -50,7 +49,6 @@ const initial: ProjectState = {
   applicationIds: [],
   moduleIds: [],
   cProject: undefined,
-  env: 'dev'
 };
 
 export const useProjectStore = create<ProjectState & ProjectActions>()(
@@ -58,6 +56,50 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
     persist(
       (set, get) => ({
         ...initial,
+
+       updateProject: (project) => {
+          const { projects, projectId, applicationIds, moduleIds } = get();
+        
+          // replace the project inside the list
+          const nextProjects = projects.map((p) =>
+              p.id === project.id
+              ? project
+              : p
+          );
+        
+          set({ projects: nextProjects });
+        
+          // if the updated project is the current project → update cProject
+          const isCurrent =  project.id  === projectId;
+        
+          if (isCurrent) {
+            set({ cProject: project });
+          }
+        
+          // ---- RECONCILE SELECTIONS ----
+          const proj = isCurrent ? project : findProject(nextProjects, projectId);
+        
+          // current project disappeared?
+          if (!proj) {
+            set({ projectId: '', applicationIds: [], moduleIds: [] });
+            return;
+          }
+        
+          // validate applications
+          const validApps = (proj.applications ?? []).map(a => a.id ?? a.name);
+          const nextAppIds = applicationIds.filter(id => validApps.includes(id));
+        
+          // validate modules
+          const validMods = nextAppIds
+            .flatMap(id => (proj.applications ?? []).find(a => (a.id ?? a.name) === id)?.modules ?? [])
+            .map(m => m.id ?? m.name);
+          const nextModIds = moduleIds.filter(id => validMods.includes(id));
+          set({
+            applicationIds: nextAppIds,
+            moduleIds: nextModIds,
+          });
+        },
+
 
         setScope: (userId, orgId) => {
           const prev = { userId: get().userId, orgId: get().orgId };
@@ -125,7 +167,6 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
         },
         setApplications: (applicationIds) => set({ applicationIds, moduleIds: [] }),
         setModules: (moduleIds) => set({ moduleIds }),
-        setEnv: (env: string) => set({ env }),
         reset: () => set({ ...initial, userId: get().userId, orgId: get().orgId }),
 
         selectAllApplicationsForCurrentProject: () => {

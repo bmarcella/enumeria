@@ -13,7 +13,7 @@ import {
 import { User } from '../../User/entities/User';
 import { Organization } from '../../Organization/entities/Organization';
 import { SessionUser } from '../../../../../common/Entity/UserDto';
-import { createBehaviors, DEvent } from '../../../Damba/service/DambaService';
+import { createBehaviors, DEvent } from '../../../Damba/service/v1/DambaService';
 import { GenTokenJwt } from '../../../../../common/keycloak/AuthMiddleware';
 import { Role, RoleName } from 'services/User/entities/Role';
 const api = createBehaviors("/auth");
@@ -61,7 +61,7 @@ api.DPost("/google/exchange", async (e: DEvent) => {
       if (err) return res.status(500).json({ error: ErrorMessage.SESSION_ERROR });
 
       const auth = user.authority?.map(r => { return  r.name  });
-      const userDTO = { ...user, authority: auth, organizations: user.organizations, currentOrgId: user.currentOrgId }
+      const userDTO = { ...user, authority: auth, organizations: user.organizations, currentSetting: user.currentSetting  };
       req.session.user = req.extras?.auth.toSessionUser(user, 'google');
       const dToken = GenTokenJwt(jwt, userDTO, process.env.JWT_PUBLIC_KEY!);
       req.session.tokens = {
@@ -103,9 +103,7 @@ api.DPost("/google/exchange", async (e: DEvent) => {
         issuer: user.issuer!,
         loginStragtegy: strategy!,
         audience: user.audience!,
-        currentOrgId: user.currentOrgId ?? null,
-        currentProjId: user.currentProjId,
-        currentAppId: user.currentAppId,
+        currentSetting: user?.currentSetting ,
         disabled: user.disabled ?? false,
         // Extract role names safely (avoid circular refs)
         authority: Array.isArray(user.authority)
@@ -148,7 +146,8 @@ api.DPost("/google/exchange", async (e: DEvent) => {
       const new_org = await req.DRepository.DSave(Organization, {
         user: new_user,
       } as Organization) as Organization;
-      new_user.currentOrgId = new_org.id!;
+
+      new_user.currentSetting = { orgId : new_org.id! } ;
       new_user.organizations = [new_org];
       await req.DRepository.DSave(User, new_user) as User;
 

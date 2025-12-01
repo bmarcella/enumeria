@@ -1,20 +1,23 @@
+
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createBehaviors, DEvent } from "@Damba/service/DambaService";
+import { createBehaviors, DEvent } from "@Damba/service/v1/DambaService";
 import { ErrorMessage } from "../../../../../common/error/error";
-import { v4 as uuidv4 } from 'uuid';
-import { DambaAttributesTemplate, DambaEntityTemplate, DambaServiceTemplate, DambaModuleTemplate } from "../../../../../common/Entity/DambApp";
-import { DambaEnvironmentType } from "../../../../../common/Entity/env";
 import { Application } from "../entities/Application";
+import { Project } from "services/Projects/entities/Project";
 
-const api = createBehaviors("/applications");
+const api = createBehaviors("/applications", Application);
 
-api.DGet("/:id_project/project/:env/environnement", async (e: DEvent) => {
-    const id_project = e.in.params.id_project;
-    const env = e.in.params.env;
-    if (!id_project) return e.out.status(401).json({ error: ErrorMessage });
+api.DGet("/:id_projects/projects", async (e: DEvent) => {
+    const id_project = api.params()?.id_projects;
+    if (!id_project) return e.out.status(401).json({ error: ErrorMessage.INVALID_URL_PARAMS});
     const apps  =  await e.in.DRepository.DGet(Application, {
+        select: {
+            id: true,
+            name: true,
+            type_app: true
+        },
         where : {
            project: {
             id : id_project
@@ -25,62 +28,37 @@ api.DGet("/:id_project/project/:env/environnement", async (e: DEvent) => {
     return e.out.json(apps);
 }, 
  {
-  getAppTemplate : (owner : string, envs : DambaEnvironmentType[] ) => {
-          const date = new Date();
-
-  const createAttributes = () => ({
-    ...structuredClone(DambaAttributesTemplate),
-    id: uuidv4(),
-    created_at: date,
-    created_by: owner,
-  });
-
-  const createEntity = () => ({
-    ...structuredClone(DambaEntityTemplate),
-    id: uuidv4(),
-    created_at: date,
-    created_by: owner,
-    attributes: [createAttributes()],
-  });
-
-  const createService = () => ({
-    ...structuredClone(DambaServiceTemplate),
-    id: uuidv4(),
-    created_at: date,
-    created_by: owner,
-    canvasBoxes: [createEntity()],
-  });
-
-  const createModule = () => ({
-    ...structuredClone(DambaModuleTemplate),
-    id: uuidv4(),
-    created_at: date,
-    created_by: owner,
-    services: [createService()],
-  });
-
-  // Build environment-specific modules
-  const data: Record<DambaEnvironmentType, any> = {} as Record<DambaEnvironmentType, any>;
-
-  for (const env of envs) {
-    data[env] = createModule();
-  }
-
-  const app = {
-    name: 'Demo App',
-    host: 'localhost',
-    port: 8080,
-    version: 1,
-    created_by: owner,
-    secretKey: undefined,
-    type_app: 'api',
-    language: 'typescript',
-    runtime: 'node18',
-    data,
-  };
-
-  return app;
+   async saveAppTemplate (e: DEvent, proj:Project)  {
+    console.log(proj);
+    try {
+      let app = {
+        name: 'App_'+proj?.id?.substring(0,8),
+        host: 'localhost',
+        port: 8080,
+        version: 1,
+        created_by: proj.created_by,
+        secretKey: undefined,
+        type_app: 'api',
+        language: 'typescript',
+        runtime: 'node18',
+        project : proj,
+        orgId: proj.organization.id
+      };
+      app = await e.in.DRepository.DSave(Application, app);
+      console.log(app);
+      return app;
+    } catch (error) {
+      console.log(error);
     }
-})
+      
+  },
+  async save(app:Partial<Application>) {
+      return await api.DSave(app);
+  }
+});
+
+
+
+
 
 export default api.done();

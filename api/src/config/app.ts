@@ -14,6 +14,7 @@ import { Mail } from '../../../common/mail';
 import { DambaRepository } from '../../../common/mvc/CrudService';
 import { OAuth2Client } from 'google-auth-library';
 import { DambaGoogleAuth } from '../../../common/auth/DambaGoogleAuth';
+import { extrasToJSON } from '@Damba/Extras/v1';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ const SESSION_SAMESITE =
  * Express / body-parser / express-session config
  */
 export const AppConfig = {
+  extras_path: "/extras",
   base_path: (process.env.BASE_PATH) ? process.env.BASE_PATH!.toString() : '/',
   port: process.env.PORT!.toString(),
   logRoute: true,
@@ -76,6 +78,7 @@ export const AppConfig = {
       req.DRepository = DambaRepository.init(DB) as any;
       req.AI = new OpenAI({ apiKey: process.env.OPENAI_API_KEY!.toString() });
       req.mail = new Mail(nodemailer, process.env.SMTP_USER!.toString(), process.env!.toString());
+
       const googleAuth = DambaGoogleAuth.init<OAuth2Client>(OAuth2Client, {
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
@@ -87,5 +90,11 @@ export const AppConfig = {
   },
   launch: () => {
     console.log(`[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`);
+  },
+  extrasDoc: (extras: any)=>{
+     return (req: Request, res: Response) => {
+         res.send(extrasToJSON(extras));
+        
+     }
   }
 } as const;

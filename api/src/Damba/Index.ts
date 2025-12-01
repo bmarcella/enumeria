@@ -1,7 +1,7 @@
 
-import { IAppConfig } from "./config/IAppConfig";
-import { DambaRoute } from "./route/DambaRoute";
-import { IServiceProvider, ServiceRegistry } from "./service/DambaService";
+import { IAppConfig } from "./config/v1/IAppConfig";
+import { DambaRoute } from "./route/v1/DambaRoute";
+import { IServiceProvider, ServiceRegistry } from "./service/v1/DambaService";
 import { NextFunction, Request, Response } from "express";
 
 

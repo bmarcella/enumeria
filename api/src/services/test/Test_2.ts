@@ -1,4 +1,4 @@
-import { createBehaviors, DEvent } from "../../Damba/service/DambaService";
+import { createBehaviors, DEvent } from "../../Damba/service/v1/DambaService";
 import { Project } from "../Projects/entities/Project";
 
 const api = createBehaviors("/useExtra", Project);

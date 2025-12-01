@@ -1,8 +1,51 @@
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // behaviors barrel
-import { createBehaviors, DEvent } from '../../../Damba/service/DambaService';
-const api = createBehaviors('/services');
-api.DGet('/:idMod/module', async (e: DEvent) => {
+import { Modules } from 'services/Modules/entities/Modules';
+import { createBehaviors, DEvent } from '../../../Damba/service/v1/DambaService';
+import { AppServices } from '../entities/AppServices';
+import { Entities } from 'services/CanvasBox/entities/CanvasBox';
+import { CheckEnv } from 'services/Projects';
+
+const api = createBehaviors('/services', AppServices);
+
+api.DPost('/', async (e: DEvent) => {
+    const data = api.body;
+    const obj = e.in.extras.services.save(data);
     // yourcode here
-    return e.out.json();
-}, {})
+    return e.out.json(obj);
+}, {
+   async save (data: Partial<AppServices>){
+       return await api.DSave(data);
+   },
+   async saveServicesTemplate (e: DEvent, mod: Modules, name? : string)  {
+            try {
+                 const serv : AppServices = {
+                 name :  (name) ? name : "Services_"+mod?.id?.substring(0,4),
+                 orgId: mod.OrgId,
+                 projectId: mod.projectId,
+                 applicationId: mod.application?.id,
+                 module : mod,
+                 created_by: mod.created_by
+             };
+             return await e.in.DRepository.DSave(AppServices, serv);
+            } catch (error) {
+                console.log(error);
+            }
+  }
+});
+
+api.DGet("/:id/entity/:env/env", async (e: DEvent) => {
+    const servId = api.params()?.id;
+    const env = api.params()?.env;
+    const objs = await e.in.DRepository.DGet(Entities, {
+        where : {
+            env,
+            servId            
+        }
+    }, true);
+    e.out.send(objs);
+}, {
+},[api.middlewares.DCheckIfExist, CheckEnv]);
+
 export default api.done();

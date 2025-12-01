@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 
 import Button from "@/components/ui/Button"
@@ -8,19 +9,22 @@ import { HiPlusCircle } from "react-icons/hi"
 interface Props {
     children: ReactNode,
     title: string,
+    btnText?: string,
+    size?: any
 }
-const AddProject = ({ children, title }: Props) => {
+const AddProject = ({ children, title, btnText, size }: Props) => {
     const { configDialog } = useDialogContext()
     const ShowDialog = () => {
         configDialog({
             title: title,
             isOpen: true,
-            children
+            children,
+            size
         })
     }
     return (
-        <Button className="mr-2" icon={<HiPlusCircle />} onClick={ShowDialog}>
-            <span>Project</span>
+        <Button size="xs" className="mr-2" icon={<HiPlusCircle />} onClick={ShowDialog}>
+            { btnText &&<span> {btnText} </span>}
         </Button>
     )
 }

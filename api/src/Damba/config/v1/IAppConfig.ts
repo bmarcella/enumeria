@@ -30,6 +30,7 @@ interface UrlEncodedConfig {
 
 // --- Définition de l'interface principale --- //
 export interface IAppConfig {
+  extras_path: string,
   base_path: string;
   port: string;
   logRoute: boolean;
@@ -38,7 +39,7 @@ export interface IAppConfig {
   json: JsonConfig;
   urlencoded: UrlEncodedConfig;
   session: SessionConfig;
-
   helper: <T>(DB: T, extras: any) => (req: Request, res: Response, next: NextFunction) => void;
   launch: () => void;
+  extrasDoc: (extras: any)=> any;
 }

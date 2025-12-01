@@ -1,6 +1,6 @@
 // damba/policies.ts
 
-import { DEvent } from "../service/DambaService";
+import { DEvent } from "../../service/v1/DambaService";
 
 /** A policy returns:
  *  - nothing / { ok: true }  → pass

@@ -21,9 +21,8 @@ export const ModuleSwitcher = () => {
   )
 
   if (options.length === 0) return <div className="opacity-60 text-xs">No Module available</div>
-  const changeModule = (Id: string) => {
+    const changeModule = (Id: string) => {
     if (!Id) return
-
     const mod = modules.find((o) => o.id === Id)
     if (!mod) return
     selectModule(mod) // store expects an id string, not the full object

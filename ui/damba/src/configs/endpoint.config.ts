@@ -1,4 +1,4 @@
-export const apiPrefix = '/api'
+export const apiPrefix = '/api/v1'
 
 const endpointConfig = {
     signIn: '/sign-in',
@@ -10,7 +10,11 @@ const endpointConfig = {
     // SERVICES
     organizations: '/organizations',
     projects: '/projects',
-    applications: '/applications'
+    entities: '/entities',
+    applications: '/applications',
+    users: '/users',
+    modules: '/modules',
+    services: '/services',
 }
 
 export default endpointConfig

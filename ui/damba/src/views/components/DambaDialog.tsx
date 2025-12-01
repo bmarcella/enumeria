@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect, useState } from 'react'
 import Dialog from '@/components/ui/Dialog'
@@ -5,10 +6,11 @@ import type {  ReactNode } from 'react'
 interface Props {
     title: string,
     children: ReactNode;
-    isOpen: boolean
+    isOpen: boolean,
+    size: any
     close: () => void
 }
-const DambaDialog = ({ title, children, isOpen = false, close }: Props) => {
+const DambaDialog = ({ title, children, isOpen = false, close, size }: Props) => {
     const [dialogIsOpen, setIsOpen] = useState(isOpen);
 
     useEffect(() => {
@@ -25,6 +27,8 @@ const DambaDialog = ({ title, children, isOpen = false, close }: Props) => {
     return (
         <div>
             <Dialog
+                width={size?.width}
+                height={size?.height}
                 isOpen={dialogIsOpen}
                 bodyOpenClassName="overflow-hidden"
                 onClose={onDialogClose}

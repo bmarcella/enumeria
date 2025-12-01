@@ -24,7 +24,7 @@ export function useProjectActions() {
   const reset = useProjectStore((s) => s.reset)
   const selectAllApps = useProjectStore((s) => s.selectAllApplicationsForCurrentProject)
   const selectAllModules = useProjectStore((s) => s.selectAllModulesForSelectedApplications)
-  const setEnv = useProjectStore((s) => s.setEnv)
-  const env = useProjectStore((s) => s.env)
-  return { setProject, setApplications, setModules, reset, selectAllApps, selectAllModules, getCProject, addProject, setEnv, env }
+  const cProject = useProjectStore((s) => s.cProject);
+  const updateProject = useProjectStore((s) => s.updateProject);
+  return { setProject, setApplications, setModules, reset, selectAllApps, selectAllModules, getCProject, addProject, cProject, updateProject }
 }

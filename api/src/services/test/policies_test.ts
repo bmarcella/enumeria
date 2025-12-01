@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { applyPolicies, policyMiddleware } from "@Damba/policies";
-import { createBehaviors, DEvent } from "@Damba/service/DambaService";
+import { applyPolicies, policyMiddleware } from "@Damba/policies/v1";
+import { createBehaviors, DEvent } from "@Damba/service/v1/DambaService";
 import { must_have_org_access, must_be_admin } from "../../policies";
 
 

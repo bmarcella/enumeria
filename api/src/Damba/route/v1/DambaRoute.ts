@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { NextFunction, Request, Response, Router } from 'express';
-import { Http, IServiceComplete, IServiceProvider, toHttpEnum } from '../service/DambaService';
-import { IAppConfig } from '@Damba/config/IAppConfig';
+import { Http, IServiceComplete, IServiceProvider, toHttpEnum } from '../../service/v1/DambaService';
+import { IAppConfig } from '@Damba/config/v1/IAppConfig';
 
 export type ExtrasMap = Record<string, (...args: any[]) => any>
 
@@ -40,9 +40,10 @@ export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFuncti
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
     // eslint-disable-next-line no-console
     if(AppConfig?.logRoute)
-    console.log('Mount service:', serviceMount);
+    console.debug('Mount service:', serviceMount);
 
     const { service, middleware } = serviceComplete as IServiceComplete<Request, Response, NextFunction>;
+    
     const sub = express.Router();
 
     for (const [key, value] of Object.entries(service)) {
@@ -51,6 +52,7 @@ export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFuncti
       // Key like: "GET@/users" | "POST@users" | "PATCH@/users/:id"
       const [rawMethod, rawPath] = String(key).split('@');
       const method = toHttpEnum(rawMethod);
+      
       if (!method) {
         // eslint-disable-next-line no-console
         if(AppConfig?.logRoute)
@@ -68,7 +70,7 @@ export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFuncti
 
       // eslint-disable-next-line no-console
       if(AppConfig?.logRoute)
-      console.log(method, ':', `${AppConfig?.base_path}${serviceMount}${routePath}`);
+      console.debug(method, ':', `${AppConfig?.base_path}${serviceMount}${routePath}`);
 
       switch (method) {
         case Http.GET:
@@ -96,7 +98,7 @@ export const DambaRoute = (_SPS_: IServiceProvider<Request, Response, NextFuncti
     // mount service-level middlewares (array or single), then sub-router
     const topLevel = toArray(middleware).map(asyncWrap);
     if (topLevel.length) {
-      root.use(serviceMount, ...topLevel, sub);
+        root.use(serviceMount, ...topLevel, sub);
     } else {
       root.use(serviceMount, sub);
     }

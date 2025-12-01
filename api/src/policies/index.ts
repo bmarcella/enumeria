@@ -1,7 +1,7 @@
 // policies/rules.ts
 
-import { Policy } from "@Damba/policies";
-import { DEvent } from "@Damba/service/DambaService";
+import { Policy } from "@Damba/policies/v1";
+import { DEvent } from "@Damba/service/v1/DambaService";
 
 export const must_have_org_access: Policy = async (e:DEvent) => {
   const orgId = e.in.payload?.orgId;

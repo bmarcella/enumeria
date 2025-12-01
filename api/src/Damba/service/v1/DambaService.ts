@@ -1,7 +1,11 @@
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, NextFunction } from 'express';
+import { defaultDMiddlewares } from './GenericMiddalware';
 export type ExtrasMap = Record<string,  Record<string, (...args: any[]) => any>>
 
 /** Adjust this to your repository expectations. If you use TypeORM, use EntityTarget from typeorm. */
@@ -72,6 +76,7 @@ export class ServiceRegistry {
 
 
 export interface ServiceConfig {
+    id_name: string,
     crud?: {
         delete?: {
             active : boolean,
@@ -101,13 +106,7 @@ export interface DEvent {
     out: Response;
     go: NextFunction;
 }
-
-
-export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFunction>
-    (name: string,
-        entity?: new (...args: any[]) => any,
-        config: ServiceConfig = {
-            crud: {
+export const DefaultDCrudValues = {
                 delete: {
                     active: true,
                     middlewares: []
@@ -118,7 +117,7 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                 },
                 get: {
                     active: true,
-                    middlewares: []
+                    middlewares: [],
                 },
                 patch: {
                     active: true,
@@ -128,11 +127,49 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                     active: true,
                     middlewares: []
                 },
-            }
+}
+
+export function firstCharToUppercase(text: string): string {
+  if (!text) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+const createSimpleName = (name: string)=>{
+  const hasSlash = name.includes('/');
+  if (!hasSlash) return name
+  const words = name.split('/');
+  const nWords =[]
+  let i = 0;
+  for(let j = 0; j < words.length ; j++){ 
+    const w = words[j];
+    if(i==0 && w =="" || w==undefined){
+       continue;
+    }
+    if(i==0 && w !="" || w!=undefined) {
+        nWords.push(w);
+        continue;
+    }
+    nWords.push(firstCharToUppercase(w));
+  }
+  return nWords.join("");
+}
+
+
+export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFunction>
+    (name: string,
+        entity?: new (...args: any[]) => any,
+        config: ServiceConfig = {
+            id_name: 'id',
+            crud: DefaultDCrudValues
         },
-    _fmiddleware?: ((de: DEvent) => any)[] | []) => {
-    const routes: Record<string, any> = {}
+    _fmiddleware?: ((de: DEvent) => any)[] ) => {
+    const routes: Record<string, any> = {};
+    name = name.trim();
     let service_name: string = name;
+    let dEvent: DEvent | null = null;
+    let DExtras: Record<string, (...args: any[]) => any> = {};
+    
+    const simple_service_name = createSimpleName(service_name);
 
     const DAction = <REQ, RES, NEXT>(
         path: string,
@@ -152,7 +189,6 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                         out: res,
                         go: next,
                     } as DEvent;
-
                     return _mw(de);
                 };
                 })
@@ -170,6 +206,7 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
                     out: res,
                     go: next,
                     } as DEvent;
+                    setDEvent(de);
                     return _mw(de);
                 };
                 })
@@ -177,13 +214,14 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
     
     }
 
-      const getBehavior  = (_middleware: (de: DEvent) => any) : any => {
+    const getBehavior  = (_middleware: (de: DEvent) => any) : any => {
             return (req: REQ, res: RES, next: NEXT) => {
                     const de = {
                     in: req,
                     out: res,
                     go: next,
                     } as DEvent;
+                    setDEvent(de);
                     return _middleware(de);
                 };
     
@@ -222,14 +260,19 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
      */
     const makeRoute = (method: string) => {
         return (
-        path: string,
+         _path: string,
         _behavior: ServiceFn [] | ServiceFn,
-         extras?: Record<string, (...args: any[]) => any>,
+         _extras?: Record<string, (...args: any[]) => any>,
         _middleware?: ((de: DEvent) => any) [],
+        _timeout?: 30
         ) => {
         const middleware = getMiddlewares(_middleware);
         const behavior =Array.isArray(_behavior) ? getBehaviors(_behavior) :  getBehavior(_behavior);
-        return DAction(buildPath(method, path), behavior, middleware, extras);
+        DExtras = {
+            ...DExtras,
+            ..._extras
+        }
+        return DAction(buildPath(method, _path), behavior, middleware, _extras);
         };
     };
 
@@ -312,7 +355,9 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const DSave = async (e: DEvent, obj: any): Promise<any> => {
+    const DSave = async ( obj: any): Promise<any> => {
+          if(!dEvent) return;
+          const e = dEvent;
           try {
             if (!entity) throw new Error('Entity class not provided to createBehaviors');
             return await e.in.DRepository.DSave(entity, obj);
@@ -322,7 +367,9 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
           }
     };
 
-     const DFindOne = async (e: DEvent, where: any): Promise<any> => {
+    const DFindOne = async ( where: any): Promise<any> => {
+         if(!dEvent) return;
+          const e = dEvent;
           try {
             if (!entity) throw new Error('Entity class not provided to createBehaviors');
             return await e.in.DRepository.DGet(entity, where, false);
@@ -332,9 +379,12 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
           }
     };
 
-     const DFindAll = async (e: DEvent, where: any): Promise<any> => {
+     const DFindAll = async (where: any): Promise<any> => {
+          if(!dEvent) return;
+          const e = dEvent;
           try {
             if (!entity) throw new Error('Entity class not provided to createBehaviors');
+            console.log(entity);
             return await e.in.DRepository.DGet(entity, where, true);
           } catch (error) {
             console.error('DSave failed:', error);
@@ -342,15 +392,73 @@ export const createBehaviors = <T, REQ = Request, RES = Response, NEXT = NextFun
           }
     };
 
+    const DFindOneById =  async () => {
+         if(!dEvent) return;
+        const e = dEvent;
+        let id = e.in.params['id_'+service_name];
+        if (!id) id = e.in.body['id_'+service_name];
+        if (!id) throw new Error('Entity class not provided to createBehaviors');
+        if (!entity) throw new Error('Entity class not provided to createBehaviors');
+        const projects =  await e.in.DRepository.DGet(entity, {
+        where : {
+            [config?.id_name ?? 'id']: id
+        }
+        }) as any; 
+      return projects
+    }
+
+    const QueryBuilder = (name: boolean= false) => {
+        if(!dEvent) return;
+        if (!entity) throw new Error('Entity class not provided to createBehaviors');
+        const e = dEvent;
+       return (name) ? e.in.DB.getRepository(entity).createQueryBuilder() :
+        e.in.DB.getRepository(entity).createQueryBuilder(simple_service_name);
+    }
+
+    const middlewares = defaultDMiddlewares(simple_service_name, config,  entity);
+
+    const setDEvent = (e: DEvent) =>{
+        dEvent = e;
+    }
+    // Optional getters
+   
+    const data = () => dEvent?.in.data;
+    const body = () => dEvent?.in.body;
+    const params = () => dEvent?.in.params;
+    const query = () => dEvent?.in.query;
+    //const extras = () => dEvent?.in.extras;
+    const DRepository = () => dEvent?.in.DRepository;
+    const Entity = typeof entity;
+
+    const setData = (new_data: any) => {
+        if(!dEvent) return;
+        dEvent.in.data  = {
+             ...dEvent.in.data,
+             ...new_data
+        }
+    }
     return {
+        [simple_service_name]: this,
+        Entity,
+        DRepository,
+        QueryBuilder,
+        setDEvent,
         DFindOne,
         DFindAll,
+        DFindOneById,
+        middlewares,
+        data,
+        setData,
+        body,
+        params,
         DSave,
         DGet,
         DPost,
         DDelete,
         DPatch,
         DPut,
+        query,
+        extras: DExtras,
         done: (): IServiceProvider<REQ, RES, NEXT> => {
             ServiceRegistry._init().populate(service_name, routes);
             const middleware = getMiddlewares(_fmiddleware);

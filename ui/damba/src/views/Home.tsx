@@ -8,28 +8,28 @@ import { useModuleActions } from "@/utils/hooks/useModule";
 import { EntityScene } from "./Canvas/entityScene";
 import { ModuleSwitcher } from "./components/ModuleSwitcher";
 import { useSessionUser } from "@/stores/authStore";
+import { useProjectActions } from "@/stores/useProjectSelectors";
+import ServiceView from "./components/ServiceView";
+import { ServiceProvider } from "@/providers/ServiceProvider";
+import { fetchServicesByModuleId } from "@/services/module";
 
 const Home = () => {
-
   const { setByPassLogin } = useAuth();
-  const { module } = useModuleActions();
-  const [scene, setScene] = useState<EntityScene>()
   const user = useSessionUser((state) => state.user);
+  const { cProject } = useProjectActions()
   useEffect(() => {
     setByPassLogin(true);
   }, []);
 
   
-  useEffect(() => {
-    setScene({ canvasBoxes: module?.services?.[0].canvasBoxes } as EntityScene)
-  }, [module?.services?.[0].canvasBoxes]);
+ 
 
   return (
     <main className="container">
       <ModuleSwitcher></ModuleSwitcher>
-      {scene &&
-        <JsonDiagram scene={scene}></JsonDiagram>
-      }
+      <ServiceProvider  fetchServicesByModuleId={fetchServicesByModuleId}>
+          <ServiceView />
+      </ServiceProvider>
     </main>
   )
 }

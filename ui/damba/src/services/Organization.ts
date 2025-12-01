@@ -14,16 +14,15 @@ export const fetchOrganizations = (id: string): Promise<Organization[]> => {
 
 
 export const fetchProject = (idUser: string, idOrg: string): Promise<Project[]> => {
-
    return ApiService.fetchDataWithAxios({
       url: `${endpointConfig.projects}/${idOrg}/organization/${idUser}/user`,
       method: 'get',
    })
 }
 
-export const fetchApplication = (idProj: string, env: string ): Promise<Application[]> => {
+export const fetchApplicationsByProjectId = (idProj: string ): Promise<Application[]> => {
    return ApiService.fetchDataWithAxios({
-      url: `${endpointConfig.applications}/${idProj}/project/${env}`,
+      url: `${endpointConfig.applications}/${idProj}/projects`,
       method: 'get',
    })
 }

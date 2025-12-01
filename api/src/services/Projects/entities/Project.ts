@@ -42,11 +42,4 @@ export class Project extends AppBaseEntity {
 })
 environments?: DambaEnvironmentType[];
 
-@Column({
-  type: 'enum',
-  enum: DambaEnvironmentType,
-  nullable: false,
-})
-selectedEnv?: DambaEnvironmentType;
-
 }

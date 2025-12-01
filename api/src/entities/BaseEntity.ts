@@ -4,6 +4,12 @@ export class AppBaseEntity  {
 
   @Column({ nullable: true })
   created_by?: string; // Creation date
+
+  @Column({ nullable: true })
+  updated_by?: string; // Creation date
+
+  @Column({ nullable: true })
+  deleted_by?: string; // Creation date
   
   @CreateDateColumn({ nullable: true })
   created_at?: Date; // Creation date

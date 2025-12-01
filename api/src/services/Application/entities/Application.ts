@@ -1,9 +1,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, BeforeInsert } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, BeforeInsert, OneToMany } from "typeorm"
 import { AppBaseEntity } from "../../../entities/BaseEntity"
 import { Project } from "../../Projects/entities/Project"
 import { randomBytes } from 'crypto';
+import { Modules } from "services/Modules/entities/Modules";
 type TypeApp = "web" | "mobile" | "api" | "cli" | "library";
 /** Project: child records of an Organization */
 @Entity('applications')
@@ -48,26 +49,11 @@ export class Application extends AppBaseEntity {
   @Column({ type: 'varchar', length: 160, default: 'localhost' })
   host?: string
 
-  @Column({ type: 'int', default: "8080" })
+  @Column({ type: 'int', default: 8080 })
   port?: number
 
   @Column({ type: 'text', nullable: true })
   description?: string | null
-
-  @Column({ type: 'jsonb', nullable: true })
-  data: any;
-
-  @Column({ type: 'jsonb', nullable: true })
-  extras?: any [];
-
-  @Column({ type: 'jsonb', nullable: true })
-  behaviors?: any [];
-
-  @Column({ type: 'jsonb', nullable: true })
-  entities?: any [];
-
-  @Column({ type: 'jsonb', nullable: true })
-  middlewares?: any [];
 
   @Column({ type: 'int', nullable: false , default: 1})
   version: number | undefined;
@@ -75,9 +61,13 @@ export class Application extends AppBaseEntity {
   @Column({ type: 'jsonb', nullable: true })
   configFile?: any;
 
-  @ManyToOne(() => Project, (o) => o.applications, { nullable: true })
+  @Column({ type: 'varchar', nullable: true })
+  orgId?: string;
+
+  @ManyToOne(() => Project, (o) => o.applications, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'projectId' })
   project?: Project;
+  
 
   @BeforeInsert()
   setDefaults() {
@@ -86,11 +76,14 @@ export class Application extends AppBaseEntity {
       this.secretKey = randomBytes(32).toString('hex');
     }
     if (!this.name) {
-       this.name = "App_"+randomBytes(12).toString('hex');
+         this.name = "App_"+randomBytes(12).toString('hex');
     }
     if (!this.type_app) {
        this.type_app = 'api';
     }
   }
+
+  @OneToMany(() => Modules, (m) => m.application, { cascade: true, nullable: true })
+  modules!: Modules[];
 
 }

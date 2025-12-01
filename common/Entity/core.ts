@@ -1,5 +1,5 @@
-import { VisibilityTypeAttributes } from './CanvasBoxAtributes';
-import { CanvasBox } from './CanvasBox';
+
+import { CanvasBox, VisibilityTypeAttributes } from './CanvasBox';
 
 export type DtoIO = 'input' | 'output';
 

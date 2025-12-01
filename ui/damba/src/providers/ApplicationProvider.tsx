@@ -8,10 +8,10 @@ import { Application } from '../../../../common/Entity/project'
 type Props = {
   children: React.ReactNode
   autoSelectSingle?: boolean,
-  fetchApplicationsByProjecAndEnv : (userId: string, orgId: string) => Promise<Application[]>
+  fetchApplicationsByProjectId : (id_project: string) => Promise<Application[]>
 }
 
-export function ApplicationProvider({ children, autoSelectSingle = true }: Props) {
+export function ApplicationProvider({ children, autoSelectSingle = true, fetchApplicationsByProjectId }: Props) {
   const user = useSessionUser((s) => s.user);
   const org = useOrganizationStore(selectSelectedOrganization)
   const setScope = useApplicationStore((s) => s.setScope)
@@ -25,13 +25,11 @@ export function ApplicationProvider({ children, autoSelectSingle = true }: Props
     let cancelled = false
     async function init() {
       setScope(user?.id, org?.id, project?.id)
-
-      const apps = project?.applications || [];
-      if (cancelled) return
-
-      setApplications(apps)
-
-      if (autoSelectSingle && apps.length === 1 && !cApp?.id) {
+      if(!project?.id) return;
+      if (cancelled ) return
+      const apps = await fetchApplicationsByProjectId(project?.id)
+      setApplications(apps);
+      if (autoSelectSingle && apps.length == 1 && !cApp?.id) {
         const a = apps[0]
         setApplication(a)
       }
@@ -41,7 +39,6 @@ export function ApplicationProvider({ children, autoSelectSingle = true }: Props
     return () => { cancelled = true }
   }, [user?.id, org?.id, project, cApp?.id, setScope, setApplications, setApplication, autoSelectSingle])
 
-  if (!initialized) return <div>Loading applications…</div>
 
   return <>{children}</>
 }

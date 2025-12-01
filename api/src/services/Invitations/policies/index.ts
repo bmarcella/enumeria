@@ -1,6 +1,6 @@
 // policies barrel
-import { applyPolicies } from "@Damba/policies";
-import { DEvent } from "@Damba/service/DambaService";
+import { applyPolicies } from "@Damba/policies/v1";
+import { DEvent } from "@Damba/service/v1/DambaService";
 
 // policies barrel
 export const defaultPolicy = async (e: DEvent) => {

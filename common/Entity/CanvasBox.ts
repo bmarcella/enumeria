@@ -2,6 +2,16 @@
 import { BaseEntity } from "./project";
 import { TypeAttbutesTypeOrm } from './TypeAttributesTypeOrm';
 
+
+export interface ICanvasBoxStyle {
+  fillColor: string;
+  strokeColor: string;
+  strokeWidth: number;
+  opacity: number;
+  borderRadius: number;
+  backgroundColor : string;
+}
+
 export interface Object extends BaseEntity {
   // canvas layout
   x?: number;
@@ -108,20 +118,19 @@ export enum RelationshipType {
 
 export const RelationshipTypeEnum = RelationshipType;
 
+export type CanvasBoxStatus =  'active' | 'archived';
+export type CanvasBoxORM =  'typeorm';
 
-export interface CanvasBox extends Object {
-  id: string;
-  entityName: string;
-  stereotype?: string;
+export enum CanvasBoxClassification {
+  PUBLIC = 'public',
+  INTERNAL = 'internal',
+  RESTRICTED = 'restricted',
+  CONFIDENTIAL = 'confidential',
+}
 
-  // ownership & lifecycle
-  ownerId?: string;
-  tags?: string[];
-  status?: 'draft' | 'active' | 'deprecated';
-
-
-
-  // persistence & mapping
+export interface CanvasBoxMapConfig {
+  
+   // persistence & mapping
   tableName?: string;
   schema?: string;
   namespace?: string;
@@ -131,37 +140,71 @@ export interface CanvasBox extends Object {
   versioned?: boolean;       // optimistic locking/version column
   uniqueConstraints?: string[][]; // [['email'], ['firstName','lastName']]
   indexes?: { name?: string; columns: string[]; unique?: boolean }[];
-
-  // security & validation
-  classification?: 'public' | 'internal' | 'restricted' | 'confidential';
-  rules?: Record<string, unknown>;
-
-  // codegen hints
-  orm?: 'typeorm' | 'prisma' | 'sequelize';
+  orm?: CanvasBoxORM;
   generateApi?: boolean;
   generateCrud?: boolean;
+}
 
-  // inheritance / composition
-  extendsId?: string;     // prefer id over object to avoid recursion
-  mixins?: string[];
-
-  // diagram
+export interface CanvasBoxDiagramConfig {
   visibility: VisibilityTypeClass;
   isAbstract?: boolean;
   isAuth?: boolean;
+    // (legacy login props—consider removing if these are entities, not app creds)
+  username?: string[];
+  password?: string;
   color?: string;
   icon?: string;
   locked?: boolean;
   selected?: boolean;
   zIndex?: number;
+}
+
+export enum EntityStereotype {
+  ENTITY = '<<entity>>',
+  MODEL = '<<model>>',
+  DTO = '<<dto>>',
+  schema = '<<schema>>',
+}
 
 
-  // fields
+export interface CanvasBox extends Object {
+  // ignore this field
+  id: string;
+  // dont ignore these fields
+  entityName: string;
+  stereotype?: EntityStereotype;
+  description?: string;
+  extendsId?: string;
+  classification?: CanvasBoxClassification;
+  // META
+
+  // ignore these fields
+  parentId?: string;
+
+  // ignore these fields
+  env?: string;
+  orgId?: string;
+  projId?: string;
+  appId?: string;
+  moduleId?: string;
+  servId?: string;
+
+  // dont ignore these fields
   attributes?: CanvasBoxAtributes[];
 
-  // (legacy login props—consider removing if these are entities, not app creds)
-  username?: string[];
-  password?: string;
+
+   // ignore these fields
+  status?: CanvasBoxStatus ;
+  mapConfig?: CanvasBoxMapConfig;
+  diagramConfig?: CanvasBoxDiagramConfig;
+
+  // security & validation
+
+  rules?: Record<string, unknown>;
+   // prefer id over object to avoid recursion
+  mixins?: string[];
+
+
 }
 
 export enum VisibilityTypeClass {
@@ -170,3 +213,5 @@ export enum VisibilityTypeClass {
   PROTECTED = "protected",
   IMPLEMENTATION = "implementation",
 }
+
+

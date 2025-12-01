@@ -1,22 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // providers/ModuleProvider.tsx
 // ...imports unchanged
 
 import { useModuleStore } from "@/stores/useModuleStore"
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useSessionUser } from "@/stores/authStore"
 import { useApplicationStore } from "@/stores/useApplicationStore"
 import { selectSelectedOrganization, useOrganizationStore } from "@/stores/useOrganizationStore"
-import { useProjectStore, selectSelectedProject } from "@/stores/useProjectStore"
+import { useProjectActions } from "@/stores/useProjectSelectors"
 
 type Props = {
   children: React.ReactNode
   autoSelectSingle?: boolean
+  fetchModulesByAppId: (id: string)=>Promise<any>
 }
 
 
 export function ModuleProvider({
   children,
-  autoSelectSingle = true
+  autoSelectSingle = true,
+  fetchModulesByAppId
 }: Props) {
 
   const user = useSessionUser((s) => s.user);
@@ -26,32 +29,26 @@ export function ModuleProvider({
   const setModule  = useModuleStore(s => s.setModule)
   const cApp = useApplicationStore((s) => s.cApp)
   const org = useOrganizationStore(selectSelectedOrganization);
-  const project = useProjectStore(selectSelectedProject)
-
-  const [initialized, setInitialized] = useState(false)
+  const { cProject } = useProjectActions();
 
   useEffect(() => {
     let cancelled = false
     async function init() {
       const userId = user?.id;
       const orgId = org?.id
-      const projectId = project?.id
-      setScope(userId, orgId, projectId, cApp?.id)
-
-      const mods = cApp?.modules || []
-      if (cancelled) return
-
+      const projectId = cProject?.id
+      setScope(userId, orgId, projectId, cApp?.id);
+      if(!cApp?.id) return;
+      const mods = await fetchModulesByAppId(cApp?.id);
+      if (cancelled) return;
       setModules(mods)
-
       if (autoSelectSingle && mods.length === 1 && !module) {
-        setModule(mods[0])   // <-- set object
+          setModule(mods[0])   // <-- set object
       }
-      setInitialized(true)
     }
     init()
     return () => { cancelled = true }
-  }, [user?.id, org?.id, project?.id, cApp, module, setScope, setModules, setModule, autoSelectSingle])
+  }, [user?.id, user?.currentSetting?.env, cApp?.id])
 
-  if (!initialized) return <div>Loading modules…</div>
   return <>{children}</>
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { AppBaseEntity } from "../../../entities/BaseEntity";
 import { Organization } from '../../Organization/entities/Organization';
@@ -8,6 +9,9 @@ import {
   Column
 } from 'typeorm';
 import { Role } from "./Role";
+import { CurrentSetting } from "../../../../../common/Entity/UserDto";
+
+
 
 @Entity({ name: 'users' })
 
@@ -51,19 +55,12 @@ export class User extends AppBaseEntity {
   @Column({ nullable: false, default: false })
   disabled?: boolean;
 
-  @Column({ type: 'varchar', nullable: true })
-  currentOrgId!: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  currentProjId!: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  currentAppId!: string;
+  @Column({ type: 'jsonb', nullable: true })
+  currentSetting?: CurrentSetting;
 
 
   @OneToMany(() => Organization, org => org.user)
   organizations?: Organization[];
-
-
-
 }

@@ -33,10 +33,10 @@ export function OrganizationProvider({
   useEffect(() => {
     let cancelled = false
     async function init() {
+      if (!user || !user.id) return
       setUser(user.id);
-      if (!user.id) return
-      const orgs = await fetchOrganizations(user?.id);
       if (cancelled) return;
+      const orgs = await fetchOrganizations(user?.id);
       setOrganizations(orgs)
       // Optional: auto-select the only org available
       if (autoSelectSingle && orgs.length === 1 && !organizationId) {
@@ -47,11 +47,12 @@ export function OrganizationProvider({
     }
     if (user.id && user.id != undefined) init();
     return () => { cancelled = true }
+
   }, [user, setUser, setOrganizations, setOrganization, organizationId, fetchOrganizations, autoSelectSingle])
 
   // Hard gate: must be logged in to see anything under this provider (optional)
   if (!user?.id) {
-    return <PreLoginLayout>{children}</PreLoginLayout>
+      return <PreLoginLayout>{children}</PreLoginLayout>
   }
 
   return (

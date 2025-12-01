@@ -1,5 +1,12 @@
 export type LoginStrategy = 'google' | 'damba' | 'github';
-
+export interface CurrentSetting {
+  orgId?: string,
+  projId? : string,
+  appId? : string,
+  moduleId? : string,
+  servId?: string,
+  env?: string
+}
 interface BaseUser {
   id?: string;
   googleSub?: string;
@@ -10,7 +17,6 @@ interface BaseUser {
   picture?: string | null;
   issuer?: string;
   audience?: string;
-
   archived?: boolean;
   disabled?: boolean;
   deleted_at?: string | null;
@@ -21,10 +27,7 @@ interface BaseUser {
   remove?: boolean;
   lock?: boolean;
   loginStragtegy?: LoginStrategy;
-
-  currentOrgId?: string;
-  currentProjId?: string;
-  currentAppId?: string;
+  currentSetting?: CurrentSetting;
 }
 export interface SessionUser extends BaseUser {
   authority?: string[];

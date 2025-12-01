@@ -4,6 +4,7 @@ import { DrawCallbacks, HitTest, PointerHandlers } from "./GenericCanvasEngine";
 
 
 export type EntityScene = { canvasBoxes: CanvasBox[]; selectedBoxId?: string | number, selectedBox?: CanvasBox  }
+
 export type Hit = { kind: 'box'; id: string | number } | { kind: 'scene' }
 
 export const DiagramConfig = {
@@ -97,7 +98,7 @@ export const drawEntities: DrawCallbacks<EntityScene> = {
             ctx.fillStyle = 'black';
             const title = canvasBox.entityName;
             ctx.fillText(
-                lblClass(canvasBox.visibility ?? VisibilityTypeClass.IMPLEMENTATION, title ?? ''),
+                lblClass(canvasBox.diagramConfig?.visibility ?? VisibilityTypeClass.IMPLEMENTATION, title ?? ''),
                 x + drawing.textPadding,
                 y + drawing.textBaseline
             )
