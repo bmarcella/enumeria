@@ -34,8 +34,8 @@ console.log(entities);
                 
            </>
         }
-        { entities.length==0 && 
-        <>
+        { !scene  && 
+        (<>
             <div className="flex items-center justify-center h-full w-full">
                     <div className="mr-4 mb-1">
                         <span className=" ml-1 text-xs">
@@ -43,13 +43,12 @@ console.log(entities);
                             size={ { width: width*0.90, height: height*0.90 } }
                             children={<AddEntityForm />}
                             title={'Add Entity'}
-                            btnText={'Create your first entity'}
+                            btnText={'Create your first entity 2'}
                         />
                         </span>
                     </div>
              </div>
-
-        </>
+        </>)
         }
     </>
   )

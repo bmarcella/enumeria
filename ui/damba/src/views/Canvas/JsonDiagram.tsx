@@ -195,7 +195,6 @@ export default function JsonDiagram({
           />
         </div>
       </div>
-
       {/* Context menu */}
       {menu.open && (
         <ul

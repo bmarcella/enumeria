@@ -12,6 +12,7 @@ import { useProjectActions } from "@/stores/useProjectSelectors";
 import ServiceView from "./components/ServiceView";
 import { ServiceProvider } from "@/providers/ServiceProvider";
 import { fetchServicesByModuleId } from "@/services/module";
+import SidebarDamba from "./components/Layout/SidebarDamba";
 
 const Home = () => {
   const { setByPassLogin } = useAuth();
@@ -25,12 +26,26 @@ const Home = () => {
  
 
   return (
-    <main className="container">
-      <ModuleSwitcher></ModuleSwitcher>
-      <ServiceProvider  fetchServicesByModuleId={fetchServicesByModuleId}>
-          <ServiceView />
-      </ServiceProvider>
-    </main>
+          <main className="w-full min-h-screen">
+            <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+              {/* Sidebar */}
+              <aside className="lg:sticky lg:top-0 lg:h-screen">
+                <SidebarDamba />
+              </aside>
+
+              {/* Content */}
+              <section className="min-w-0">
+                <div className="container mx-auto px-4">
+                  <ModuleSwitcher />
+
+                  <ServiceProvider fetchServicesByModuleId={fetchServicesByModuleId}>
+                    <ServiceView />
+                  </ServiceProvider>
+                </div>
+              </section>
+            </div>
+          </main>
+
   )
 }
 

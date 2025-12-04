@@ -20,7 +20,7 @@ export function ApplicationProvider({ children, autoSelectSingle = true, fetchAp
   const setApplication = useApplicationStore((s) => s.setApplication)
   const [initialized, setInitialized] = useState(false)
   const project = useProjectStore((s) => s.cProject)
-  
+
   useEffect(() => {
     let cancelled = false
     async function init() {
