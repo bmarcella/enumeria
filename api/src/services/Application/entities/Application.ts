@@ -19,6 +19,9 @@ export class Application extends AppBaseEntity {
   @Column({ type: 'varchar' , nullable: true })
   secretKey?: string;
 
+
+  @Column({ type: 'varchar' , nullable: false, default:"src" })
+  srcDir?: string;
  
   @Column({ type: 'jsonb', nullable: true })
   config?: any;

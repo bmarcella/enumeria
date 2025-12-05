@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AppBaseEntity } from "entities/BaseEntity";
 import { Column, Entity , PrimaryGeneratedColumn } from "typeorm";
 import { CanvasBoxAtributes, CanvasBoxClassification, CanvasBoxMapConfig, CanvasBoxStatus, EntityStereotype } from "../../../../../common/Entity/CanvasBox";
+import { DambaFullMeta } from "entities/BaseEntity";
 
 @Entity('entities')
-export class Entities extends AppBaseEntity {
+export class Entities extends DambaFullMeta {
 
   @PrimaryGeneratedColumn('uuid')
   id?: string;
@@ -34,23 +34,6 @@ export class Entities extends AppBaseEntity {
   @Column({ type: 'varchar', nullable: true })
   description?: string;
 
-
-  // META 
-  @Column({ type: 'varchar', nullable: false })
-  orgId?: string;
-
-  @Column({ type: 'varchar', nullable: false })
-  projId?: string;
-
-  @Column({ type: 'varchar', nullable: false })
-  appId?: string;
-
-  @Column({ type: 'varchar', nullable: false })
-  moduleId?: string;
-
-  @Column({ type: 'varchar', nullable: false })
-  servId?: string;
-  // END META
 
     // fields
   @Column({ type: 'jsonb', nullable: true })

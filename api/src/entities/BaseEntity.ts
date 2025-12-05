@@ -35,3 +35,32 @@ export class AppBaseEntity  {
   @Column({ default: false })
   archived?: boolean;
 }
+
+export class DambaFullMeta extends AppBaseEntity{
+
+      @Column({ type: 'varchar', nullable: false })
+      orgId?: string;
+    
+      @Column({ type: 'varchar', nullable: false })
+      projId?: string;
+
+      @Column({ type: 'varchar', nullable: false })
+      appId?: string;
+      
+      @Column({ type: 'varchar', nullable: false })
+      moduleId?: string;
+      
+      @Column({ type: 'varchar', nullable: false })
+      servId?: string;
+
+}
+
+export class DambaMeta extends AppBaseEntity{
+
+      @Column({ type: 'varchar', nullable: false })
+      orgId?: string;
+    
+      @Column({ type: 'varchar', nullable: false })
+      projId?: string;
+
+}
