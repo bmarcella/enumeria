@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { ErrorMessage } from "../../../error/error";
+import { DEvent } from "./DEvent";
 import { ServiceConfig } from "./ServiceConfig";
 
 interface PropsDefaultDMiddlewares {
@@ -13,8 +14,8 @@ export const defaultDMiddlewares = <REQ, RES, NEXT>(
   entity?: new (...args: any[]) => any
 ): PropsDefaultDMiddlewares => {
   return {
-    DCheckIfExist: async (e: any) => {
-      const name_id = config?.id_name ?? "id";
+    DCheckIfExist: async (e: DEvent) => {
+      const name_id = config?.id_name || "id";
       let id = e.in.params[name_id];
       if (!id) id = e.in.body?.[name_id];
 

@@ -18,7 +18,7 @@ type AuthState = {
 type AuthAction = {
     setSessionSignedIn: (payload: boolean) => void
     setUser: (payload: User) => void
-    setSetting: ()=>void
+    setSetting: () => void
 }
 
 const getPersistStorage = () => {
@@ -39,8 +39,8 @@ const initialState: AuthState = {
     },
     user: {
         email: '',
-        firstName:'',
-        lastName:'',
+        firstName: '',
+        lastName: '',
         id: '',
         picture: '',
         currentSetting: undefined,
@@ -66,10 +66,10 @@ export const useSessionUser = create<AuthState & AuthAction>()(
                         ...payload,
                     },
                 })),
-                setSetting: async()=>{
-                   const user = get().user;
-                   await changeSettingApi(user!.currentSetting!); 
-                }
+            setSetting: async () => {
+                const user = get().user;
+                await changeSettingApi(user!.currentSetting!);
+            }
         }),
         { name: 'sessionUser', storage: createJSONStorage(() => localStorage) },
     ),

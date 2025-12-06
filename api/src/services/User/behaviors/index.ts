@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { User } from '../entities/User';
 import { CurrentSetting } from '../../../../../common/Entity/UserDto';
 import { createService, DEvent } from '@App/damba.import';
 import { AuthConfig } from '@App/config/auth';
+import { User } from '../entities/User';
 
 const api = createService('/users', User, undefined,
     [
@@ -11,13 +11,15 @@ const api = createService('/users', User, undefined,
 );
 api.DPost('/currentSetting', async (e: DEvent) => {
     const data = api.body();
-    const id = e.in.payload?.id;
-    const conf = await e.in.extras.users.setCurrentSetting(e, id, data);
-    return e.out.json(conf);
+    console.log(data);
+    // const id = e.in.payload?.id;
+    // if (!id) return e.out.status(500).send({ message: ErrorMessage.NOT_FOUND });
+    // const conf = await api.extras.setCurrentSetting(e, id, data);
+    return e.out.json(data);
 }, {
-    setCurrentSetting: async (e: DEvent, idUser, data: CurrentSetting,) => {
-        await e.in.DRepository.DUpdate(User, {
-            id: idUser
+    setCurrentSetting: async (e: DEvent, id, data: CurrentSetting,) => {
+        return await e.in.DRepository.DUpdate(User, {
+            id
         }, {
             currentSetting: data
         })

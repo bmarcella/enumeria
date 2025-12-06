@@ -10,6 +10,7 @@ const api = createService("/applications", Application);
 
 api.DGet("/:id_projects/projects", async (e: DEvent) => {
   const id_project = api.params()?.id_projects;
+  console.log(id_project);
   if (!id_project) return e.out.status(401).json({ error: ErrorMessage.INVALID_URL_PARAMS });
   const apps = await e.in.DRepository.DGet(Application, {
     select: {
