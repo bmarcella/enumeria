@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm"
 import { AppBaseEntity } from "../../../entities/BaseEntity"
-import { Modules } from "services/Modules/entities/Modules";
+import { Modules } from "@App/services/Modules/entities/Modules";
 
 /** Project: child records of an Organization */
 @Entity('app_services')
@@ -12,7 +12,7 @@ export class AppServices extends AppBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id?: string
 
-  @Column({ type: 'varchar',  nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   name?: string;
 
   @Column({ type: 'varchar', nullable: true })
@@ -34,7 +34,7 @@ export class AppServices extends AppBaseEntity {
 
   @Column({ type: 'jsonb', nullable: true })
   crudConfig?: any;
-  
+
   //
   @Column({ type: 'text', nullable: true })
   description?: string | null

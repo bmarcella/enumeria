@@ -1,5 +1,6 @@
-import { applyPolicies } from "@Damba/policies/v1";
-import { DEvent } from "@Damba/service/v1/DambaService";
+import { DEvent } from "@App/damba.import";
+import { applyPolicies } from "@Damba/v1/policies";
+
 
 export const defaultPolicy = async (e: DEvent) => {
   await applyPolicies(e);

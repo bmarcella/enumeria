@@ -1,24 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createBehaviors, DEvent } from "../../Damba/service/v1/DambaService";
+import { createService, DEvent } from "@App/damba.import";
 import { Project } from "../Projects/entities/Project";
 
-const api = createBehaviors("/test", Project);
+const api = createService("/test", Project);
 
 
 
 api.DGet("/home", (e: DEvent) => {
     e.out.send(api.data());
 }, {
-    getName: ()=>{
+    getName: () => {
         return "Asgard"
     }
 })
 
 api.DGet("/id_projects", (e: DEvent) => {
-   console.log(e.in.extras)
-   e.out.send(e.in?.extras.canvasboxes.getCBName());
+    console.log(e.in.extras)
+    e.out.send(e.in?.extras.canvasboxes.getCBName());
 }, {
-    getName: ()=> {
+    getName: () => {
         return "Asgard"
     }
 })

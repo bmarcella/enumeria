@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Request, Response, NextFunction } from 'express';
-
 
 // --- Types externes personnalisés --- //
 interface SessionCookieConfig {
@@ -39,7 +37,7 @@ export interface IAppConfig {
   json: JsonConfig;
   urlencoded: UrlEncodedConfig;
   session: SessionConfig;
-  helper: <T>(DB: T, extras: any) => (req: Request, res: Response, next: NextFunction) => void;
+  helper: <T>(DB: T, extras: any) => (req: any, res: any, next: any) => void;
   launch: () => void;
-  extrasDoc: (extras: any)=> any;
+  extrasDoc: (extras: any) => any;
 }

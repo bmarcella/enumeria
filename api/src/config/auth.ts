@@ -1,11 +1,13 @@
-import  jwt  from 'jsonwebtoken';
-import { free, protect } from "../../../common/keycloak/AuthMiddleware";
+import { DEvent } from '@App/damba.import';
+import { free, protect } from '@Damba/v1/auth/AuthMiddleware';
+import jwt from 'jsonwebtoken';
+
 
 export const AuthConfig = {
-  protect:  (roles: string[]) => {
-    return  protect(roles,  process.env.JWT_PUBLIC_KEY!, jwt);
+  protect: (roles: string[]) => {
+    return protect<DEvent>(roles, process.env.JWT_PUBLIC_KEY!, jwt);
   },
   free: () => {
-    return free(process.env.JWT_PUBLIC_KEY!, jwt);
+    return free<DEvent>(process.env.JWT_PUBLIC_KEY!, jwt);
   }
 }

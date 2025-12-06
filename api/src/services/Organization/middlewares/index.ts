@@ -1,6 +1,5 @@
-import { DEvent } from "@Damba/service/v1/DambaService";
-
+import { DEvent } from "@App/damba.import";
 // middlewares barrel
-export const DefaultMiddleware  =  async (e: DEvent) => {
+export const DefaultMiddleware = async (e: DEvent) => {
     e.go();
 }

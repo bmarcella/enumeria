@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { User } from'../entities/User';
-import { createBehaviors, DEvent } from '../../../Damba/service/v1/DambaService';
+import { User } from '../entities/User';
 import { CurrentSetting } from '../../../../../common/Entity/UserDto';
-import { AuthConfig } from 'config/auth';
-const api = createBehaviors('/users', User, undefined, 
+import { createService, DEvent } from '@App/damba.import';
+import { AuthConfig } from '@App/config/auth';
+
+const api = createService('/users', User, undefined,
     [
         AuthConfig.protect(['user']),
     ]
@@ -14,11 +15,11 @@ api.DPost('/currentSetting', async (e: DEvent) => {
     const conf = await e.in.extras.users.setCurrentSetting(e, id, data);
     return e.out.json(conf);
 }, {
-     setCurrentSetting: async (e: DEvent, idUser, data: CurrentSetting, ) => {
-      await e.in.DRepository.DUpdate(User, {
+    setCurrentSetting: async (e: DEvent, idUser, data: CurrentSetting,) => {
+        await e.in.DRepository.DUpdate(User, {
             id: idUser
         }, {
-            currentSetting : data
+            currentSetting: data
         })
     }
 })

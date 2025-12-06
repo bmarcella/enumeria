@@ -51,7 +51,6 @@ export function extrasToJSON(registry: Record<string, any>) {
           : `[Function: ${name}(${params})]`;
       }
     }
-
     out[groupKey] = jsonGroup;
   }
 

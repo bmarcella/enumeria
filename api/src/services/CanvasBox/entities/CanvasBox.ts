@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Column, Entity , PrimaryGeneratedColumn } from "typeorm";
-import { CanvasBoxAtributes, CanvasBoxClassification, CanvasBoxMapConfig, CanvasBoxStatus, EntityStereotype } from "../../../../../common/Entity/CanvasBox";
-import { DambaFullMeta } from "entities/BaseEntity";
-
+import { DambaFullMeta } from "@App/entities/BaseEntity";
+import { CanvasBoxAtributes, CanvasBoxClassification, CanvasBoxDiagramConfig, CanvasBoxMapConfig, CanvasBoxStatus, EntityStereotype } from "@Common/Entity/CanvasBox";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 @Entity('entities')
 export class Entities extends DambaFullMeta {
 
@@ -11,13 +10,13 @@ export class Entities extends DambaFullMeta {
 
 
   // REQUIRED FIELD
-  @Column({ type: 'varchar',  nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   entityName!: string;
 
-  @Column({ type: 'enum', enum: EntityStereotype, nullable: false, default: EntityStereotype.ENTITY  })
+  @Column({ type: 'enum', enum: EntityStereotype, nullable: false, default: EntityStereotype.ENTITY })
   stereotype!: EntityStereotype;
 
-  @Column({ type: 'varchar',  nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   env?: string;
 
   @Column({
@@ -35,34 +34,28 @@ export class Entities extends DambaFullMeta {
   description?: string;
 
 
-    // fields
+  // fields
   @Column({ type: 'jsonb', nullable: true })
-  attributes?: CanvasBoxAtributes [];
+  attributes?: CanvasBoxAtributes[];
 
   @Column({ type: 'varchar', nullable: true })
   extendsId?: string;
 
-  @Column({ type: 'varchar', nullable: true , default: 'active' })
+  @Column({ type: 'varchar', nullable: true, default: 'active' })
   status?: CanvasBoxStatus;
 
 
   @Column({ type: 'jsonb', nullable: true })
   mapConfig?: CanvasBoxMapConfig[];
 
- @Column({ type: 'jsonb', nullable: true })
-  diagramConfig?: CanvasBoxMapConfig[];
+  @Column({ type: 'jsonb', nullable: true })
+  diagramConfig?: CanvasBoxDiagramConfig[];
 
-  
+  @Column({ type: 'jsonb', nullable: true })
+  rules?: Record<string, unknown>;
 
+  @Column({ type: 'jsonb', nullable: true })
+  mixins?: string[];
 
- @Column({ type: 'jsonb', nullable: true })
- rules?: Record<string, unknown>;
-
- @Column({ type: 'jsonb', nullable: true })
- mixins?: string[];
-
-  
-//   @Column({ type: 'jsonb', nullable: true })
-//   tags?: string[]; ADD TABLE ENTITYTAGS
 
 }

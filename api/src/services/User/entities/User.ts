@@ -9,12 +9,10 @@ import {
   Column
 } from 'typeorm';
 import { Role } from "./Role";
-import { CurrentSetting } from "../../../../../common/Entity/UserDto";
-
+import { CurrentSetting } from "@Common/Entity/UserDto";
 
 
 @Entity({ name: 'users' })
-
 export class User extends AppBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

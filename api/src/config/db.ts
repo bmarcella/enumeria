@@ -8,12 +8,16 @@ import { OrgDomain } from "../services/Organization/entities/OrgDomain";
 import { OrgMember } from "../services/Organization/entities/OrgMember";
 import { Project } from "../services/Projects/entities/Project";
 import { Invitation } from "../services/Invitations/entities/Invitation";
-import { Application } from "services/Application/entities/Application";
-import { Role } from "services/User/entities/Role";
-import { Modules } from "services/Modules/entities/Modules";
-import { AppServices } from "services/AppService/entities/AppServices";
-import { Entities } from "services/CanvasBox/entities/CanvasBox";
+import { Role } from "@App/services/User/entities/Role";
+import { Application } from "@App/services/Application/entities/Application";
+import { Modules } from "@App/services/Modules/entities/Modules";
+import { AppServices } from "@App/services/AppService/entities/AppServices";
+import { Entities } from "@App/services/CanvasBox/entities/CanvasBox";
+import { Behavior, CodeFile } from "@App/services/Behaviors/entities/Behaviors";
+import { Policy } from "@App/services/Behaviors/entities/Policy";
+import { Extra } from "@App/services/Behaviors/entities/Extra";
+import { Middleware } from "@App/services/Behaviors/entities/Middleware";
 
 export const DBConfig = {
-   entities:  [User, Role, ChatAi, MessageAi, Organization, OrgMember, OrgDomain, Contributor, Project, Application, Modules, AppServices, Entities, Invitation],
+   entities: [User, Role, ChatAi, MessageAi, Organization, OrgMember, OrgDomain, Contributor, Project, Application, Modules, AppServices, Behavior, Middleware, Policy, Extra, CodeFile, Entities, Invitation],
 }

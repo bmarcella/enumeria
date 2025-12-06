@@ -12,7 +12,8 @@ import {
     Request,
     Response,
 } from 'express';
-import { IServiceProvider } from "@Damba/service/v1/DambaService";
+import { IServiceProvider } from "@Damba/v1/service/IServiceDamba";
+
 
 export const _SPS_: IServiceProvider<Request, Response, NextFunction> = {
     ..._Org,
@@ -23,5 +24,5 @@ export const _SPS_: IServiceProvider<Request, Response, NextFunction> = {
     ..._Serv,
     ..._Box,
     ..._User,
-     ..._Test,
+    ..._Test,
 }

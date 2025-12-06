@@ -4,7 +4,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, BeforeIn
 import { AppBaseEntity } from "../../../entities/BaseEntity"
 import { Project } from "../../Projects/entities/Project"
 import { randomBytes } from 'crypto';
-import { Modules } from "services/Modules/entities/Modules";
+import { Modules } from "@App/services/Modules/entities/Modules";
 type TypeApp = "web" | "mobile" | "api" | "cli" | "library";
 /** Project: child records of an Organization */
 @Entity('applications')
@@ -13,16 +13,16 @@ export class Application extends AppBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id?: string
 
-  @Column({ type: 'varchar',  nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   name?: string;
 
-  @Column({ type: 'varchar' , nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   secretKey?: string;
 
 
-  @Column({ type: 'varchar' , nullable: false, default:"src" })
+  @Column({ type: 'varchar', nullable: false, default: "src" })
   srcDir?: string;
- 
+
   @Column({ type: 'jsonb', nullable: true })
   config?: any;
 
@@ -37,16 +37,16 @@ export class Application extends AppBaseEntity {
   @Column({ type: 'timestamp', nullable: true })
   lastUpdateParent?: Date;
 
-  @Column({ type: 'varchar' , default: "node18", nullable: false})
+  @Column({ type: 'varchar', default: "node18", nullable: false })
   runtime?: string;
 
-  @Column({ type: 'varchar', default: "typescript"})
+  @Column({ type: 'varchar', default: "typescript" })
   language?: string;
 
-  @Column({ type: 'varchar', default : "damba" })
+  @Column({ type: 'varchar', default: "damba" })
   framework?: string;
 
-  @Column({ type: 'varchar', nullable: true  })
+  @Column({ type: 'varchar', nullable: true })
   packageName?: string;
 
   @Column({ type: 'varchar', length: 160, default: 'localhost' })
@@ -58,7 +58,7 @@ export class Application extends AppBaseEntity {
   @Column({ type: 'text', nullable: true })
   description?: string | null
 
-  @Column({ type: 'int', nullable: false , default: 1})
+  @Column({ type: 'int', nullable: false, default: 1 })
   version: number | undefined;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -68,9 +68,9 @@ export class Application extends AppBaseEntity {
   orgId?: string;
 
   @ManyToOne(() => Project, (o) => o.applications, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'projectId' })
+  @JoinColumn({ name: 'appId' })
   project?: Project;
-  
+
 
   @BeforeInsert()
   setDefaults() {
@@ -79,10 +79,10 @@ export class Application extends AppBaseEntity {
       this.secretKey = randomBytes(32).toString('hex');
     }
     if (!this.name) {
-         this.name = "App_"+randomBytes(12).toString('hex');
+      this.name = "App_" + randomBytes(12).toString('hex');
     }
     if (!this.type_app) {
-       this.type_app = 'api';
+      this.type_app = 'api';
     }
   }
 

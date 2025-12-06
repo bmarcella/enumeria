@@ -16,14 +16,15 @@ import { DBConfig } from './config/db';
 import { OAuth2Client } from 'google-auth-library';
 import { JwtPayload } from 'jsonwebtoken';
 import OpenAI from 'openai';
-import { Mail } from '../../common/mail';
-import { DambaRepository } from '../../common/mvc/CrudService';
-import { DambaServices } from './Damba/Index';
-import { ExtrasMap } from './Damba/service/v1/DambaService';
+import { Mail } from '../../common/mail';;
 import { _SPS_ } from './services';
-import { corsConfig } from 'config/cors';
-dotenv.config();
+import { corsConfig } from './config/cors';
+import { DambaServices } from './damba.import';
+import { ExtrasMap } from '@Damba/v1/route/DambaRoute';
+import { DambaRepository } from '@Damba/v1/mvc/CrudService';
 
+//  
+dotenv.config();
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
@@ -62,11 +63,11 @@ AppDataSource<DataSource, Array<any>>(DataSource, process.env, DBConfig.entities
   app.use(bodyParser.json(AppConfig.json));
   app.use(bodyParser.urlencoded(AppConfig.urlencoded));
   app.use(session(AppConfig.session));
-  const {route , extras } = DambaServices(_SPS_, AppConfig);
+  const { route, extras } = DambaServices(_SPS_, AppConfig);
   app.use(AppConfig.helper<DataSource>(DB, extras))
   app.use(AppConfig.extras_path, AppConfig.extrasDoc(extras));
   app.use(AppConfig.base_path, route);
-  app.listen(AppConfig.port, AppConfig.launch );
+  app.listen(AppConfig.port, AppConfig.launch);
 
 }).catch((error: any) => console.log(error));
 

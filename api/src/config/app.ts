@@ -11,10 +11,11 @@ import nodemailer from 'nodemailer';
 
 import OpenAI from 'openai';
 import { Mail } from '../../../common/mail';
-import { DambaRepository } from '../../../common/mvc/CrudService';
 import { OAuth2Client } from 'google-auth-library';
-import { DambaGoogleAuth } from '../../../common/auth/DambaGoogleAuth';
-import { extrasToJSON } from '@Damba/Extras/v1';
+import { ExtrasMap } from '@Damba/v1/service/IServiceDamba';
+import { DambaRepository } from '@Damba/v1/mvc/CrudService';
+import { DambaGoogleAuth } from '@Damba/v1/auth/DambaGoogleAuth';
+import { extrasToJSON } from '@Damba/v1/Extras';
 
 dotenv.config();
 
@@ -50,7 +51,7 @@ export const AppConfig = {
   base_path: (process.env.BASE_PATH) ? process.env.BASE_PATH!.toString() : '/',
   port: process.env.PORT!.toString(),
   logRoute: true,
-  version : 1, 
+  version: 1,
   json: {
     limit: '50mb',
     type: 'application/json' as const,
@@ -71,14 +72,13 @@ export const AppConfig = {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   },
-  helper: <T>(DB: T, extras: any) => {
+  helper: <T>(DB: T, extras: ExtrasMap) => {
     return (req: Request, res: Response, next: NextFunction) => {
       req.extras = extras;
       req.DB = DB;
       req.DRepository = DambaRepository.init(DB) as any;
       req.AI = new OpenAI({ apiKey: process.env.OPENAI_API_KEY!.toString() });
       req.mail = new Mail(nodemailer, process.env.SMTP_USER!.toString(), process.env!.toString());
-
       const googleAuth = DambaGoogleAuth.init<OAuth2Client>(OAuth2Client, {
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
@@ -91,10 +91,9 @@ export const AppConfig = {
   launch: () => {
     console.log(`[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`);
   },
-  extrasDoc: (extras: any)=>{
-     return (req: Request, res: Response) => {
-         res.send(extrasToJSON(extras));
-        
-     }
+  extrasDoc: (extras: any) => {
+    return (res: Response) => {
+      res.send(extrasToJSON(extras));
+    }
   }
 } as const;

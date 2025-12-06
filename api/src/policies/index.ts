@@ -1,9 +1,7 @@
-// policies/rules.ts
+import { DEvent } from "@App/damba.import";
+import { Policy } from "@Damba/v1/policies";
 
-import { Policy } from "@Damba/policies/v1";
-import { DEvent } from "@Damba/service/v1/DambaService";
-
-export const must_have_org_access: Policy = async (e:DEvent) => {
+export const must_have_org_access: Policy = async (e: DEvent) => {
   const orgId = e.in.payload?.orgId;
   if (!orgId) return { ok: false, status: 403, code: "ORG_CONTEXT_MISSING", message: "Missing organization context" };
   return { ok: true };
