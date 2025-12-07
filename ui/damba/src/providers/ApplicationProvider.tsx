@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react'
 import { useOrganizationStore, selectSelectedOrganization } from '@/stores/useOrganizationStore'
 import { useApplicationStore } from '@/stores/useApplicationStore'

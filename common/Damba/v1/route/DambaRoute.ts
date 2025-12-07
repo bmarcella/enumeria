@@ -3,7 +3,7 @@
 
 import { IAppConfig } from "../config/IAppConfig";
 import { toHttpEnum } from "../service/DambaHelper";
-import { Http, IServiceComplete, IServiceProvider } from "../service/IServiceDamba";
+import { Http, IDActionConfig, IServiceComplete, IServiceProvider } from "../service/IServiceDamba";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export type ExtrasMap = Record<string, (...args: any[]) => any>
@@ -18,7 +18,7 @@ const normalizePath = (p?: string) => {
 
 const toArray = <T>(m?: T | T[]) => (Array.isArray(m) ? m : m ? [m] : []);
 
-const asyncWrap = (fn: <REQ, RES, NEXT> (req: REQ, res: RES, next: NEXT) => any) =>
+const asyncWrap = (fn: (req: any, res: any, next: any) => any) =>
   <REQ, RES, NEXT>(req: REQ, res: RES, next: NEXT) =>
     Promise.resolve(fn(req, res, next)).catch(next as any);
 
@@ -39,7 +39,7 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>({ root, sub }: any, _SPS_: IS
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
     // eslint-disable-next-line no-console
     if (AppConfig?.logRoute)
-      console.debug('Mount service:', serviceMount);
+       console.debug('Mount service:', serviceMount);
 
     const { service, middleware } = serviceComplete as IServiceComplete<REQ, RES, NEXT>;
 
@@ -61,9 +61,18 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>({ root, sub }: any, _SPS_: IS
       const name = serviceMount.replace("/", "").toLowerCase();
 
       extras = makeExtrasMiddleware(extras, name, value.extras);
-
+      const config  = (value as any)?.config as IDActionConfig;
+     
       const mws = [...toArray(value.middleware)];
+      if (config?.timeout) {
+         mws.push((req: REQ, res: RES, next: NEXT) => {
+                  (req as any).setTimeout(config.timeout);
+                  (res as any).setTimeout(config.timeout);
+                  (next as any)();
+         });
+      }
       const handler = value?.behavior;
+     
 
       // eslint-disable-next-line no-console
       if (AppConfig?.logRoute)
@@ -93,9 +102,7 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>({ root, sub }: any, _SPS_: IS
     }
 
     // mount service-level middlewares (array or single), then sub-router
-    const topLevel = toArray(middleware).map((fn: any) => {
-      return asyncWrap(fn)
-    });
+    const topLevel = toArray(middleware).map(asyncWrap);
     if (topLevel.length) {
       root.use(serviceMount, ...topLevel, sub);
     } else {

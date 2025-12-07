@@ -16,7 +16,7 @@ import { DBConfig } from './config/db';
 import { OAuth2Client } from 'google-auth-library';
 import { JwtPayload } from 'jsonwebtoken';
 import OpenAI from 'openai';
-import { Mail } from '../../common/mail';;
+import { Mail } from '../../common/mail';
 import { _SPS_ } from './services';
 import { corsConfig } from './config/cors';
 import { DambaServices } from './damba.import';
@@ -63,9 +63,10 @@ AppDataSource<DataSource, Array<any>>(DataSource, process.env, DBConfig.entities
   app.use(bodyParser.json(AppConfig.json));
   app.use(bodyParser.urlencoded(AppConfig.urlencoded));
   app.use(session(AppConfig.session));
-  const { route, extras } = DambaServices(_SPS_, AppConfig);
+  const { route, extras, doc } = DambaServices(_SPS_, AppConfig);
   app.use(AppConfig.helper<DataSource>(DB, extras))
   app.use(AppConfig.extras_path, AppConfig.extrasDoc(extras));
+  app.use(AppConfig.apiDoc_path, AppConfig.apiDoc(doc));
   app.use(AppConfig.base_path, route);
   app.listen(AppConfig.port, AppConfig.launch);
 

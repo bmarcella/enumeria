@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // canvas/anim.ts
 type ApiLike = {
   setPan: (x: number, y: number) => void
@@ -29,8 +30,6 @@ export function smoothZoomAndPanTo(
   if (!st) return
 
   const startScale = st.scale
-  const startPanX = st.panX
-  const startPanY = st.panY
   const vpW = st.width
   const vpH = st.height
 
@@ -44,7 +43,6 @@ export function smoothZoomAndPanTo(
     y: screenY - worldY * s,
   })
 
-  const endPan = panFor(targetScale, wx, wy, anchorX, anchorY)
 
   const start = performance.now()
   function frame(now: number) {

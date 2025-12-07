@@ -47,7 +47,8 @@ const SESSION_SAMESITE =
  * Express / body-parser / express-session config
  */
 export const AppConfig = {
-  extras_path: "/extras",
+  extras_path: "/damba/doc/extras",
+  apiDoc_path: "/damba/doc/api",
   base_path: (process.env.BASE_PATH) ? process.env.BASE_PATH!.toString() : '/',
   port: process.env.PORT!.toString(),
   logRoute: true,
@@ -92,8 +93,13 @@ export const AppConfig = {
     console.log(`[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`);
   },
   extrasDoc: (extras: any) => {
-    return (res: Response) => {
+    return (req: Request, res: Response) => {
       res.send(extrasToJSON(extras));
+    }
+  }
+  ,apiDoc: (doc: any) => {
+    return (req: Request, res: Response) => {
+          res.send(doc);
     }
   }
 } as const;

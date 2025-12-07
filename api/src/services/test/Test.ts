@@ -4,14 +4,17 @@ import { Project } from "../Projects/entities/Project";
 
 const api = createService("/test", Project);
 
-
-
 api.DGet("/home", (e: DEvent) => {
-    e.out.send(api.data());
+    e.out.send({
+        name: "home"
+    });
 }, {
     getName: () => {
         return "Asgard"
     }
+}, [], {
+    description: "Ceci est un test",
+    timeout: 300
 })
 
 api.DGet("/id_projects", (e: DEvent) => {

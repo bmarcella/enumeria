@@ -2,6 +2,11 @@
 import { RouteKey } from "./DambaHelper";
 import { DEvent } from "./DEvent";
 
+export interface IDActionConfig {
+  timeout?: number,
+  description?: string
+}
+
 export type ExtrasMap = Record<string, Record<string, (...args: any[]) => any>>
 // /** Adjust this to your repository expectations. If you use TypeORM, use EntityTarget from typeorm. */
 export type EntityCtor<T = any> = abstract new (...args: any[]) => T

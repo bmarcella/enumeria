@@ -8,8 +8,22 @@ import { DEvent as DambaEvent } from "@Damba/v1/service/DEvent";
 import { Request, Response, NextFunction, Router } from 'express';
 import { ServiceConfig } from '@Damba/v1/service/ServiceConfig';
 import express from 'express';
-// 
-export const createService = <T,>(
+import DambaApiDocNested from '@Damba/v1/route/DambaRouteDoc';
+
+
+
+export const DambaServices = (_SPS_: IServiceProvider<Request, Response, NextFunction>, AppConfig?: IAppConfig) => {
+  ServiceRegistry._init();
+  const root = express.Router();
+  const sub = express.Router();
+  const { route, extras } =  DambaRoute<Request, Response, NextFunction, Router>({ root, sub }, _SPS_, AppConfig);
+  const { doc } = DambaApiDocNested<Request, Response, NextFunction>(_SPS_, AppConfig);
+  return { route, extras, doc }; 
+}
+
+export type DEvent = DambaEvent<Request, Response, NextFunction>;
+
+export const createService = <T>(
   name: string,
   entity?: new (...args: any[]) => any,
   config?: ServiceConfig<Request, Response, NextFunction>,
@@ -22,12 +36,3 @@ export const createService = <T,>(
     fmiddleware
   );
 };
-
-export const DambaServices = (_SPS_: IServiceProvider<Request, Response, NextFunction>, AppConfig?: IAppConfig) => {
-  ServiceRegistry._init();
-  const root = express.Router();
-  const sub = express.Router();
-  return DambaRoute<Request, Response, NextFunction, Router>({ root, sub }, _SPS_, AppConfig);
-}
-
-export type DEvent = DambaEvent<Request, Response, NextFunction>;

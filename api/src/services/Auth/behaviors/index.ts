@@ -11,10 +11,11 @@ import {
 } from 'express';
 import { User } from '../../User/entities/User';
 import { Organization } from '../../Organization/entities/Organization';
-import { SessionUser } from '../../../../../common/Entity/UserDto';
+import { CurrentSetting, SessionUser } from '../../../../../common/Entity/UserDto';
 import { createService, DEvent } from '@App/damba.import';
 import { GenTokenJwt } from '@Damba/v1/auth/AuthMiddleware';
 import { Role, RoleName } from '@App/services/User/entities/Role';
+import { AuthConfig } from '@App/config/auth';
 
 const api = createService("/auth");
 
@@ -197,4 +198,22 @@ api.DGet("/refreshToken",
     }
   }
 );
+
+api.DPost('/meta', async (e: DEvent) => {
+       const data = e.in.body;
+       const id = e.in.payload?.id;
+       if (!id) return e.out.status(500).send({ message: ErrorMessage.NOT_FOUND, entity: "MetaConfig" });
+       const conf = await e.in.extras.auth.setCurrentSetting(e, id, data);
+       return e.out.json(conf);
+ }, {
+    setCurrentSetting: async (e: DEvent, id, data: any) => {
+        return await e.in.DRepository.DUpdate(User, {
+            id
+        }, {
+            currentSetting: data
+        })
+    }
+} , [
+    AuthConfig.protect(['user'])
+])
 export default api.done();

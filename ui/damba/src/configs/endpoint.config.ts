@@ -15,6 +15,7 @@ const endpointConfig = {
     users: '/users',
     modules: '/modules',
     services: '/services',
+    auth: '/auth',
 }
 
 export default endpointConfig

@@ -5,7 +5,7 @@
 import { createSimpleName } from './DambaHelper';
 import { DEvent } from './DEvent';
 import { defaultDMiddlewares } from './GenericMiddleware';
-import { IServiceProvider, ServiceFn } from './IServiceDamba';
+import { IDActionConfig, IServiceProvider, ServiceFn } from './IServiceDamba';
 import { DefaultDCrudValues, ServiceConfig } from './ServiceConfig';
 import { ServiceRegistry } from './ServiceRegistry';
 
@@ -14,6 +14,7 @@ export const createBehaviors = <T, REQ, RES, NEXT>
         entity?: new (...args: any[]) => any,
         config: ServiceConfig<REQ, RES, NEXT> = {
             id_name: 'id',
+            crud_path:'/damba',
             crud: DefaultDCrudValues
         },
         _fmiddleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[]) => {
@@ -29,9 +30,10 @@ export const createBehaviors = <T, REQ, RES, NEXT>
         path: string,
         behavior: ServiceFn<REQ, RES, NEXT>,
         middleware?: ((req: REQ, res: RES, next: NEXT) => any)[] | [],
-        extras?: Record<string, (...args: any[]) => any>
+        extras?: Record<string, (...args: any[]) => any>,
+        config?: IDActionConfig
     ) => {
-        routes[path] = { behavior, middleware, extras }
+        routes[path] = { behavior, middleware, extras, config }
     }
 
     const getMiddlewares = (_middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[] | []): any => {
@@ -118,7 +120,7 @@ export const createBehaviors = <T, REQ, RES, NEXT>
             _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
             _extras?: Record<string, (...args: any[]) => any>,
             _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-            _timeout?: number
+            _config?: IDActionConfig
         ) => {
             const middleware = getMiddlewares(_middleware);
             const behavior = Array.isArray(_behavior) ? getBehaviors(_behavior) : getBehavior(_behavior);
@@ -126,7 +128,7 @@ export const createBehaviors = <T, REQ, RES, NEXT>
                 ...DExtras,
                 ..._extras
             }
-            return DAction(buildPath(method, _path), behavior, middleware, _extras);
+            return DAction(buildPath(method, _path), behavior, middleware, _extras, _config);
         };
     };
 
@@ -142,21 +144,36 @@ export const createBehaviors = <T, REQ, RES, NEXT>
         const next = e.go as any;
         return { req, res, next }
     }
-
-    if (entity) {
+   
+    const runCrud = ()=>{
+    
         if (config?.crud?.get.active)
-            DGet("", async (e: DEvent<REQ, RES, NEXT>) => {
+            DGet(config?.crud_path+"", async (e: DEvent<REQ, RES, NEXT>) => {
                 const { res, req } = getContext<REQ, RES, NEXT>(e);
                 const entities = await req.DRepository.DGet(
                     entity, {}, true
-                );
+                ) as typeof entity [];
+                return res.send(entities);
+            }, {}, config?.crud?.get.middlewares);
+
+        if (config?.crud?.get.active)
+            DGet(config?.crud_path+"/:id", async (e: DEvent<REQ, RES, NEXT>) => {
+                const { res, req } = getContext<REQ, RES, NEXT>(e);
+                const id = req.params.id;
+                const entities = await req.DRepository.DGet(
+                    entity, {
+                        where : {
+                            [config?.id_name || 'id'] : id
+                        }
+                    }
+                ) as typeof entity;
                 return res.send(entities);
             }, {}, config?.crud?.get.middlewares);
 
         if (config?.crud?.post?.active)
-            DPost("", async (e: DEvent<REQ, RES, NEXT>) => {
+            DPost(config?.crud_path+"", async (e: DEvent<REQ, RES, NEXT>) => {
                 const { res, req } = getContext<REQ, RES, NEXT>(e);
-                const object = req.body as Partial<T>;
+                const object = req.body as Partial<typeof entity>;
                 const entities = await req.DRepository.DSave(
                     entity,
                     object
@@ -165,11 +182,11 @@ export const createBehaviors = <T, REQ, RES, NEXT>
             }, {}, config?.crud?.post?.middlewares)
 
         if (config?.crud?.patch?.active)
-            DPatch("/:id", async (e: DEvent<REQ, RES, NEXT>) => {
+            DPatch(config?.crud_path+"/:id", async (e: DEvent<REQ, RES, NEXT>) => {
 
                 const { res, req } = getContext<REQ, RES, NEXT>(e);
 
-                const object = req.body as Partial<T> & {
+                const object = req.body as Partial<typeof entity> & {
                     id: any
                 };
                 if (!req.params.id) res.status(404).send({});
@@ -177,14 +194,14 @@ export const createBehaviors = <T, REQ, RES, NEXT>
                 const entities = await req.DRepository.DSave(
                     entity,
                     object,
-                );
+                ) as typeof entity;
                 return res.status(200).json(entities);
             }, {}, config?.crud?.patch?.middlewares)
 
         if (config?.crud?.patch?.active)
-            DPut("/:id", async (e: DEvent<REQ, RES, NEXT>) => {
+            DPut(config?.crud_path+"/:id", async (e: DEvent<REQ, RES, NEXT>) => {
                 const { res, req } = getContext<REQ, RES, NEXT>(e);
-                const object = req.body as T & {
+                const object = req.body as typeof entity & {
                     id: any
                 };
                 if (!req.params.id) res.status(404).send({});
@@ -192,12 +209,12 @@ export const createBehaviors = <T, REQ, RES, NEXT>
                 const entities = await req.DRepository.DSave(
                     entity,
                     object,
-                );
+                ) as typeof entity;
                 return res.send(entities);
             }, {}, config?.crud?.patch?.middlewares)
 
         if (config?.crud?.delete?.active)
-            DDelete("/:id", async (e: DEvent<REQ, RES, NEXT>) => {
+              DDelete(config?.crud_path+"/:id", async (e: DEvent<REQ, RES, NEXT>) => {
                 const { res, req } = getContext<REQ, RES, NEXT>(e);
                 if (!req.params.id) res.status(404).send({});
                 const id = req.params.id;
@@ -319,6 +336,7 @@ export const createBehaviors = <T, REQ, RES, NEXT>
         query,
         extras: DExtras,
         done: (): IServiceProvider<REQ, RES, NEXT> => {
+           if (entity) { runCrud(); }
             ServiceRegistry._init().populate(service_name, routes);
             const middleware = getMiddlewares(_fmiddleware);
             return (middleware && middleware.length > 0) ? {
@@ -327,13 +345,13 @@ export const createBehaviors = <T, REQ, RES, NEXT>
                     middleware,
                     dbEntity: entity
                 }
-            } :
-                {
+             } :
+            {
                     [service_name]: {
                         service: routes,
                         dbEntity: entity
                     }
-                };
+            };
         },
     }
 }

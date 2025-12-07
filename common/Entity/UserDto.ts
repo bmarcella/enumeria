@@ -1,4 +1,5 @@
 export type LoginStrategy = 'google' | 'damba' | 'github';
+
 export interface CurrentSetting {
   orgId?: string,
   projId? : string,
@@ -7,6 +8,7 @@ export interface CurrentSetting {
   servId?: string,
   env?: string
 }
+
 interface BaseUser {
   id?: string;
   googleSub?: string;

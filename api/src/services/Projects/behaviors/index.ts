@@ -1,7 +1,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Project } from "../entities/Project";
-import { CheckEnv, CheckIfOrgAndUserExist, GetCurrentOrg } from "../middlewares";
+import { CheckIfOrgAndUserExist, GetCurrentOrg } from "../middlewares";
 import { AuthConfig } from '../../../config/auth';
 import { DambaEnvironmentType } from "../../../../../common/Entity/env";
 import { ProjectDto } from "../dtos/ProjectsDto";
@@ -100,16 +100,40 @@ api.DPost("/:id_org/organization/:id_user/user", async (e: DEvent) => {
 );
 
 // UPDATE ENV OF PROJECTS
-api.DGet("/:id/:env", async (e: DEvent) => {
-    const env = e.in.params.env;
-    let obj = await api.data().projects;
-    obj.selectedEnv = env as DambaEnvironmentType;
-    obj = await api.DSave(obj);
-    return e.out.json(obj);
-},
-    {
+// api.DGet("/:id/:env", async (e: DEvent) => {
+//     const env = e.in.params.env;
+//     let obj = await api.data().projects;
+//     obj.selectedEnv = env as DambaEnvironmentType;
+//     obj = await api.DSave(obj);
+//     return e.out.json(obj);
+// },
+//     {
 
+//     },
+//     [api.middlewares.DCheckIfExist, CheckEnv]
+// )
+
+api.DGet("/:id/applications", async (e: DEvent) => {
+  const id_project = api.params()?.id;
+  if (!id_project) return e.out.status(401).json({ error: ErrorMessage.INVALID_URL_PARAMS });
+  const apps = await e.in.DRepository.DGet(Application, {
+    select: {
+      id: true,
+      name: true,
+      type_app: true
     },
-    [api.middlewares.DCheckIfExist, CheckEnv]
-)
+    where: {
+      project: {
+        id: id_project
+      }
+    }
+  }, true) as any;
+
+  return e.out.json(apps);
+},
+  {
+    async save(app: Partial<Application>) {
+      return await api.DSave(app);
+    }
+  });
 export default api.done();

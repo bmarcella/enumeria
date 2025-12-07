@@ -4,6 +4,7 @@ import { DEvent } from "./DEvent";
 
 export interface ServiceConfig<REQ, RES , NEXT> {
     id_name: string,
+    crud_path: string,
     crud?: {
         delete?: {
             active : boolean,
