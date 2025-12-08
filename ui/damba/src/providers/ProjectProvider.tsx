@@ -9,7 +9,7 @@ const ProjectContext = createContext<ProjCtx | undefined>(undefined)
 type Props = {
   children: React.ReactNode;
   /** Must return ONLY the projects for this user in this org */
-  fetchProjectsByUserAndOrg: (idProj: string, env: string) => Promise<Project[]>;
+  fetchProjectsByUserAndOrg: (idProj: string, idOrg: string) => Promise<Project[]>;
   /** Auto-select the single project (DX nice-to-have) */
   autoSelectSingle?: boolean;
 };

@@ -1,7 +1,11 @@
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Column } from "typeorm";
+import {
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  Column
+} from "typeorm";
 
-export class AppBaseEntity  {
-
+export class AppBaseEntity {
   @Column({ nullable: true })
   created_by?: string; // Creation date
 
@@ -10,7 +14,7 @@ export class AppBaseEntity  {
 
   @Column({ nullable: true })
   deleted_by?: string; // Creation date
-  
+
   @CreateDateColumn({ nullable: true })
   created_at?: Date; // Creation date
 
@@ -36,31 +40,21 @@ export class AppBaseEntity  {
   archived?: boolean;
 }
 
-export class DambaFullMeta extends AppBaseEntity{
+export class DambaMeta extends AppBaseEntity {
+  @Column({ type: "varchar", nullable: false })
+  orgId?: string;
 
-      @Column({ type: 'varchar', nullable: false })
-      orgId?: string;
-    
-      @Column({ type: 'varchar', nullable: false })
-      projId?: string;
-
-      @Column({ type: 'varchar', nullable: false })
-      appId?: string;
-      
-      @Column({ type: 'varchar', nullable: false })
-      moduleId?: string;
-      
-      @Column({ type: 'varchar', nullable: false })
-      servId?: string;
-
+  @Column({ type: "varchar", nullable: false })
+  projId?: string;
 }
 
-export class DambaMeta extends AppBaseEntity{
+export class DambaFullMeta extends DambaMeta {
+  @Column({ type: "varchar", nullable: false })
+  appId?: string;
 
-      @Column({ type: 'varchar', nullable: false })
-      orgId?: string;
-    
-      @Column({ type: 'varchar', nullable: false })
-      projId?: string;
+  @Column({ type: "varchar", nullable: false })
+  moduleId?: string;
 
+  @Column({ type: "varchar", nullable: false })
+  servId?: string;
 }

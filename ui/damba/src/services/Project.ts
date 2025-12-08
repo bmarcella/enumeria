@@ -12,5 +12,6 @@ export const saveProject = (id_org: string, id_user: string, data: any): Promise
 
 export const changeSettingApi = (data: CurrentSetting): Promise<any> => {
    const url = `${endpointConfig.auth}/meta`;
-   return ApiPost(url, data)
+   console.log(data);
+   return ApiPost(url, data);
 }

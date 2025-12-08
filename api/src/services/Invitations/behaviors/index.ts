@@ -1,11 +1,7 @@
-// behaviors barrel
-import { createBehaviors } from '@Damba/service/v1/DambaService';
-import { DEvent } from '@Damba/service/v1/DEvent';
+import { createService } from "@App/damba.import";
+import getAllInvitaion from "./GetAllInvitation";
 
-const api = createBehaviors('/invitations');
+const api = createService("/invitations");
 
-api.DGet('/', async (e: DEvent) => {
-    // yourcode here
-    return e.out.json();
-}, {})
+api.DGet("/", getAllInvitaion, {}, [], {});
 export default api.done();

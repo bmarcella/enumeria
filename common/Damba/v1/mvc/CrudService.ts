@@ -215,4 +215,9 @@ export class DambaRepository<DS> {
     }
     return QB.execute();
   }
+
+  public getRelation( T: new (...args: any[]) => any, relation: string, ) {
+       const repository = Crud.getRepository(this.DataSource, T);
+      return repository.metadata.relations.find((r: any) => r.propertyName === relation);
+  }
 }

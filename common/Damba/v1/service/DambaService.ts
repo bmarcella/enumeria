@@ -2,10 +2,11 @@
 
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { DambaRepository } from '../mvc/CrudService';
 import { createSimpleName } from './DambaHelper';
 import { DEvent } from './DEvent';
 import { defaultDMiddlewares } from './GenericMiddleware';
-import { IDActionConfig, IServiceProvider, ServiceFn } from './IServiceDamba';
+import { IDActionConfig, IServiceProvider, ServiceFn, PropType } from './IServiceDamba';
 import { DefaultDCrudValues, ServiceConfig } from './ServiceConfig';
 import { ServiceRegistry } from './ServiceRegistry';
 
@@ -168,6 +169,35 @@ export const createBehaviors = <T, REQ, RES, NEXT>
                     }
                 ) as typeof entity;
                 return res.send(entities);
+            }, {}, config?.crud?.get.middlewares);
+
+         if (config?.crud?.get.active)
+            DGet(config?.crud_path+"/:id/:relation", async (e: DEvent<REQ, RES, NEXT>) => {
+                const { res, req, next } = getContext<REQ, RES, NEXT>(e);
+
+                const id = req.params.id;
+                const relation = String(req.params.relation) as any;
+
+                if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+            
+                if(!entity) return res.status(500).send({ message: 'Entity not found' });
+                
+                const DRep = req.DRepository as DambaRepository<any>;
+                const rel =  DRep.getRelation(entity, relation);
+                let all = false;
+                if (!rel) return res.status(400).json({ error: `Unknown relation: ${relation}` });
+
+                if (["many-to-one"].includes(rel.relationType)) {
+                      return res.status(400).json({ error: "This endpoint is for collection relations only." });
+                }
+                if (["one-to-many", "many-to-many"].includes(rel.relationType)) {
+                     all = true
+                } 
+               const entities = await DRep.DGet(entity, {
+                  where: { id },
+                  relations: { [relation]: true } as any, // TS can't type dynamic keys nicely here
+                }, all);
+                return res.json((entities as any)[relation]);
             }, {}, config?.crud?.get.middlewares);
 
         if (config?.crud?.post?.active)

@@ -6,11 +6,6 @@ import { useAppServiceStore } from '@/stores/ServiceStore'
 type Props = {
   children: React.ReactNode
   autoSelectSingle?: boolean,
-
-  /**
-   * You can refine this signature if you want filters like env/module/project
-   * For now: fetch services for (moduleId, env) and return an array.
-   */
   fetchServicesByModuleId: (moduleId: string) => Promise<any[]>
 }
 

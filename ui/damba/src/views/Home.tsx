@@ -1,52 +1,108 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useMemo, useState } from 'react'
 
-import { useAuth } from "@/auth";
-import { useEffect, useState } from "react";
-import JsonDiagram from "./Canvas/JsonDiagram";
-import { useModuleActions } from "@/utils/hooks/useModule";
-import { EntityScene } from "./Canvas/entityScene";
-import { ModuleSwitcher } from "./components/ModuleSwitcher";
-import { useSessionUser } from "@/stores/authStore";
-import { useProjectActions } from "@/stores/useProjectSelectors";
-import ServiceView from "./components/ServiceView";
-import { ServiceProvider } from "@/providers/ServiceProvider";
-import { fetchServicesByModuleId } from "@/services/module";
-import SidebarDamba from "./components/Layout/SidebarDamba";
+import AppView from './Pages/AppView'
+import { useApplicationStore } from '@/stores/useApplicationStore'
+import DambaEditorView from './Pages/DambaEditorView'
+import OrgView from './Pages/OrgView'
+import ProjectView from './Pages/ProjectView'
+import SettingView from './Pages/SettingView'
+import SidebarDamba, {
+    MenuKey,
+    SidebarItem,
+    SidebarMenuKey,
+} from './components/Layout/SideBarDambaPure'
+import {
+    HiOutlineViewGrid,
+    HiOutlineCode,
+    HiOutlineFolder,
+    HiOutlineOfficeBuilding,
+    HiOutlineCog,
+} from 'react-icons/hi'
+import MainDamba from './components/Layout/MainDamba'
+
+const LS_KEY = 'sidebar_menu_key'
 
 const Home = () => {
-  const { setByPassLogin } = useAuth();
-  const user = useSessionUser((state) => state.user);
-  const { cProject } = useProjectActions()
-  useEffect(() => {
-    setByPassLogin(true);
-  }, []);
+    const app = useApplicationStore((s) => s.cApp)
+    const [appName, setAppName] = useState<MenuKey>()
+    const validKeys = useMemo(
+        () =>
+            new Set<MenuKey>([
+                appName as any,
+                ...Object.values(SidebarMenuKey),
+            ]),
+        [appName],
+    )
 
-  
- 
+    const [key, setkey] = useState<string>(() => {
+        if (typeof window === 'undefined') return appName
+        const saved = window.localStorage.getItem(LS_KEY)
+        return saved && validKeys.has(saved) ? saved : (appName as any)
+    })
 
-  return (
-          <main className="w-full min-h-screen">
-            <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
-              {/* Sidebar */}
-              <aside className="lg:sticky lg:top-0 lg:h-screen">
-                <SidebarDamba />
-              </aside>
+    // const items: SidebarItem[] = useMemo(()=> [
+    //   { key: appName, label: appName, icon: <HiOutlineViewGrid /> },
+    //   { key: SidebarMenuKey.Editor, label: SidebarMenuKey.Editor, icon: <HiOutlineCode /> },
+    //   { key: SidebarMenuKey.Project, label: SidebarMenuKey.Project, icon: <HiOutlineFolder /> },
+    //   { key: SidebarMenuKey.Organition, label: SidebarMenuKey.Organition, icon: <HiOutlineOfficeBuilding /> },
+    //   { key: SidebarMenuKey.Setting, label: SidebarMenuKey.Setting, icon: <HiOutlineCog /> },
+    // ], [appName]);
+    const items: SidebarItem[] = useMemo(
+        () => [
+            { key: appName, icon: <HiOutlineViewGrid /> },
+            { key: SidebarMenuKey.Editor, icon: <HiOutlineCode /> },
+            { key: SidebarMenuKey.Project, icon: <HiOutlineFolder /> },
+            {
+                key: SidebarMenuKey.Organition,
+                icon: <HiOutlineOfficeBuilding />,
+            },
+            { key: SidebarMenuKey.Setting, icon: <HiOutlineCog /> },
+        ],
+        [appName],
+    )
+    useEffect(() => {
+        const appName = app?.name || 'Application'
+        setAppName(appName)
+        setkey(appName)
+    }, [app])
 
-              {/* Content */}
-              <section className="min-w-0">
-                <div className="container mx-auto px-4">
-                  <ModuleSwitcher />
+    const handleView = (key: string) => {
+        key = !key ? app?.name || 'Application' : key
+        setkey(key)
+    }
 
-                  <ServiceProvider fetchServicesByModuleId={fetchServicesByModuleId}>
-                    <ServiceView />
-                  </ServiceProvider>
-                </div>
-              </section>
-            </div>
-          </main>
+    const renderView = (key: SidebarMenuKey | string) => {
+        switch (key) {
+            case appName:
+                return <AppView />
+            case SidebarMenuKey.Editor:
+                return <DambaEditorView />
+            case SidebarMenuKey.Organition:
+                return <OrgView />
+            case SidebarMenuKey.Project:
+                return <ProjectView />
+            case SidebarMenuKey.Setting:
+                return <SettingView />
+            default:
+                return null // or a <NotFound /> / placeholder
+        }
+    }
 
-  )
+    return (
+        <>
+            <MainDamba
+                sidebar={
+                    <SidebarDamba
+                        items={items}
+                        activeKey={key}
+                        onSelect={handleView}
+                    />
+                }
+                content={renderView(key)}
+            ></MainDamba>
+        </>
+    )
 }
 
 export default Home

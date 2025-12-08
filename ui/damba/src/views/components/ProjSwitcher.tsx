@@ -73,13 +73,13 @@ export const ProjSwitcher = ({ initialized }: Props) => {
 
   const changeEnv = async (env: any) => {
     if (!env) return;
-    user!.currentSetting!.env! = env;
+    user.currentSetting!.env! = env;
     setUser(user);
   }
 
   useEffect(() => {
-    setSetting();
-  }, [user]);
+     setSetting();
+  }, [user, user?.currentSetting?.env, user?.currentSetting?.projId]);
 
 
   if (!initialized) return <div>Loading projects…</div>;
@@ -122,7 +122,6 @@ export const ProjSwitcher = ({ initialized }: Props) => {
         {optionsEnv && optionsEnv.length > 0 && <span className="opacity-60 text-xs block mb-1">Environement.</span>}
         {optionsEnv && optionsEnv.length > 1 && (
           <Select
-
             size="sm"
             placeholder="Select Application"
             options={optionsEnv}

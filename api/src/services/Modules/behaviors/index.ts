@@ -7,8 +7,8 @@ import { AppServices } from "@App/services/AppService/entities/AppServices";
 
 const api = createService('/modules', Modules);
 
-api.DGet('/:application_id/application', async (e: DEvent) => {
-    const id = api?.params()?.application_id;
+api.DGet('/:id/application', async (e: DEvent) => {
+    const id = api?.params()?.id;
     // yourcode here
     const modules = await api.DFindAll({
         where: {

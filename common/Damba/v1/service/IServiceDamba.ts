@@ -6,6 +6,7 @@ export interface IDActionConfig {
   timeout?: number,
   description?: string
 }
+export type PropType<T, K extends keyof T> = T[K];
 
 export type ExtrasMap = Record<string, Record<string, (...args: any[]) => any>>
 // /** Adjust this to your repository expectations. If you use TypeORM, use EntityTarget from typeorm. */

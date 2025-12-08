@@ -3,16 +3,17 @@ import React, { useEffect, useState } from 'react'
 import { EntityScene } from '../Canvas/entityScene'
 import JsonDiagram from '../Canvas/JsonDiagram'
 import { useEntityStore } from '@/stores/useEntityStore'
-import AddProject from './AddProject';
+import AddProject from '../components/AddProject';
 import AddEntityForm from '../Form/entity/AddEntityForm';
 import { useWindowSize } from '@/utils/hooks/useWindowSize';
 
-function EntityView() {
+function EntityViewDiagram() {
 const entities = useEntityStore((s) => s.entities);
-console.log(entities);
      const [scene, setScene] = useState<EntityScene>()
      const { width, height} = useWindowSize();
-       useEffect(() => {
+  useEffect(() => {
+       console.log(entities);
+        setScene(undefined);
         if(entities.length>0){
            setScene({ canvasBoxes: entities } as EntityScene)
         }
@@ -31,7 +32,6 @@ console.log(entities);
                         </span>
               </div>
               <JsonDiagram scene={scene}></JsonDiagram>
-                
            </>
         }
         { !scene  && 
@@ -54,4 +54,4 @@ console.log(entities);
   )
 }
 
-export default EntityView
+export default EntityViewDiagram

@@ -1,0 +1,4 @@
+const getAllInvitaionExtras = {
+
+} ;
+export getAllInvitaionExtras;
