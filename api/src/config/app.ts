@@ -1,56 +1,65 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // config/app-config.ts
 import dotenv from 'dotenv';
-import {
-  NextFunction,
-  Request,
-  Response,
-} from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import nodemailer from 'nodemailer';
-
 import OpenAI from 'openai';
-import { Mail } from '../../../common/mail';
 import { OAuth2Client } from 'google-auth-library';
-import { ExtrasMap } from '@Damba/v1/service/IServiceDamba';
+import type { ExtrasMap } from '@Damba/v1/service/IServiceDamba';
 import { DambaRepository } from '@Damba/v1/mvc/CrudService';
 import { DambaGoogleAuth } from '@Damba/v1/auth/DambaGoogleAuth';
 import { extrasToJSON } from '@Damba/v1/Extras';
+import { parseBoolean, SameSiteOption, mustEnv, AppShutdownParams } from '@Damba/v1/config/ConfigHelper';
+import {  IAppConfig } from '@Damba/v1/config/IAppConfig';
+import { Mail } from '@Damba/mail';
+import { Server } from 'http';
+import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
+import { DataSource } from 'typeorm';
+
+import { DEvent } from '@App/damba.import';
+import { authorize } from '@Damba/v1/auth/AuthMiddleware';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
-type SameSiteOption = 'lax' | 'strict' | 'none';
-
-function parseBoolean(value: string | undefined, fallback = false): boolean {
-  if (value == null) return fallback;
-  const v = value.trim().toLowerCase();
-  return v === 'true' || v === '1' || v === 'yes';
-}
-
 const isProd = process.env.NODE_ENV === 'production';
 
-const SESSION_SECRET =
-  (process.env.SESSION_SECRET ?? '').trim();
-
+const SESSION_SECRET = (process.env.SESSION_SECRET ?? '').trim();
 if (!SESSION_SECRET) {
-  // Fail fast in dev; in prod you might want to throw instead.
   console.warn('SESSION_SECRET is empty. Set it in your environment.');
 }
 
-const SESSION_COOKIES_SECURE =
-  parseBoolean(process.env.SESSION_COOKIES_SECURE, isProd);
+const SESSION_COOKIES_SECURE = parseBoolean(process.env.SESSION_COOKIES_SECURE, isProd);
 
-const SESSION_SAMESITE =
-  ((process.env.SESSION_SAMESITE ?? 'lax').toLowerCase() as SameSiteOption);
+const SESSION_SAMESITE = (process.env.SESSION_SAMESITE ?? 'lax').toLowerCase() as SameSiteOption;
 
-/**
- * Express / body-parser / express-session config
- */
-export const AppConfig = {
-  extras_path: "/damba/doc/extras",
-  apiDoc_path: "/damba/doc/api",
-  base_path: (process.env.BASE_PATH) ? process.env.BASE_PATH!.toString() : '/',
-  port: process.env.PORT!.toString(),
+export const AppConfig: IAppConfig = {
+  cors: {
+    allowedOrigins: ['http://localhost:5174/'],
+    corsOptions: {
+    checkOrigin: (origin: any, callback: any) => {
+      if (!origin || AppConfig.cors?.allowedOrigins.indexOf(origin) !== -1) {
+          callback(null, true);
+      } else {
+        if (Number(process.env.DEV + '') == 0) callback(null, true);
+        else callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  },
+  },
+  path: {
+    basic: process.env.BASE_PATH ? String(process.env.BASE_PATH) : '/',
+    docs: {
+      extras: '/damba/doc/extras',
+      api: '/damba/doc/api',
+    },
+    cicd: {
+      health: '/damba/cicd/health',
+      ready: '/damba/cicd/ready',
+    },
+  },
+  port: String(process.env.PORT ?? '3000'),
   logRoute: true,
   version: 1,
   json: {
@@ -63,43 +72,78 @@ export const AppConfig = {
   },
   session: {
     name: 'sid',
-    secret: SESSION_SECRET,
+    secret: mustEnv('SESSION_SECRET'),
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: SESSION_SAMESITE, // 'lax' | 'strict' | 'none'
-      secure: SESSION_COOKIES_SECURE, // true in prod by default
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      sameSite: SESSION_SAMESITE,
+      secure: SESSION_COOKIES_SECURE,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   },
-  helper: <T>(DB: T, extras: ExtrasMap) => {
-    return (req: Request, res: Response, next: NextFunction) => {
+  call : {
+  helper: <T> (DB: T, extras: ExtrasMap) => {
+    const DRepo = DambaRepository.init(DB as any) as any;
+    const aiApiKey = mustEnv('OPENAI_API_KEY');
+    const AI = new OpenAI({ apiKey: aiApiKey });
+    const smtpUser = mustEnv('SMTP_USER');
+    const smtpPass = mustEnv('SMTP_PASSWORD'); // <-- add this env var (or rename to your existing one)
+    const mail = new Mail(nodemailer, smtpUser, smtpPass);
+    const googleAuth = DambaGoogleAuth.init<OAuth2Client>(OAuth2Client, {
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+      GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+    });
+    const oauth2Google = googleAuth.getAuth;
+    return (req: Request, _res: Response, next: NextFunction) => {
       req.extras = extras;
       req.DB = DB;
-      req.DRepository = DambaRepository.init(DB) as any;
-      req.AI = new OpenAI({ apiKey: process.env.OPENAI_API_KEY!.toString() });
-      req.mail = new Mail(nodemailer, process.env.SMTP_USER!.toString(), process.env!.toString());
-      const googleAuth = DambaGoogleAuth.init<OAuth2Client>(OAuth2Client, {
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-        GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
-      });
-      req.oauth2Google = googleAuth.getAuth;
+      req.DRepository = DRepo;
+      req.AI = AI;
+      req.mail = mail;
+      req.oauth2Google = oauth2Google;
       next();
-    }
+    };
   },
   launch: () => {
-    console.log(`[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`);
+    console.log(
+      `[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`,
+    );
   },
-  extrasDoc: (extras: any) => {
-    return (req: Request, res: Response) => {
-      res.send(extrasToJSON(extras));
+  extrasDoc: (extras: any) => (req: Request, res: Response) => {
+    res.send(extrasToJSON(extras));
+  },
+  apiDoc: (doc: any) => (req: Request, res: Response) => {
+    res.send(doc);
+  },
+   shutdown : async  (params: AppShutdownParams<Server, DambaTypeOrm<DataSource>>) => {
+
+      await new Promise<void>((resolve) => {
+            if(params?.server) 
+            params.server.close(() => resolve())
+            else resolve()
+      }); 
+
+    if(params?.orm) 
+    await params.orm.shutdown(params.name); 
+
+    process.exit(0);
+
+   },
+   ready: () => (req: Request, res: Response) => {
+   
+   },
+   health: () => (req: Request, res: Response) => {
+   
+   },
+  
+  },
+  authoriztion : {
+    strategy:  "localstorage",
+    check: (roles?: string[] ) => {
+         return authorize<DEvent>(mustEnv("JWT_PUBLIC_KEY"), jwt, roles , AppConfig.authoriztion.strategy);
     }
   }
-  ,apiDoc: (doc: any) => {
-    return (req: Request, res: Response) => {
-          res.send(doc);
-    }
-  }
+
 } as const;

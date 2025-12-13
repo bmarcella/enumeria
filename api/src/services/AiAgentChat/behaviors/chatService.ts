@@ -1,10 +1,7 @@
 /* eslint-disable no-async-promise-executor */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  Request,
-  Response,
-} from 'express';
+import { Request, Response } from 'express';
 import { ChatCompletion, ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { ChatAi, Service_tier } from '../entities/ChatAi';
 import { DGet, DSave } from '../../../../../common/mvc/CrudService';
@@ -16,7 +13,6 @@ const services = {
   //     name: process.env.APP_NAME,
   //   });
   // },
-
   // chat: async (req: Request, res: Response) => {
   //   let isNew = (!req.body.chat) ? true : false;
   //   try {
@@ -60,15 +56,12 @@ const services = {
   //   setSummary: async (req: Request, data: ChatAi, completion: ChatCompletion & {
   //     _request_id?: string | null;
   //   }) => {
-
   //     return new Promise(async (resolve) => {
-
   //       const ai = DSave(req.DB, MessageAi, {
   //         chatAi: data,
   //         role: 'system',
   //         content: completion.choices[0].message.content ?? '',
   //       });
-
   //       const messages: ChatCompletionMessageParam[] = [];
   //       messages.push({ role: 'system', content: ` Create a new  short and explicit summary  to allow an AI to remind past message, by merging this old summary : \b ${data.summary && ''} \b with new message of the user : \b ${req.body.content} \b and the new answer of the AI : ${completion.choices[0].message.content ?? ''} ` });
   //       const c = await req.AI.chat.completions.create({
@@ -110,7 +103,6 @@ const services = {
   //             role: req.body.role,
   //             content: req.body.content,
   //           });
-
   //           const ai = await DSave(req.DB, MessageAi, {
   //             chatAi: data,
   //             role: 'system',
@@ -119,7 +111,5 @@ const services = {
   //           resolve({ data, message, ai });
   //         });
   //       },
-
-
 };
 export default services;

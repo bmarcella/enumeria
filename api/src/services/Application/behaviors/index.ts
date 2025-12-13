@@ -1,15 +1,16 @@
-
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createService, DEvent } from "@App/damba.import";
-import { Application } from "../entities/Application";
-import { Project } from "@App/services/Projects/entities/Project";
+import { createService, DEvent } from '@App/damba.import';
+import { Application } from '../entities/Application';
+import { Project } from '@App/services/Projects/entities/Project';
 
-const api = createService("/applications", Application);
+const api = createService('/applications', Application);
 
-api.DGet("/", async (e: DEvent) => {
-  return e.out.json({});
-},
+api.DGet(
+  '/',
+  async (e: DEvent) => {
+    return e.out.json({});
+  },
   {
     async saveAppTemplate(e: DEvent, proj: Project) {
       try {
@@ -24,17 +25,17 @@ api.DGet("/", async (e: DEvent) => {
           language: 'typescript',
           runtime: 'node18',
           project: proj,
-          orgId: proj.organization.id
+          orgId: proj.organization.id,
         };
         app = await e.in.DRepository.DSave(Application, app);
         return app;
       } catch (error) {
         console.log(error);
       }
-
     },
     async save(app: Partial<Application>) {
       return await api.DSave(app);
-    }
-  });
+    },
+  },
+);
 export default api.done();

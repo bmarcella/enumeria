@@ -1,16 +1,13 @@
-
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm"
-import { AppBaseEntity } from "../../../entities/BaseEntity"
-import { Modules } from "@App/services/Modules/entities/Modules";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { AppBaseEntity } from '../../../entities/BaseEntity';
+import { Modules } from '@App/services/Modules/entities/Modules';
 
 /** Project: child records of an Organization */
 @Entity('app_services')
 export class AppServices extends AppBaseEntity {
-
   @PrimaryGeneratedColumn('uuid')
-  id?: string
+  id?: string;
 
   @Column({ type: 'varchar', nullable: true })
   name?: string;
@@ -37,10 +34,9 @@ export class AppServices extends AppBaseEntity {
 
   //
   @Column({ type: 'text', nullable: true })
-  description?: string | null
+  description?: string | null;
 
   @ManyToOne(() => Modules, (o) => o.services, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'moduleId' })
   module?: Modules;
-
 }

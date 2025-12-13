@@ -1,5 +1,16 @@
-import { Entity, Unique, BaseEntity, PrimaryGeneratedColumn, Index, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
-import { Organization } from "./Organization"
+import {
+  Entity,
+  Unique,
+  BaseEntity,
+  PrimaryGeneratedColumn,
+  Index,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Organization } from './Organization';
 
 export enum OrgMemberRole {
   OWNER = 'owner',
@@ -13,33 +24,33 @@ export enum OrgMemberRole {
 @Unique('uniq_org_member', ['organizationId', 'userId'])
 export class OrgMember extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id!: string
+  id!: string;
 
   @Index()
   @Column('uuid')
-  organizationId!: string
+  organizationId!: string;
 
   @ManyToOne(() => Organization, (o) => o.members, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'organizationId' })
-  organization!: Organization
+  organization!: Organization;
 
   // If you have a User entity, replace with a relation
   @Index()
   @Column({ type: 'varchar', length: 64 })
-  userId!: string
+  userId!: string;
 
   @Column({ type: 'enum', enum: OrgMemberRole, default: OrgMemberRole.MEMBER })
-  role!: OrgMemberRole
+  role!: OrgMemberRole;
 
   @Column({ type: 'timestamptz', nullable: true })
-  invitedAt?: Date | null
+  invitedAt?: Date | null;
 
   @Column({ type: 'timestamptz', nullable: true })
-  joinedAt?: Date | null
+  joinedAt?: Date | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  createdAt!: Date
+  createdAt!: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt!: Date
+  updatedAt!: Date;
 }

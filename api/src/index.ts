@@ -5,45 +5,39 @@ import 'tsconfig-paths/register';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import express, {
-  Express,
-} from 'express';
+import express from 'express';
 import session from 'express-session';
 import { DataSource } from 'typeorm';
-import { AppDataSource } from '../../common/db/data-source';
 import { AppConfig } from './config/app';
 import { DBConfig } from './config/db';
 import { OAuth2Client } from 'google-auth-library';
 import { JwtPayload } from 'jsonwebtoken';
 import OpenAI from 'openai';
-import { Mail } from '../../common/mail';
 import { _SPS_ } from './services';
-import { corsConfig } from './config/cors';
 import { DambaServices } from './damba.import';
 import { ExtrasMap } from '@Damba/v1/route/DambaRoute';
 import { DambaRepository } from '@Damba/v1/mvc/CrudService';
+import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
+import { Mail } from '@Damba/mail';
 
-//  
-dotenv.config();
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      EurekaClient?: any,
-      payload?: JwtPayload,
-      token?: string
-      DB: any,
-      mail: Mail,
-      AI: OpenAI
-      oauth2Google: OAuth2Client | any,
-      DRepository: DambaRepository<DataSource>,
-      extras: ExtrasMap,
+      EurekaClient?: any;
+      payload?: JwtPayload;
+      token?: string;
+      DB: any;
+      mail: Mail;
+      AI: OpenAI;
+      oauth2Google: OAuth2Client | any;
+      DRepository: DambaRepository<DataSource>;
+      extras: ExtrasMap;
       data: any;
     }
   }
 }
 
-declare module "express-session" {
+declare module 'express-session' {
   interface SessionData {
     user?: SessionUser;
     tokens?: {
@@ -56,22 +50,58 @@ declare module "express-session" {
   }
 }
 
-AppDataSource<DataSource, Array<any>>(DataSource, process.env, DBConfig.entities).then((DB: DataSource) => {
-  const app: Express = express();
-  app.use(cors(corsConfig.corsOptions));
-  // body-parser
+async function main() {
+  dotenv.config();
+  const orm = DambaTypeOrm.get(DataSource, process.env as any, DBConfig.entities, {
+    retries: 8,
+    retryDelayMs: 1000,
+    log: console.log,
+  });
+
+  // init DB before listening (fail fast)
+  await orm.init();
+
+  const app = express();
+
+  // Basic health endpoints (useful for k8s / load balancers)
+  app.get('/healthz', (_req, res) => res.status(200).json({ ok: true }));
+  app.get('/readyz', (_req, res) => {
+    const ready = orm.datasource?.isInitialized === true;
+    res.status(ready ? 200 : 503).json({ ready });
+  });
+
+  app.use(cors(AppConfig.cors?.corsOptions));
   app.use(bodyParser.json(AppConfig.json));
   app.use(bodyParser.urlencoded(AppConfig.urlencoded));
   app.use(session(AppConfig.session));
+
   const { route, extras, doc } = DambaServices(_SPS_, AppConfig);
-  app.use(AppConfig.helper<DataSource>(DB, extras))
-  app.use(AppConfig.extras_path, AppConfig.extrasDoc(extras));
-  app.use(AppConfig.apiDoc_path, AppConfig.apiDoc(doc));
-  app.use(AppConfig.base_path, route);
-  app.listen(AppConfig.port, AppConfig.launch);
+  // attach helpers (DB + extras) after init so req.DB is always valid
+  app.use(AppConfig.call.helper!(orm.datasource, extras));
 
-}).catch((error: any) => console.log(error));
+  if (AppConfig.path.docs?.extras) app.use(AppConfig.path.docs?.extras, AppConfig.call.extrasDoc!(extras));
 
+  if (AppConfig.path.docs?.api) app.use(AppConfig.path.docs?.api, AppConfig.call.apiDoc!(doc));
 
+  app.use(AppConfig.path.basic, route);
 
+  const server = app.listen(AppConfig.port, AppConfig.call.launch);
 
+  process.once('SIGTERM', () => void AppConfig.call.shutdown!({ server, name: 'SIGTERM', orm }));
+  process.once('SIGINT', () => void AppConfig.call.shutdown!({  server,  name: 'SIGINT', orm }));
+
+  // Avoid silent crashes
+  process.on('unhandledRejection', (err) => {
+    console.error('unhandledRejection', err);
+  });
+
+  process.on('uncaughtException', (err) => {
+    console.error('uncaughtException', err);
+    void AppConfig.call.shutdown!({ server, name: 'uncaughtException', orm });
+  });
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});

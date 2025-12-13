@@ -1,16 +1,14 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm"
-import { AppBaseEntity } from "../../../entities/BaseEntity";
-import { Application } from "@App/services/Application/entities/Application";
-import { AppServices } from "@App/services/AppService/entities/AppServices";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { AppBaseEntity } from '../../../entities/BaseEntity';
+import { Application } from '@App/services/Application/entities/Application';
+import { AppServices } from '@App/services/AppService/entities/AppServices';
 
 /** Project: child records of an Organization */
 @Entity('modules')
 export class Modules extends AppBaseEntity {
-
   @PrimaryGeneratedColumn('uuid')
-  id?: string
+  id?: string;
 
   @Column({ type: 'varchar', nullable: true })
   name?: string;
@@ -25,7 +23,7 @@ export class Modules extends AppBaseEntity {
   OrgId?: string;
 
   @Column({ type: 'text', nullable: true })
-  description?: string | null
+  description?: string | null;
 
   @ManyToOne(() => Application, (o) => o.modules, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'applicationId' })
@@ -33,5 +31,4 @@ export class Modules extends AppBaseEntity {
 
   @OneToMany(() => AppServices, (m) => m.module, { cascade: true, nullable: true })
   services?: AppServices[];
-
 }

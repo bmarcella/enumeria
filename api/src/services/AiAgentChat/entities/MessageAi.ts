@@ -1,20 +1,18 @@
-import { Column, Entity,  ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { AppBaseEntity } from "../../../entities/BaseEntity";
-import { ChatAi } from "./ChatAi";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { AppBaseEntity } from '../../../entities/BaseEntity';
+import { ChatAi } from './ChatAi';
 
 @Entity()
 export class MessageAi extends AppBaseEntity {
+  @PrimaryGeneratedColumn()
+  id?: number;
 
-     @PrimaryGeneratedColumn()
-     id?: number;
-  
-    @Column()
-     role! : string;
-      
-     @Column()
-     content!: string;
+  @Column()
+  role!: string;
 
-     @ManyToOne(() => ChatAi, chatAi => chatAi.messageAi, { nullable: true })
-     chatAi?: ChatAi;
+  @Column()
+  content!: string;
+
+  @ManyToOne(() => ChatAi, (chatAi) => chatAi.messageAi, { nullable: true })
+  chatAi?: ChatAi;
 }
-

@@ -1,9 +1,4 @@
-import {
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  Column
-} from "typeorm";
+import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Column } from 'typeorm';
 
 export class AppBaseEntity {
   @Column({ nullable: true })
@@ -41,20 +36,20 @@ export class AppBaseEntity {
 }
 
 export class DambaMeta extends AppBaseEntity {
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   orgId?: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   projId?: string;
 }
 
 export class DambaFullMeta extends DambaMeta {
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   appId?: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   moduleId?: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   servId?: string;
 }
