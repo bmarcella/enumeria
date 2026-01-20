@@ -5,13 +5,10 @@ import { DambaEnvironmentType } from '../../../../../common/Entity/env';
 import { ProjectDto } from '../dtos/ProjectsDto';
 import { CurrentSetting } from '../../../../../common/Entity/UserDto';
 import { ErrorMessage } from '../../../../../common/error/error';
-import { createService, DEvent } from '@App/damba.import';
+import { auth, createService, DEvent } from '@App/damba.import';
 import { Application } from '@App/services/Application/entities/Application';
 import { Modules } from '@App/services/Modules/entities/Modules';
 import { AppServices } from '@App/services/AppService/entities/AppServices';
-import { AppConfig } from '@App/config/app';
-
-const auth = AppConfig.authoriztion;
 
 const api = createService('/projects', Project, undefined, [auth.check(['user'])]);
 
@@ -107,20 +104,6 @@ api.DPost(
   {},
   [CheckIfOrgAndUserExist, GetCurrentOrg],
 );
-
-// UPDATE ENV OF PROJECTS
-// api.DGet("/:id/:env", async (e: DEvent) => {
-//     const env = e.in.params.env;
-//     let obj = await api.data().projects;
-//     obj.selectedEnv = env as DambaEnvironmentType;
-//     obj = await api.DSave(obj);
-//     return e.out.json(obj);
-// },
-//     {
-
-//     },
-//     [api.middlewares.DCheckIfExist, CheckEnv]
-// )
 
 api.DGet(
   '/:id/applications',

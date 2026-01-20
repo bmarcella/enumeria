@@ -11,6 +11,7 @@ export interface DambaTabItem {
     label?: string
     content: ReactNode
     icon?: ReactNode
+    hidden?: boolean
 }
 
 interface DambaTabProps {
@@ -60,7 +61,7 @@ function DambaTabs({
                 <TabList className={classNames('flex', disposition)}>
                     {items.map((tab, index) => {
                         const value = getValue(tab, index)
-                        return (
+                        return tab.hidden ? null : (
                             <TabNav
                                 key={value}
                                 value={value}

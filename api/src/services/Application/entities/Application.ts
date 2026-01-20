@@ -28,6 +28,21 @@ export class Application extends AppBaseEntity {
   @Column({ type: 'varchar', nullable: false, default: 'src' })
   srcDir?: string;
 
+  @Column({ type: 'varchar', nullable: false, default: 'app' })
+  moduleDirName?: string;
+
+  @Column({ type: 'varchar', nullable: false, default: 'behaviors' })
+  behaviorsDirName?: string;
+
+  @Column({ type: 'varchar', nullable: false, default: 'extras' })
+  extrasDirName?: string;
+
+  @Column({ type: 'varchar', nullable: false, default: 'middlewares' })
+  middlewaresDirName?: string;
+
+  @Column({ type: 'varchar', nullable: false, default: 'policies' })
+  policiesDirName?: string;
+
   @Column({ type: 'jsonb', nullable: true })
   config?: any;
 
@@ -48,6 +63,9 @@ export class Application extends AppBaseEntity {
 
   @Column({ type: 'varchar', default: 'damba' })
   framework?: string;
+
+  @Column({ type: 'varchar', default: 'v2' })
+  frameworkVersion?: string;
 
   @Column({ type: 'varchar', nullable: true })
   packageName?: string;

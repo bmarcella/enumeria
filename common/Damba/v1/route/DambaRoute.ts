@@ -71,6 +71,10 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>({ root, sub }: any, _SPS_: IS
                   (next as any)();
          });
       }
+
+      if (config?.validators){
+
+      }
       const handler = value?.behavior;
      
 

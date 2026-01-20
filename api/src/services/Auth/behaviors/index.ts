@@ -8,11 +8,11 @@ import { ErrorMessage } from '../../../../../common/error/error';
 import { Request, Response } from 'express';
 import { User } from '../../User/entities/User';
 import { Organization } from '../../Organization/entities/Organization';
-import {  SessionUser } from '../../../../../common/Entity/UserDto';
+import { SessionUser } from '../../../../../common/Entity/UserDto';
 import { createService, DEvent } from '@App/damba.import';
 import { GenTokenJwt } from '@Damba/v1/auth/AuthMiddleware';
 import { Role, RoleName } from '@App/services/User/entities/Role';
-import { AppConfig } from '@App/config/app';
+import { AppConfig } from '@App/config/app.config';
 const auth = AppConfig.authoriztion;
 const api = createService('/auth');
 
@@ -25,10 +25,12 @@ api.DPost(
       const { code } = e.in.body as { code: string };
       const { tokens } = await e.in.oauth2Google.getToken({ code });
       if (!tokens.id_token) return e.out.status(400).json({ error: ErrorMessage.NO_ID_TOKEN });
+
       const ticket = await e.in.oauth2Google.verifyIdToken({
         idToken: tokens.id_token!,
         audience: process.env.GOOGLE_CLIENT_ID!,
       });
+
       const payload = ticket.getPayload()!;
 
       let user: User = (await req.DRepository.DGet(
@@ -67,14 +69,17 @@ api.DPost(
         const auth = user.authority?.map((r) => {
           return r.name;
         });
+
         const userDTO = {
           ...user,
           authority: auth,
           organizations: user.organizations,
           currentSetting: user.currentSetting,
         };
+
         req.session.user = req.extras?.auth.toSessionUser(user, 'google');
         const dToken = GenTokenJwt(jwt, userDTO, process.env.JWT_PUBLIC_KEY!);
+
         req.session.tokens = {
           access_token: tokens.access_token!,
           refresh_token: tokens.refresh_token!,
@@ -97,7 +102,7 @@ api.DPost(
       });
     } catch (e) {
       console.error(e);
-      res.status(401).json({ error: ErrorMessage.EXCHANGE_TOKEN_FAILED });
+      res.status(500).json({ error: ErrorMessage.INTERNAL_SERVER_ERROR });
     }
   },
   {

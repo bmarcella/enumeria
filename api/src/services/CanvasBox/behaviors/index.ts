@@ -7,7 +7,7 @@ import { DambaAttributesTemplate } from '../../../../../common/Entity/DambApp';
 import { v4 as uuidv4 } from 'uuid';
 import { Entities } from '../entities/CanvasBox';
 import { createService, DEvent } from '@App/damba.import';
-import { AppConfig } from '@App/config/app';
+import { AppConfig } from '@App/config/app.config';
 const auth = AppConfig.authoriztion;
 
 const api = createService('/entities', Entities, undefined, [auth.check(['user'])]);

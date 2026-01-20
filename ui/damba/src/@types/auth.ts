@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ClientTokenDTO, UserDto } from "../../../../common/Entity/UserDto"
+import { ClientTokenDTO, UserDto } from '../../../../common/Entity/UserDto'
 
 export type SignInCredential = {
     email: string
@@ -23,7 +23,7 @@ export type SignInResponse = {
 }
 
 export type SignUpResponse = SignInResponse & {
-    refreshToken: string,
+    refreshToken: string
     data: any
 }
 
@@ -45,13 +45,13 @@ export type AuthRequestStatus = 'success' | 'failed' | ''
 
 export type AuthResult = Promise<{
     status: AuthRequestStatus
-    message: string,
+    message: string
     data?: any
 }>
 
-export type User = UserDto;
+export type User = UserDto
 
-export type Token = ClientTokenDTO;
+export type Token = ClientTokenDTO
 
 export type OauthSignInCallbackPayload = {
     onSignIn: (tokens: Token, user?: User) => void

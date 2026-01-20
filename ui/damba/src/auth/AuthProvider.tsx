@@ -12,7 +12,7 @@ import type {
     AuthResult,
     OauthSignInCallbackPayload,
     User,
-    Token
+    Token,
 } from '@/@types/auth'
 import type { ReactNode, Ref } from 'react'
 import type { NavigateFunction } from 'react-router-dom'
@@ -44,11 +44,11 @@ function AuthProvider({ children }: AuthProviderProps) {
     )
 
     const { token, setToken } = useToken()
-    const [byPassLogin, setByPassLogin] = useState<boolean>(false);
+    const [byPassLogin, setByPassLogin] = useState<boolean>(false)
 
     const authenticated = Boolean(token && signedIn)
 
-   const navigatorRef = useRef<IsolatedNavigatorRef>(null)
+    const navigatorRef = useRef<IsolatedNavigatorRef>(null)
 
     const redirect = () => {
         const search = window.location.search
@@ -98,8 +98,8 @@ function AuthProvider({ children }: AuthProviderProps) {
         }
     }
 
-    const redirectTo = ()=>{
-        redirect();
+    const redirectTo = () => {
+        redirect()
     }
 
     const signUp = async (values: SignUpCredential): AuthResult => {
@@ -165,5 +165,3 @@ function AuthProvider({ children }: AuthProviderProps) {
 }
 
 export default AuthProvider
-
-

@@ -1,8 +1,11 @@
-
-import { CanvasBox, RelationshipType, VisibilityTypeAttributes, VisibilityTypeClass } from "./CanvasBox";
+import {
+  CanvasBox,
+  RelationshipType,
+  VisibilityTypeAttributes,
+  VisibilityTypeClass,
+} from "./CanvasBox";
 import { DambaEnvironmentType } from "./env";
 import { TypeAttbutesTypeOrm } from "./TypeAttributesTypeOrm";
-
 
 export type ServiceKind =
   | "api"
@@ -47,10 +50,10 @@ interface CanvasSetting {
   showGrid: boolean;
 }
 
-export interface ServiceCanvasSetting { }
-export interface AppCanvasSetting extends CanvasSetting { }
-export interface ModuleCanvasSetting extends CanvasSetting { }
-export interface ProjectCanvasSetting extends CanvasSetting { }
+export interface ServiceCanvasSetting {}
+export interface AppCanvasSetting extends CanvasSetting {}
+export interface ModuleCanvasSetting extends CanvasSetting {}
+export interface ProjectCanvasSetting extends CanvasSetting {}
 
 // Generic config holder (renamed generic param to avoid shadowing)
 export type Config<TCanvas> = {
@@ -82,9 +85,7 @@ export interface Service extends BaseEntity {
   crudConfig?: any;
 
   description?: string | null;
-
 }
-
 
 /* -------------------------------- Module -------------------------------------------- */
 
@@ -95,25 +96,8 @@ export interface AppModule extends BaseEntity {
   services?: Service[];
   config?: Config<ModuleCanvasSetting>;
 
-  // Classification
-  type?: "core" | "feature" | "integration" | "ui" | "infrastructure";
   version?: string;
   status?: "draft" | "active" | "deprecated" | "archived";
-
-  // Ownership & contributors
-  ownerId?: string;
-  contributors?: Contributor[];
-  tags?: string[];
-
-  // Dependencies & links
-  dependencies?: string[];
-  externalDeps?: string[];
-
-  // Code location
-  repoPath?: string;    // monorepo-relative path
-  packageName?: string; // npm/internal package name
-
-  // Environment config
   environments?: Environments;
 }
 
@@ -141,8 +125,8 @@ export interface Project extends BaseEntity {
   name: string;
 
   // Identity & discovery
-  key?: string;    // short code like "HR"
-  slug?: string;   // "hr-platform"
+  key?: string; // short code like "HR"
+  slug?: string; // "hr-platform"
   description?: string;
   tags?: string[];
 
@@ -156,13 +140,13 @@ export interface Project extends BaseEntity {
   priority?: "low" | "medium" | "high" | "critical";
   version?: string;
   startDate?: string; // ISO
-  dueDate?: string;   // ISO
+  dueDate?: string; // ISO
 
   // Execution surface
-  environments?:  DambaEnvironmentType[];
+  environments?: DambaEnvironmentType[];
   selectedEnv?: DambaEnvironmentType;
   repoUrls?: string[]; // monorepo + extra repos
-  docsUrl?: string;    // main doc/home
+  docsUrl?: string; // main doc/home
   roadmapUrl?: string;
   issueTracker?: { system?: "linear" | "jira" | "github"; projectKey?: string };
   ci?: { pipelineUrl?: string };
@@ -183,120 +167,108 @@ export interface Project extends BaseEntity {
 
 /* ----------------------------- enums & types ----------------------------- */
 
-export type OrgStatus = 'active' | 'suspended' | 'archived';
-export type OrgPlan = 'free' | 'pro' | 'business' | 'enterprise'
-export type OrgVisibility = 'private' | 'internal' | 'public'
+export type OrgStatus = "active" | "suspended" | "archived";
+export type OrgPlan = "free" | "pro" | "business" | "enterprise";
+export type OrgVisibility = "private" | "internal" | "public";
 
 export interface OrgCanvasSetting {
   /** If you render an org-level canvas (portfolio/system map) */
-  showGrid?: boolean
+  showGrid?: boolean;
 }
 
-
-
-export type OrgRole =
-  | 'owner'
-  | 'admin'
-  | 'maintainer'
-  | 'member'
-  | 'viewer';
-
+export type OrgRole = "owner" | "admin" | "maintainer" | "member" | "viewer";
 
 export interface OrgMember extends BaseEntity {
-  userId: string
-  role: OrgRole
-  displayName?: string
-  email?: string
-  teams?: string[]     // ids or names of teams/squads
-  tags?: string[]
+  userId: string;
+  role: OrgRole;
+  displayName?: string;
+  email?: string;
+  teams?: string[]; // ids or names of teams/squads
+  tags?: string[];
 }
 
-
 export interface OrgDomain {
-  domain: string        // e.g. "nclusion.com"
-  verified?: boolean
-  addedAt?: string
+  domain: string; // e.g. "nclusion.com"
+  verified?: boolean;
+  addedAt?: string;
 }
 
 /* ------------------------------- Organization --------------------------- */
 
 export interface Organization extends BaseEntity {
   /** Identity */
-  id: string
-  name: string
-  key?: string               // short code, e.g., "NCL"
-  slug?: string              // "nclusion"
-  description?: string
-  avatarUrl?: string
+  id: string;
+  name: string;
+  key?: string; // short code, e.g., "NCL"
+  slug?: string; // "nclusion"
+  description?: string;
+  avatarUrl?: string;
 
   /** Visibility & lifecycle */
-  visibility?: OrgVisibility
-  status?: OrgStatus
-  plan?: OrgPlan
-  trialEndsAt?: string
+  visibility?: OrgVisibility;
+  status?: OrgStatus;
+  plan?: OrgPlan;
+  trialEndsAt?: string;
 
   /** Ownership & people */
-  ownerId?: string
-  contributors?: Contributor[]         // high-level maintainers
-  members?: OrgMember[]                // membership roster
-  defaultRole?: OrgRole                // role for newly invited users
+  ownerId?: string;
+  contributors?: Contributor[]; // high-level maintainers
+  members?: OrgMember[]; // membership roster
+  defaultRole?: OrgRole; // role for newly invited users
 
   /** Governance & security */
-  rbacPolicyId?: string                // link/id to RBAC policy doc
-  dataClassification?: 'public' | 'internal' | 'restricted' | 'confidential'
-  domains?: OrgDomain[]                // verified email/login domains
-  ssoProvider?: 'google' | 'azuread' | 'okta' | 'github' | 'custom'
-  mfaRequired?: boolean
+  rbacPolicyId?: string; // link/id to RBAC policy doc
+  dataClassification?: "public" | "internal" | "restricted" | "confidential";
+  domains?: OrgDomain[]; // verified email/login domains
+  ssoProvider?: "google" | "azuread" | "okta" | "github" | "custom";
+  mfaRequired?: boolean;
 
   /** Regionalization */
-  locale?: string                      // "en-US"
-  timezone?: string                    // "America/Toronto"
-  region?: string                      // "ca-central-1" | "us-east-1" etc.
+  locale?: string; // "en-US"
+  timezone?: string; // "America/Toronto"
+  region?: string; // "ca-central-1" | "us-east-1" etc.
 
   /** Execution surface / defaults for new projects */
-  environments?: Environments
-  defaultProjectTemplateId?: string
-  projectNamingConvention?: 'slug' | 'key-name' | 'name-only'
+  environments?: Environments;
+  defaultProjectTemplateId?: string;
+  projectNamingConvention?: "slug" | "key-name" | "name-only";
 
   /** Integrations */
   integrations?: {
-    githubOrg?: string
-    gitlabGroup?: string
-    linearTeamId?: string
-    jiraProjectKey?: string
-    slackWorkspace?: string
-  }
+    githubOrg?: string;
+    gitlabGroup?: string;
+    linearTeamId?: string;
+    jiraProjectKey?: string;
+    slackWorkspace?: string;
+  };
 
   /** Billing (light, non-sensitive) */
   billing?: {
-    customerId?: string
-    currency?: string         // "USD", "CAD"
-    cycle?: 'monthly' | 'yearly' | 'free'
-    seats?: number
-  }
+    customerId?: string;
+    currency?: string; // "USD", "CAD"
+    cycle?: "monthly" | "yearly" | "free";
+    seats?: number;
+  };
 
   /** Org-wide tags/labels */
-  tags?: string[]
+  tags?: string[];
 
   /** Children */
-  projects?: Project[]
+  projects?: Project[];
 
   /** UI config */
-  config?: Config<OrgCanvasSetting>
+  config?: Config<OrgCanvasSetting>;
 }
 
 export interface OptionType<T> {
   label: string;
   value: string | number;
-  color?: string,
-  data?: T,
+  color?: string;
+  data?: T;
 }
 
 export interface SimpleOptionType {
   label: string;
   value: string | number;
-  color?: string
+  color?: string;
 }
-
-
-

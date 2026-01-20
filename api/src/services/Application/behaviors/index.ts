@@ -36,6 +36,10 @@ api.DGet(
     async save(app: Partial<Application>) {
       return await api.DSave(app);
     },
+    async getAppById(e: DEvent, id) {
+      return e.in.DRepository.DGet(Application, { where: { id } }, false);
+    },
   },
 );
+
 export default api.done();

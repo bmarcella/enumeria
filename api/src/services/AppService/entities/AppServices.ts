@@ -13,9 +13,17 @@ export class AppServices extends AppBaseEntity {
   name?: string;
 
   @Column({ type: 'varchar', nullable: true })
-  parentId?: string;
+  defaultEntity?: string;
 
   //
+  @Column({ type: 'text', nullable: true })
+  description?: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  crudConfig?: any;
+
+  @Column({ type: 'varchar', nullable: true })
+  parentId?: string;
 
   @Column({ type: 'varchar', nullable: false })
   applicationId?: string;
@@ -25,16 +33,6 @@ export class AppServices extends AppBaseEntity {
 
   @Column({ type: 'varchar', nullable: false })
   orgId?: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  defaultEntity?: string;
-
-  @Column({ type: 'jsonb', nullable: true })
-  crudConfig?: any;
-
-  //
-  @Column({ type: 'text', nullable: true })
-  description?: string | null;
 
   @ManyToOne(() => Modules, (o) => o.services, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'moduleId' })

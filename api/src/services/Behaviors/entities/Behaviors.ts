@@ -12,27 +12,15 @@ import { Middleware } from './Middleware';
 import { DambaFullMeta } from '@App/entities/BaseEntity';
 import { Http } from '@Damba/v1/service/IServiceDamba';
 import { Extra } from './Extra';
-
-export enum Stereotype {
-  BEHAVIOR,
-  SERVICE,
-  ENTITY,
-  POLICY,
-  MIDDLEWARE,
-  INDEX,
-  DAMBA,
-  MODULE,
-  CONFIG,
-  EXTRA,
-}
+import { DStereotype } from '@Damba/v2/model/DStereotype';
 
 @Entity('codeFile')
 export class CodeFile extends DambaFullMeta {
   @PrimaryGeneratedColumn('uuid')
   id?: string;
 
-  @Column({ type: 'enum', enum: Stereotype, nullable: false })
-  stereotype?: Stereotype;
+  @Column({ type: 'enum', enum: DStereotype, nullable: false })
+  stereotype?: DStereotype;
 
   @Column({ type: 'varchar', nullable: false })
   objId?: string;

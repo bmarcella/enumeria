@@ -2,7 +2,7 @@
 import { CurrentSetting } from '../../../../../common/Entity/UserDto';
 import { createService, DEvent } from '@App/damba.import';
 import { User } from '../entities/User';
-import { AppConfig } from '@App/config/app';
+import { AppConfig } from '@App/config/app.config';
 const auth = AppConfig.authoriztion;
 const api = createService('/users', User, undefined, [auth.check(['user'])]);
 
@@ -26,11 +26,20 @@ api.DPost(
   },
   {
     setCurrentSetting: async (e: DEvent, id, data: CurrentSetting) => {
-      // return await e.in.DRepository.DUpdate(User, {
-      //     id
-      // }, {
-      //     currentSetting: data
-      // })
+      return await e.in.DRepository.DUpdate(
+        User,
+        {
+          id,
+        },
+        {
+          currentSetting: data,
+        },
+      );
+    },
+
+    getCurrentSetting: async (e: DEvent, id) => {
+      const qb = e.in.DRepository.QueryBuilder(User, 'u');
+      return qb.select('u.currentSetting').where('u.id = :id', { id }).getRawOne();
     },
   },
 );

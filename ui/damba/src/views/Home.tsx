@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from 'react'
 
-import AppView from './Pages/AppView'
+import AppView from './Pages/App/AppView'
 import { useApplicationStore } from '@/stores/useApplicationStore'
 import DambaEditorView from './Pages/DambaEditorView'
-import OrgView from './Pages/OrgView'
-import ProjectView from './Pages/ProjectView'
-import SettingView from './Pages/SettingView'
+import OrgView from './Pages/Org/OrgView'
+import ProjectView from './Pages/Project/ProjectView'
+import SettingView from './Pages/Settings/SettingView'
 import SidebarDamba, {
     MenuKey,
     SidebarItem,
@@ -20,6 +20,7 @@ import {
     HiOutlineCog,
 } from 'react-icons/hi'
 import MainDamba from './components/Layout/MainDamba'
+import Meta from './Meta'
 
 const LS_KEY = 'sidebar_menu_key'
 
@@ -41,13 +42,6 @@ const Home = () => {
         return saved && validKeys.has(saved) ? saved : (appName as any)
     })
 
-    // const items: SidebarItem[] = useMemo(()=> [
-    //   { key: appName, label: appName, icon: <HiOutlineViewGrid /> },
-    //   { key: SidebarMenuKey.Editor, label: SidebarMenuKey.Editor, icon: <HiOutlineCode /> },
-    //   { key: SidebarMenuKey.Project, label: SidebarMenuKey.Project, icon: <HiOutlineFolder /> },
-    //   { key: SidebarMenuKey.Organition, label: SidebarMenuKey.Organition, icon: <HiOutlineOfficeBuilding /> },
-    //   { key: SidebarMenuKey.Setting, label: SidebarMenuKey.Setting, icon: <HiOutlineCog /> },
-    // ], [appName]);
     const items: SidebarItem[] = useMemo(
         () => [
             { key: appName, icon: <HiOutlineViewGrid /> },
@@ -59,16 +53,16 @@ const Home = () => {
             },
             { key: SidebarMenuKey.Setting, icon: <HiOutlineCog /> },
         ],
-        [appName],
+        [appName, app],
     )
     useEffect(() => {
-        const appName = app?.name || 'Application'
+        const appName = app?.name || 'No Application'
         setAppName(appName)
         setkey(appName)
     }, [app])
 
     const handleView = (key: string) => {
-        key = !key ? app?.name || 'Application' : key
+        key = !key ? app?.name || 'No Application' : key
         setkey(key)
     }
 
@@ -91,6 +85,7 @@ const Home = () => {
 
     return (
         <>
+            <Meta></Meta>
             <MainDamba
                 sidebar={
                     <SidebarDamba

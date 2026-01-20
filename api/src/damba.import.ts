@@ -9,16 +9,17 @@ import { Request, Response, NextFunction, Router } from 'express';
 import { ServiceConfig } from '@Damba/v1/service/ServiceConfig';
 import express from 'express';
 import DambaApiDocNested from '@Damba/v2/route/DambaRouteDoc';
+import { DataSource } from 'typeorm';
+import { AppConfig } from './config/app.config';
 
 export const DambaServices = (
   _SPS_: IServiceProvider<Request, Response, NextFunction>,
-  AppConfig?: IAppConfig,
+  AppConfig?: IAppConfig<DataSource>,
 ) => {
   ServiceRegistry._init();
   const root = express.Router();
-  const sub = express.Router();
   const { route, extras } = DambaRoute<Request, Response, NextFunction, Router>(
-    { root, sub },
+    { root, express },
     _SPS_,
     AppConfig,
   );
@@ -27,7 +28,6 @@ export const DambaServices = (
 };
 
 export type DEvent = DambaEvent<Request, Response, NextFunction>;
-
 export const createService = <T>(
   name: string,
   entity?: new (...args: any[]) => any,
@@ -36,3 +36,5 @@ export const createService = <T>(
 ) => {
   return createBehaviors<T, Request, Response, NextFunction>(name, entity, config, fmiddleware);
 };
+
+export const auth = AppConfig.authoriztion;
