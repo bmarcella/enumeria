@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IAppConfig } from "@Damba/v1/config/IAppConfig";
+import { IAppConfig } from "@Damba/v2/config/IAppConfig";
 import {
   Http,
   IDActionConfig,
   IServiceComplete,
   IServiceProvider,
 } from "../service/IServiceDamba";
-import { toHttpEnum } from "@Damba/v1/service/DambaHelper";
+import { toHttpEnum } from "@Damba/v2/service/DambaHelper";
 import {
   normalizePath,
   makeExtrasMiddleware,
@@ -112,5 +112,6 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
       root.use(serviceMount, sub);
     }
   }
+
   return { route: root, extras };
 };

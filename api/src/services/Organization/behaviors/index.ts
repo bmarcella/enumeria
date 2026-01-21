@@ -4,9 +4,9 @@ import { AppConfig } from '@App/config/app.config';
 import { ErrorMessage } from '../../../../../common/error/error';
 import { Organization } from '../entities/Organization';
 import { createService, DEvent } from '@App/damba.import';
-const auth = AppConfig.authoriztion;
+const auth = AppConfig?.authoriztion;
 
-const api = createService('/organizations', Organization, undefined, [auth.check(['user'])]);
+const api = createService('/organizations', Organization, undefined, [auth?.check(['user'])]);
 
 api.DGet(
   '/:id/user',

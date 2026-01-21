@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { User } from '../services/User/entities/User';
 import { ChatAi } from '../services/AiAgentChat/entities/ChatAi';
 import { MessageAi } from '../services/AiAgentChat/entities/MessageAi';
@@ -17,26 +18,24 @@ import { Policy } from '@App/services/Behaviors/entities/Policy';
 import { Extra } from '@App/services/Behaviors/entities/Extra';
 import { Middleware } from '@App/services/Behaviors/entities/Middleware';
 
-export const DBConfig = {
-  entities: [
-    User,
-    Role,
-    ChatAi,
-    MessageAi,
-    Organization,
-    OrgMember,
-    OrgDomain,
-    Contributor,
-    Project,
-    Application,
-    Modules,
-    AppServices,
-    Behavior,
-    Middleware,
-    Policy,
-    Extra,
-    CodeFile,
-    Entities,
-    Invitation,
-  ],
-};
+export const DBEntities = [
+  User,
+  Role,
+  ChatAi,
+  MessageAi,
+  Organization,
+  OrgMember,
+  OrgDomain,
+  Contributor,
+  Project,
+  Application,
+  Modules,
+  AppServices,
+  Behavior,
+  Middleware,
+  Policy,
+  Extra,
+  CodeFile,
+  Entities,
+  Invitation,
+];

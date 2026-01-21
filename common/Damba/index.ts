@@ -1,43 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { IAppConfig } from "./v1/config/IAppConfig";
+import type { IAppConfig, IProcessHandler } from "./v2/config/IAppConfig";
 
-interface IProcessHandler {
-  /** NodeJS process event name (e.g. "SIGINT", "SIGTERM", "uncaughtException") */
-  name: string;
-  /** If true, handler will be invoked with the error payload */
-  error: boolean;
-  withoutError?: (server?: any) => void;
-  withError?: (e: unknown, server?: any) => void;
-}
-
-interface IDambaParams<DS = any> {
+export interface IDambaParams<DS = any> {
   datasource: DS;
   _SPS_: any;
-
   AppConfig: IAppConfig<DS>;
-
   // Dependencies are injected for testability / portability
   express: any;
   route?: any;
-
   cors?: (options?: any) => any;
   bodyParser?: {
     json: (options?: any) => any;
     urlencoded: (options?: any) => any;
   };
   session?: (options?: any) => any;
-  // Optional resources used by docs / tooling
   extras?: any;
   doc?: any;
   orm?: any;
-
-  /**
-   * Optional override of port (if your IAppConfig also contains a port,
-   * this value can be used as a fallback)
-   */
   port?: number;
-
   processes?: IProcessHandler[];
 }
 
@@ -49,19 +30,20 @@ export class DambaApp<DS> {
     this.assertValid(params);
 
     this.app = params.express();
-
     this.registerMiddleware(params);
     this.registerDocs(params);
     this.registerRoutes(params);
-
     this.server = this.launch(params);
     this.registerProcessHandlers(params);
   }
 
   private assertValid(params: IDambaParams<DS>) {
-    if (!params?.AppConfig) throw new Error("DambaApp: AppConfig is required");
+    if (!params?.AppConfig)
+      throw new Error(`${params?.AppConfig.appName} AppConfig is required`);
     if (typeof params.express !== "function")
-      throw new Error("DambaApp: express() factory is required");
+      throw new Error(
+        `${params?.AppConfig.appName}: express() factory is required`
+      );
   }
 
   private registerMiddleware(params: IDambaParams<DS>) {
@@ -95,7 +77,6 @@ export class DambaApp<DS> {
 
   private registerDocs(params: IDambaParams<DS>) {
     const { AppConfig } = params;
-
     // Extras docs
     if (
       AppConfig.path?.docs?.extras &&
@@ -116,6 +97,11 @@ export class DambaApp<DS> {
 
   private registerRoutes(params: IDambaParams<DS>) {
     const { AppConfig, route } = params;
+
+    if (AppConfig.call?.welcome) {
+      this.app.get("/", AppConfig.call.welcome(AppConfig));
+    }
+
     if (AppConfig.path?.basic && route) {
       this.app.use(AppConfig.path.basic, route);
     }
@@ -135,7 +121,10 @@ export class DambaApp<DS> {
       } catch (e) {
         // Fail fast if launch callback is faulty
         // eslint-disable-next-line no-console
-        console.error("DambaApp: launch callback threw:", e);
+        console.error(
+          `${params?.AppConfig.appName}: launch callback threw:`,
+          e
+        );
       }
     });
   }

@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createBehaviors } from '@Damba/v2/service/DambaService';
-import { IAppConfig } from '@Damba/v1/config/IAppConfig';
+import { IAppConfig } from '@Damba/v2/config/IAppConfig';
 import { DambaRoute } from '@Damba/v2/route/DambaRoute';
 import { IServiceProvider } from '@Damba/v2/service/IServiceDamba';
-import { ServiceRegistry } from '@Damba/v1/service/ServiceRegistry';
-import { DEvent as DambaEvent } from '@Damba/v1/service/DEvent';
+import { ServiceRegistry } from '@Damba/v2/service/ServiceRegistry';
+import { DEvent as DambaEvent } from '@Damba/v2/service/DEvent';
 import { Request, Response, NextFunction, Router } from 'express';
-import { ServiceConfig } from '@Damba/v1/service/ServiceConfig';
+import { ServiceConfig } from '@Damba/v2/service/ServiceConfig';
 import express from 'express';
 import DambaApiDocNested from '@Damba/v2/route/DambaRouteDoc';
 import { DataSource } from 'typeorm';

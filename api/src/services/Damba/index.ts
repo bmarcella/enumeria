@@ -6,7 +6,7 @@ import { ChatPromptTemplateLangChain } from './behaviors/ChatPromtTemplate';
 import { BehaviorsChain } from '@Damba/v2/service/DambaService';
 import { loadFilesBehavior } from './behaviors/loadFiles';
 
-const api = createService('/test', Project);
+const api = createService('/helper');
 
 const behaviors: BehaviorsChain = {
   chat: ChatPromptTemplateLangChain(api),

@@ -1,5 +1,5 @@
-import { readdir, readFile } from "fs/promises";
-import { join, parse } from "path";
+import { readdir, readFile, stat } from "fs/promises";
+import { join, parse, resolve } from "path";
 
 export interface IFileDescriptor {
   name: string;
@@ -10,19 +10,24 @@ export interface IFileDescriptor {
 }
 
 export class FileSystemReader {
-  public static async readAll(basePath: string): Promise<IFileDescriptor[]> {
-    const files: IFileDescriptor[] = [];
+  public static async readAll(basePath: string) {
+    const files: any = [];
+
+    try {
+      await stat(basePath);
+    } catch {
+      throw new Error(`Base path does not exist: ${basePath}`);
+    }
 
     await this.walk(basePath, basePath, files);
-
     return files;
   }
 
   private static async walk(
     basePath: string,
     currentPath: string,
-    result: IFileDescriptor[]
-  ): Promise<void> {
+    result: any[]
+  ) {
     const entries = await readdir(currentPath, { withFileTypes: true });
 
     for (const entry of entries) {
@@ -35,8 +40,8 @@ export class FileSystemReader {
 
       if (!entry.isFile()) continue;
 
-      const parsed = parse(fullPath);
       const content = await readFile(fullPath, "utf8");
+      const parsed = parse(fullPath);
 
       result.push({
         name: parsed.name,
@@ -49,7 +54,9 @@ export class FileSystemReader {
   }
 }
 
+export const PROJECT_ROOT = resolve(process.cwd(), "..");
+
 export const LoadFiles = async (basePath: string) => {
-  const files = await FileSystemReader.readAll(basePath);
+  const files = await FileSystemReader.readAll(resolve(PROJECT_ROOT, basePath));
   return files;
 };

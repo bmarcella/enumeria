@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { IAppConfig } from "@Damba/v1/config/IAppConfig";
-import { IDActionConfig, IServiceComplete, IServiceProvider, TimeoutType } from "../service/IServiceDamba";
+import { IAppConfig } from "@Damba/v2/config/IAppConfig";
+import {
+  IDActionConfig,
+  IServiceComplete,
+  IServiceProvider,
+  TimeoutType,
+} from "../service/IServiceDamba";
 import { toHttpEnum } from "@Damba/v1/service/DambaHelper";
 
 const normalizePath = (p?: string) => {
@@ -28,7 +33,7 @@ export type NestedApiDoc = Record<
         routeMiddlewareCount: number;
         hasHandler: boolean;
         extras?: any;
-        timeout?: TimeoutType
+        timeout?: TimeoutType;
       }
     >
   >
@@ -41,14 +46,22 @@ const DambaApiDocNested = <REQ, RES, NEXT>(
   const doc: NestedApiDoc = {};
   let extras: any = {};
 
-  const makeExtrasMiddleware = (extrasObj: any, name: string, routeExtras?: any) => {
+  const makeExtrasMiddleware = (
+    extrasObj: any,
+    name: string,
+    routeExtras?: any
+  ) => {
     const incoming = routeExtras ?? {};
     const existing = extrasObj?.[name] ?? {};
     return { ...extrasObj, [name]: { ...existing, ...incoming } };
   };
 
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
-    const { service, middleware } = serviceComplete as IServiceComplete<REQ, RES, NEXT>;
+    const { service, middleware } = serviceComplete as IServiceComplete<
+      REQ,
+      RES,
+      NEXT
+    >;
     const serviceMws = toArray(middleware);
 
     const name = serviceMount.replace("/", "").toLowerCase();
@@ -69,7 +82,7 @@ const DambaApiDocNested = <REQ, RES, NEXT>(
 
       const routeMws = toArray((value as any)?.middleware);
       const handler = (value as any)?.behavior;
-      const config  = (value as any)?.config as IDActionConfig;
+      const config = (value as any)?.config as IDActionConfig;
 
       extras = makeExtrasMiddleware(extras, name, (value as any)?.extras);
 
@@ -85,7 +98,7 @@ const DambaApiDocNested = <REQ, RES, NEXT>(
         hasHandler: !!handler,
         extras: (value as any)?.extras,
         decription: config?.description,
-        timeout: config?.timeout
+        timeout: config?.timeout,
       };
     }
   }

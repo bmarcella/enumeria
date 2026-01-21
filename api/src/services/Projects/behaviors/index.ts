@@ -10,7 +10,7 @@ import { Application } from '@App/services/Application/entities/Application';
 import { Modules } from '@App/services/Modules/entities/Modules';
 import { AppServices } from '@App/services/AppService/entities/AppServices';
 
-const api = createService('/projects', Project, undefined, [auth.check(['user'])]);
+const api = createService('/projects', Project, undefined, [auth?.check(['user'])]);
 
 api.DGet(
   '/:id_org/organization/:id_user/user',

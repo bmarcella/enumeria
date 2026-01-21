@@ -9,9 +9,7 @@ import { CheckEnv } from '@App/services/Projects';
 import { CurrentSetting } from '@Common/Entity/UserDto';
 import { Application } from '@App/services/Application/entities/Application';
 
-const api = createService('/services', AppServices, undefined, [
-  auth.check(['user'])
-]);
+const api = createService('/services', AppServices, undefined, [auth?.check(['user'])]);
 
 api.DPost(
   '/',

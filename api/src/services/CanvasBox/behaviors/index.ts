@@ -10,7 +10,7 @@ import { createService, DEvent } from '@App/damba.import';
 import { AppConfig } from '@App/config/app.config';
 const auth = AppConfig.authoriztion;
 
-const api = createService('/entities', Entities, undefined, [auth.check(['user'])]);
+const api = createService('/entities', Entities, undefined, [auth?.check(['user'])]);
 
 api.DPost('/', async (e: DEvent) => {
   let data = api.body() as Partial<Entities>;

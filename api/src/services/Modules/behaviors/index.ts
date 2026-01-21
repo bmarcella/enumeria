@@ -6,7 +6,7 @@ import { AppServices } from '@App/services/AppService/entities/AppServices';
 import { CurrentSetting } from '@Common/Entity/UserDto';
 import z from 'zod';
 
-const api = createService('/modules', Modules, undefined, [auth.check(['user'])]);
+const api = createService('/modules', Modules, undefined, [auth?.check(['user'])]);
 
 export const ModuleSchema = z.object({
   name: z.string().min(1, 'Name is required'),

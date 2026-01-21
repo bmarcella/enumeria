@@ -17,7 +17,7 @@ export type DEventHandler<REQ = any, RES = any, NEXT = any> = (
 ) => Promise<any> | any;
 
 export type DEventHandlerFactory<
-  API = CreateBehaviorsReturn,
+  API = DambaApi,
   REQ = any,
   RES = any,
   NEXT = any,
@@ -34,7 +34,7 @@ type AnyFn = (...args: any[]) => any;
  * The typed return shape of createBehaviors.
  * (Kept mostly `any` to match the current implementation, but now the API is typed.)
  */
-export type CreateBehaviorsReturn<
+export type DambaApi<
   T = any,
   REQ = any,
   RES = any,
@@ -128,7 +128,7 @@ export const createBehaviors = <
     crud: DefaultDCrudValues,
   },
   _fmiddleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[]
-): Omit<CreateBehaviorsReturn<T, REQ, RES, NEXT, ENTITY>, "Entity"> & {
+): Omit<DambaApi<T, REQ, RES, NEXT, ENTITY>, "Entity"> & {
   Entity: ENTITY | undefined;
 } => {
   const routes: Record<string, any> = {};

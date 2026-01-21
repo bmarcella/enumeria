@@ -13,7 +13,7 @@ import { createService, DEvent } from '@App/damba.import';
 import { GenTokenJwt } from '@Damba/v1/auth/AuthMiddleware';
 import { Role, RoleName } from '@App/services/User/entities/Role';
 import { AppConfig } from '@App/config/app.config';
-const auth = AppConfig.authoriztion;
+const auth = AppConfig?.authoriztion;
 const api = createService('/auth');
 
 api.DPost(
@@ -235,6 +235,6 @@ api.DPost(
       );
     },
   },
-  [auth.check(['user'])],
+  [auth?.check(['user'])],
 );
 export default api.done();

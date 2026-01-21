@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // config/app-config.ts
 import dotenv from 'dotenv';
@@ -15,7 +16,7 @@ import {
   mustEnv,
   AppShutdownParams,
 } from '@Damba/v1/config/ConfigHelper';
-import { IAppConfig } from '@Damba/v1/config/IAppConfig';
+import { IAppConfig } from '@Damba/v2/config/IAppConfig';
 import { Mail } from '@Damba/v2/mail';
 import { Server } from 'http';
 import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
@@ -24,8 +25,9 @@ import { DataSource } from 'typeorm';
 import { DEvent } from '@App/damba.import';
 import { authorize } from '@Damba/v1/auth/AuthMiddleware';
 import jwt from 'jsonwebtoken';
-import { DBConfig } from './db';
 import { ChatOllama } from '@langchain/ollama';
+import { DBEntities } from './db';
+import createWelcomeHandler from '@Damba/v2/welcome';
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ const SESSION_COOKIES_SECURE = parseBoolean(process.env.SESSION_COOKIES_SECURE, 
 const SESSION_SAMESITE = (process.env.SESSION_SAMESITE ?? 'lax').toLowerCase() as SameSiteOption;
 
 export const AppConfig: IAppConfig<DataSource> = {
+  appName: process.env.APP_NAME || 'DambaApp',
+  description: process.env.APP_DESCRIPTION || 'Damba Application',
   cors: {
     allowedOrigins: ['http://localhost:5174/'],
     corsOptions: {
@@ -105,7 +109,7 @@ export const AppConfig: IAppConfig<DataSource> = {
       const oauth2Google = googleAuth.getAuth;
       const ollama = new ChatOllama({
         temperature: 0,
-        model: 'gemma3:4b',
+        model: 'gpt-oss:120b',
       });
       return (req: Request, _res: Response, next: NextFunction) => {
         req.extras = extras;
@@ -122,6 +126,7 @@ export const AppConfig: IAppConfig<DataSource> = {
         `[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`,
       );
     },
+    welcome: createWelcomeHandler,
     extrasDoc: (extras: any) => (req: Request, res: Response) => {
       res.send(extrasToJSON(extras));
     },
@@ -151,9 +156,67 @@ export const AppConfig: IAppConfig<DataSource> = {
         mustEnv('JWT_PUBLIC_KEY'),
         jwt,
         roles,
-        AppConfig.authoriztion.strategy,
+        AppConfig?.authoriztion?.strategy,
       );
     },
   },
-  typeOrmDatabaseConfig: DBConfig,
+  databaseConfig: {
+    entities: DBEntities,
+    initOrm: async () => {
+      const orm = DambaTypeOrm.get(DataSource, process.env as any, DBEntities, {
+        retries: 8,
+        retryDelayMs: 1000,
+        log: console.log,
+      });
+      const dataSource = (await orm.init()) as DataSource;
+      orm.enableProcessSignalHandlers();
+      return { orm, dataSource };
+    },
+  },
+  processes: (orm: DambaTypeOrm<DataSource>) => {
+    return [
+      {
+        name: 'SIGTERM',
+        error: false,
+        withoutError: (server: any) =>
+          void AppConfig.call.shutdown?.({
+            server: server,
+            name: 'SIGTERM',
+            orm,
+          }),
+      },
+      {
+        name: 'SIGINT',
+        error: false,
+        withoutError: (server: any) =>
+          void AppConfig.call.shutdown?.({
+            server: server,
+            name: 'SIGINT',
+            orm,
+          }),
+      },
+      {
+        name: 'unhandledRejection',
+        error: true,
+        withError: (err: any) => {
+          console.error('unhandledRejection', err);
+          // If you want fail-fast instead of just logging, uncomment:
+          // void AppConfig.call.shutdown?.({ server: (Damba.instance as any)?.server, name: "unhandledRejection", orm });
+        },
+      },
+      {
+        name: 'uncaughtException',
+        error: true,
+        withoutError: () => {},
+        withError: (err: any, server: any) => {
+          console.error('uncaughtException', err);
+          void AppConfig.call.shutdown?.({
+            server: server,
+            name: 'uncaughtException',
+            orm,
+          });
+        },
+      },
+    ];
+  },
 } as const;

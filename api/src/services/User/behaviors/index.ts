@@ -4,7 +4,7 @@ import { createService, DEvent } from '@App/damba.import';
 import { User } from '../entities/User';
 import { AppConfig } from '@App/config/app.config';
 const auth = AppConfig.authoriztion;
-const api = createService('/users', User, undefined, [auth.check(['user'])]);
+const api = createService('/users', User, undefined, [auth?.check(['user'])]);
 
 api.DGet(
   '/metaSetting',
