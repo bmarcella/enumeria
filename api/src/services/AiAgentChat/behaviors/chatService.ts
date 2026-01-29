@@ -1,12 +1,6 @@
 /* eslint-disable no-async-promise-executor */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Request, Response } from 'express';
-import { ChatCompletion, ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-import { ChatAi, Service_tier } from '../entities/ChatAi';
-import { DGet, DSave } from '../../../../../common/mvc/CrudService';
-import { MessageAi } from '../entities/MessageAi';
-import { v4 as uuidv4 } from 'uuid';
 const services = {
   //   home: async(0: Request, res: Response) => {
   //   return res.send({

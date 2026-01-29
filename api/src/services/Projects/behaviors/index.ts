@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Project } from '../entities/Project';
+import { Project } from '../../../entities/Project';
 import { CheckIfOrgAndUserExist, GetCurrentOrg } from '../middlewares';
 import { DambaEnvironmentType } from '../../../../../common/Entity/env';
 import { ProjectDto } from '../dtos/ProjectsDto';
 import { CurrentSetting } from '../../../../../common/Entity/UserDto';
 import { ErrorMessage } from '../../../../../common/error/error';
 import { auth, createService, DEvent } from '@App/damba.import';
-import { Application } from '@App/services/Application/entities/Application';
-import { Modules } from '@App/services/Modules/entities/Modules';
-import { AppServices } from '@App/services/AppService/entities/AppServices';
+import { Application } from '@App/entities/Application';
+import { AppServices } from '@App/entities/AppServices';
+import { Modules } from '@App/entities/Modules';
 
 const api = createService('/projects', Project, undefined, [auth?.check(['user'])]);
 

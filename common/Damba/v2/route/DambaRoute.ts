@@ -19,19 +19,22 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
   { root, express }: any,
   _SPS_: IServiceProvider<REQ, RES, NEXT>,
   AppConfig?: IAppConfig<any>
-): { route: ROUTER; extras: any } => {
+): { route: ROUTER; extras: any; events: any } => {
   let extras: any = {};
+  let all_events: any = {};
 
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
     const sub = express.Router();
     // eslint-disable-next-line no-console
     if (AppConfig?.logRoute) console.debug("Mount service:", serviceMount);
 
-    const { service, middleware } = serviceComplete as IServiceComplete<
+    const { service, middleware, events } = serviceComplete as IServiceComplete<
       REQ,
       RES,
       NEXT
     >;
+
+    all_events = { ...all_events, ...events };
 
     for (const [key, value] of Object.entries(service)) {
       if (!value) continue;
@@ -112,6 +115,5 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
       root.use(serviceMount, sub);
     }
   }
-
-  return { route: root, extras };
+  return { route: root, extras, events: all_events };
 };

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ErrorMessage } from '../../../../../common/error/error';
 import { DambaEnvironmentType } from '../../../../../common/Entity/env';
-import { Project } from '../entities/Project';
+import { Project } from '../../../entities/Project';
 import { DEvent } from '@App/damba.import';
 
 const isDambaEnvironmentType = (value: any): value is DambaEnvironmentType => {

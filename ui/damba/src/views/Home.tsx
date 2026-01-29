@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import AppView from './Pages/App/AppView'
 import { useApplicationStore } from '@/stores/useApplicationStore'
-import DambaEditorView from './Pages/DambaEditorView'
+import DambaEditorView from './Pages/Editor/DambaEditorView'
 import OrgView from './Pages/Org/OrgView'
 import ProjectView from './Pages/Project/ProjectView'
 import SettingView from './Pages/Settings/SettingView'

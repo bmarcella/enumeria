@@ -30,6 +30,7 @@ export enum Http {
   DELETE = "DELETE",
   PATCH = "PATCH",
 }
+export type  EventHandler<SK = any> = (sokect : SK, payload?: any) => void 
 
 export type ServiceFn<REQ, RES, NEXT> = (
   damba_event: DEvent<REQ, RES, NEXT>
@@ -55,4 +56,5 @@ export interface IServiceComplete<REQ, RES, NEXT> {
   service: IServicesMap<REQ, RES, NEXT>;
   middleware?: ((req: REQ, res: RES, next: NEXT) => any)[] | [];
   dbEntity?: new (...args: any[]) => any | any;
+  events: Record<string, EventHandler>
 }

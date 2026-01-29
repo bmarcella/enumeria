@@ -19,7 +19,10 @@ export type AppReadyType = (
   ...args: []
 ) => (req: any, res: any, next: any) => void;
 export type AppHelperType<T> = (
-  DB: T,
+  extras: any,
+  DB?: T,
+) => (req: any, res: any, next: any) => void;
+export type AppHelperTypeWDB<T> = (
   extras: any
 ) => (req: any, res: any, next: any) => void;
 

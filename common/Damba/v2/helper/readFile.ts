@@ -1,7 +1,8 @@
 import { readdir, readFile, stat } from "fs/promises";
 import { join, parse, resolve } from "path";
 
-export interface IFileDescriptor {
+export interface IDambaFile {
+  id?:string 
   name: string;
   extension: string;
   content: string;
@@ -11,7 +12,7 @@ export interface IFileDescriptor {
 
 export class FileSystemReader {
   public static async readAll(basePath: string) {
-    const files: any = [];
+    const files: IDambaFile [] = [];
 
     try {
       await stat(basePath);
@@ -56,7 +57,7 @@ export class FileSystemReader {
 
 export const PROJECT_ROOT = resolve(process.cwd(), "..");
 
-export const LoadFiles = async (basePath: string) => {
+export const LoadFiles = async (basePath: string)  => {
   const files = await FileSystemReader.readAll(resolve(PROJECT_ROOT, basePath));
   return files;
 };

@@ -4,7 +4,6 @@
 import dotenv from 'dotenv';
 import type { NextFunction, Request, Response } from 'express';
 import nodemailer from 'nodemailer';
-import OpenAI from 'openai';
 import { OAuth2Client } from 'google-auth-library';
 import type { ExtrasMap } from '@Damba/v1/service/IServiceDamba';
 import { DambaRepository } from '@Damba/v2/dao';
@@ -28,6 +27,9 @@ import jwt from 'jsonwebtoken';
 import { ChatOllama } from '@langchain/ollama';
 import { DBEntities } from './db';
 import createWelcomeHandler from '@Damba/v2/welcome';
+import { TavilySearch } from '@langchain/tavily';
+import { ChatOpenAI } from '@langchain/openai';
+import { socketConfig } from './SocketConfig';
 
 dotenv.config();
 
@@ -94,10 +96,14 @@ export const AppConfig: IAppConfig<DataSource> = {
     },
   },
   call: {
-    helper: (DB: DataSource, extras: ExtrasMap) => {
+    helper: (extras: ExtrasMap, DB?: DataSource) => {
       const DRepo = DambaRepository.init(DB);
       const aiApiKey = mustEnv('OPENAI_API_KEY');
-      const AI = new OpenAI({ apiKey: aiApiKey });
+      const openAi = new ChatOpenAI({
+        apiKey: aiApiKey,
+        model: "gpt-4o-mini",
+        temperature: 0.2,
+      });
       const smtpUser = mustEnv('SMTP_USER');
       const smtpPass = mustEnv('SMTP_PASSWORD'); // <-- add this env var (or rename to your existing one)
       const mail = new Mail(nodemailer, smtpUser, smtpPass);
@@ -109,15 +115,22 @@ export const AppConfig: IAppConfig<DataSource> = {
       const oauth2Google = googleAuth.getAuth;
       const ollama = new ChatOllama({
         temperature: 0,
-        model: 'gpt-oss:120b',
+        model:"qwen2.5-coder:32b-instruct"
       });
+      
+      const tavily = new TavilySearch({
+           maxResults: 5,
+           tavilyApiKey: process.env.TAVILY_API_KEY
+      });
+
       return (req: Request, _res: Response, next: NextFunction) => {
         req.extras = extras;
         req.DRepository = DRepo;
-        req.AI = AI;
+        req.openAi = openAi;
         req.mail = mail;
         req.oauth2Google = oauth2Google;
         req.ollama = ollama;
+        req.tavily = tavily;
         next();
       };
     },
@@ -219,4 +232,5 @@ export const AppConfig: IAppConfig<DataSource> = {
       },
     ];
   },
+  socket : socketConfig
 } as const;

@@ -1,22 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { User } from '../services/User/entities/User';
-import { ChatAi } from '../services/AiAgentChat/entities/ChatAi';
-import { MessageAi } from '../services/AiAgentChat/entities/MessageAi';
-import { Contributor } from '../services/Organization/entities/Contributor';
-import { Organization } from '../services/Organization/entities/Organization';
-import { OrgDomain } from '../services/Organization/entities/OrgDomain';
-import { OrgMember } from '../services/Organization/entities/OrgMember';
-import { Project } from '../services/Projects/entities/Project';
-import { Invitation } from '../services/Invitations/entities/Invitation';
-import { Role } from '@App/services/User/entities/Role';
-import { Application } from '@App/services/Application/entities/Application';
-import { Modules } from '@App/services/Modules/entities/Modules';
-import { AppServices } from '@App/services/AppService/entities/AppServices';
-import { Entities } from '@App/services/CanvasBox/entities/CanvasBox';
-import { Behavior, CodeFile } from '@App/services/Behaviors/entities/Behaviors';
-import { Policy } from '@App/services/Behaviors/entities/Policy';
-import { Extra } from '@App/services/Behaviors/entities/Extra';
-import { Middleware } from '@App/services/Behaviors/entities/Middleware';
+import { Application } from "@App/entities/Application";
+import { AppServices } from "@App/entities/AppServices";
+import { Behavior, CodeFile } from "@App/entities/Behaviors";
+import { ChatAi } from "@App/entities/ChatAi";
+import { Contributor } from "@App/entities/Contributor";
+import DambaCoreCode from "@App/entities/DambaCoreCode";
+import { Extra } from "@App/entities/Extra";
+import { Invitation } from "@App/entities/Invitation";
+import { MessageAi } from "@App/entities/MessageAi";
+import { Middleware } from "@App/entities/Middleware";
+import { Modules } from "@App/entities/Modules";
+import { Organization } from "@App/entities/Organization";
+import { OrgDomain } from "@App/entities/OrgDomain";
+import { OrgMember } from "@App/entities/OrgMember";
+import { Policy } from "@App/entities/Policy";
+import { Project } from "@App/entities/Project";
+import { Role } from "@App/entities/Role";
+import { User } from "@App/entities/User";
+import { Entities } from "@App/services/CanvasBox/entities/CanvasBox";
+
 
 export const DBEntities = [
   User,
@@ -38,4 +39,5 @@ export const DBEntities = [
   CodeFile,
   Entities,
   Invitation,
+  DambaCoreCode
 ];

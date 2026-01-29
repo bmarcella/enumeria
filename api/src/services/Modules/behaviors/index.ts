@@ -1,8 +1,8 @@
 // behaviors barrel
 import { auth, createService, DEvent } from '@App/damba.import';
-import { Modules } from '../entities/Modules';
-import { Application } from '@App/services/Application/entities/Application';
-import { AppServices } from '@App/services/AppService/entities/AppServices';
+import { Application } from '@App/entities/Application';
+import { AppServices } from '@App/entities/AppServices';
+import { Modules } from '@App/entities/Modules';
 import { CurrentSetting } from '@Common/Entity/UserDto';
 import z from 'zod';
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { DEvent } from "../../v1/service/DEvent";
+import { DEvent } from "./DEvent";
 import { ServiceConfig } from "../../v1/service/ServiceConfig";
 import { AsyncLocalStorage } from "async_hooks";
 import { IDActionConfig } from "./IServiceDamba";

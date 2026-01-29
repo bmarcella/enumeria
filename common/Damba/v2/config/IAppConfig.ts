@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { DambaTypeOrm } from "../dao/DambaDb";
-import { AppHelperType, AppReadyType, AppShutdownParams } from "./ConfigHelper";
+import { AppHelperType, AppHelperTypeWDB, AppReadyType, AppShutdownParams } from "./ConfigHelper";
 
 // --- Types externes personnalisés --- //
 interface SessionCookieConfig {
@@ -48,8 +48,26 @@ export interface IProcessHandler {
   withError?: (e: unknown, server?: any) => void;
 }
 
+export type LaunchSocket<S, IO> = (server: S) => IO;
+
+export type OnConnect<S = any>= (socket: S) => void;
+export type OnMessage<S = any>= (socket: S, payload: any) => void;
+export type OnDisconnect<S = any, R = any>= (socket: S, reason: R) => void;
+export type OnConnectError<S= any>= (socket: S) => void;
+export type OnErrorSocket<S= any> = (socket: S, error: any) => void;
+export type SocketConfig<S= any, IO = any> = 
+{
+      launch : LaunchSocket<S, IO>
+      onConnect: OnConnect,
+      onDisconnect?: OnDisconnect,
+      onConnectError?: OnConnectError
+      onError?: OnErrorSocket,
+      onMessage?: OnMessage
+      events?: Record<string, (socket: S, payload: any) => void>;
+}
+
 // --- Définition de l'interface principale --- //
-export interface IAppConfig<DS = any> {
+export interface IAppConfig<DS = any,  S = any, IO= any >  {
   appName: string;
   description?: string;
   cors?: {
@@ -91,6 +109,6 @@ export interface IAppConfig<DS = any> {
     check: (roles: string[]) => any;
   };
   processes?: (...args: any[]) => IProcessHandler[];
-
   databaseConfig?: DatabaseConfig<DS>;
+  socket? : SocketConfig
 }

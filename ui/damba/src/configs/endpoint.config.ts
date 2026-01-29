@@ -18,6 +18,7 @@ const endpointConfig = {
     services: '/services',
     auth: '/auth',
     behavior: '/behavior',
+    helper: '/helper',
 }
 
 export default endpointConfig

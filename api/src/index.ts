@@ -13,16 +13,14 @@ import { DataSource } from 'typeorm';
 import { AppConfig } from './config/app.config';
 import { OAuth2Client } from 'google-auth-library';
 import { JwtPayload } from 'jsonwebtoken';
-import OpenAI from 'openai';
-
 import { _SPS_ } from './services';
-import { DambaServices } from './damba.import';
-
 import { ExtrasMap } from '@Damba/v1/route/DambaRoute';
 import { DambaRepository } from '@Damba/v2/dao';
 import { Mail } from '@Damba/v2/mail';
 import { ChatOllama } from '@langchain/ollama';
-import Damba from '@Damba/index';
+import { ChatOpenAI } from '@langchain/openai';
+import { TavilySearch } from '@langchain/tavily';
+import Damba from '@Damba/v2';
 
 declare global {
   namespace Express {
@@ -31,12 +29,13 @@ declare global {
       payload?: JwtPayload;
       token?: string;
       mail: Mail;
-      AI: OpenAI;
+      openAi: ChatOpenAI;
       oauth2Google: OAuth2Client | any;
       DRepository: DambaRepository<DataSource>;
       extras: ExtrasMap;
       data: any;
       ollama: ChatOllama;
+      tavily: TavilySearch;
     }
   }
 }
@@ -57,30 +56,13 @@ declare module 'express-session' {
 async function main() {
   dotenv.config();
   try {
-    if (!AppConfig.databaseConfig || !AppConfig.databaseConfig.initOrm) {
-      throw new Error('TypeOrmDatabaseConfig is not defined in AppConfig');
-    }
-    const { orm, dataSource } = await AppConfig.databaseConfig.initOrm();
-    const { route, extras, doc } = DambaServices(_SPS_, AppConfig);
-
     Damba.start({
-      datasource: dataSource,
       _SPS_,
       AppConfig,
-
-      // injected deps (your DambaApp expects these names)
       express,
       cors,
       bodyParser,
-      session,
-
-      // app-specific pieces
-      route,
-      extras,
-      doc,
-      orm,
-      // process handlers (wired only after server starts, per your DambaApp)
-      processes: AppConfig?.processes ? AppConfig?.processes(orm) : [],
+      session
     });
   } catch (err) {
     console.error(err);

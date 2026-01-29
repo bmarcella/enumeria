@@ -5,11 +5,14 @@ import _App from './Application/behaviors';
 import _Mod from './Modules/behaviors';
 import _Box from './CanvasBox/behaviors';
 import _User from './User/behaviors';
-import _Test from './test/Test';
+import _Wrapper from './test/WrapperTest'
 import _Serv from './AppService/behaviors';
 import _Helper from './Damba';
+import _AI from './AiAgentChat/AiChat';
+import _SK from './test/TestSocket';
 import { NextFunction, Request, Response } from 'express';
 import { IServiceProvider } from '@Damba/v2/service/IServiceDamba';
+
 
 export const _SPS_: IServiceProvider<Request, Response, NextFunction> = {
   ..._Org,
@@ -20,6 +23,8 @@ export const _SPS_: IServiceProvider<Request, Response, NextFunction> = {
   ..._Serv,
   ..._Box,
   ..._User,
-  ..._Test,
   ..._Helper,
+  ..._Wrapper,
+  ..._AI,
+  ..._SK
 };
