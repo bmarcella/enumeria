@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // behaviors barrel
-import { DambaAttributesTemplate } from '../../../../../common/Entity/DambApp';
+import { DambaAttributesTemplate } from '../../../../../common/Damba/v2/Entity/DambApp';
 import { v4 as uuidv4 } from 'uuid';
 import { Entities } from '../entities/CanvasBox';
 import { createService, DEvent } from '@App/damba.import';

@@ -5,7 +5,7 @@ import { auth, createService, DEvent } from '@App/damba.import';
 import { AppServices } from '../../../entities/AppServices';
 import { Entities } from '@App/services/CanvasBox/entities/CanvasBox';
 import { CheckEnv } from '@App/services/Projects';
-import { CurrentSetting } from '@Common/Entity/UserDto';
+import { CurrentSetting } from '@Damba/v2/Entity/UserDto';
 import { Application } from '@App/entities/Application';
 import { Modules } from '@App/entities/Modules';
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { CurrentSetting } from '../../../../../common/Entity/UserDto';
+import { CurrentSetting } from '../../../../../common/Damba/v2/Entity/UserDto';
 import { createService, DEvent } from '@App/damba.import';
 import { AppConfig } from '@App/config/app.config';
 import { User } from '@App/entities/User';

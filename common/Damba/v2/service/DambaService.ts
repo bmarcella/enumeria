@@ -37,7 +37,7 @@ export type DEventHandlerFactory<
   API = DambaApi,
   REQ = any,
   RES = any,
-  NEXT = any,
+  NEXT = any
 > = (
   api?: API
 ) => DEventHandler<REQ, RES, NEXT> | DEventHandler<REQ, RES, NEXT>[];
@@ -46,10 +46,8 @@ export type Behavior<
   API = DambaApi,
   REQ = any,
   RES = any,
-  NEXT = any,
+  NEXT = any
 > = DEventHandlerFactory<API, REQ, RES, NEXT>;
-
-
 
 export type BehaviorsChain<REQ = any, RES = any, NEXT = any> = Record<
   string,
@@ -60,7 +58,7 @@ export type BehaviorsChainLooperContent<
   T = any,
   REQ = any,
   RES = any,
-  NEXT = any,
+  NEXT = any
 > = {
   behavior:
     | DEventHandlerFactory<DambaApi<T, REQ, RES, NEXT>, REQ, RES, NEXT>
@@ -77,21 +75,19 @@ export type BehaviorsChainLooper<
   T = any,
   REQ = any,
   RES = any,
-  NEXT = any,
+  NEXT = any
 > = Record<string, BehaviorsChainLooperContent<T, REQ, RES, NEXT>>;
 
-
-
-export type EventBehaviorChainLooperContent<
-  API = DambaApi,
-  SK = any,
-> = (
+export type EventBehaviorChainLooperContent<API = DambaApi, SK = any> = (
   api?: API
-) => EventHandler<SK> ;
+) => EventHandler<SK>;
 
 export type EventBehavior = EventBehaviorChainLooperContent;
 
-export type  EventBehaviorChainLooper < API = DambaApi , SK = any > = Record<string, EventBehaviorChainLooperContent< API, SK>>;
+export type EventBehaviorChainLooper<API = DambaApi, SK = any> = Record<
+  string,
+  EventBehaviorChainLooperContent<API, SK>
+>;
 
 export type EBChain = EventBehaviorChainLooper;
 
@@ -106,13 +102,13 @@ export type DambaApi<
   REQ = any,
   RES = any,
   NEXT = any,
-  ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any,
+  ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any
 > = {
-  simple_service_name: string,
+  simple_service_name: string;
   Entity: ENTITY | undefined; // runtime "typeof entity" is not representable; see below note
   DRepository: () => any;
   QueryBuilder: (name?: boolean) => any;
-  on: <SK>(name: string , on : EventHandler<SK>)=> void
+  on: <SK>(name: string, on: EventHandler<SK>) => void;
   DFindOne: (where: any) => Promise<any>;
   DFindAll: (where: any) => Promise<any>;
   DFindOneById: () => Promise<any>;
@@ -173,12 +169,12 @@ export type DambaApi<
   done: () => IServiceProvider<REQ, RES, NEXT>;
 };
 
-export const DambaMakeApi = <REQ = any, RES = any, NEXT = any, SK= any> (
+export const DambaMakeApi = <REQ = any, RES = any, NEXT = any, SK = any>(
   api: DambaApi,
   behaviors?: BehaviorsChainLooper,
   events?: EventBehaviorChainLooper
 ): IServiceProvider<REQ, RES, NEXT> => {
-  if(behaviors) {
+  if (behaviors) {
     for (const [path, chain] of Object.entries(behaviors)) {
       const extras = chain.extras ? chain.extras(api) : undefined;
       switch (chain.method) {
@@ -230,9 +226,9 @@ export const DambaMakeApi = <REQ = any, RES = any, NEXT = any, SK= any> (
       }
     }
   }
-  if(events) {
+  if (events) {
     for (const [name, on] of Object.entries(events)) {
-         api.on<SK>(`${api.simple_service_name}:${name}`, on(api))
+      api.on<SK>(`${api.simple_service_name}:${name}`, on(api));
     }
   }
   return api.done();
@@ -241,20 +237,29 @@ export const DambaMakeApi = <REQ = any, RES = any, NEXT = any, SK= any> (
 export type ServiceBuilderParams<T = any, REQ = any, RES = any, NEXT = any> = {
   service: DambaService<T, REQ, RES, NEXT>;
   behaviors?: BehaviorsChainLooper;
-  events?: EventBehaviorChainLooper
+  events?: EventBehaviorChainLooper;
 };
 
-export const createDambaService = <T = any, REQ = any, RES = any, NEXT = any, SK = any>(
+export const createDambaService = <
+  T = any,
+  REQ = any,
+  RES = any,
+  NEXT = any,
+  SK = any
+>(
   params: ServiceBuilderParams
 ): IServiceProvider<REQ, RES, NEXT> => {
-
   const api = createBehaviors<T, REQ, RES, NEXT>(
     params.service.name,
     params.service.entity as any,
     params.service.config,
     params.service.middlewares
   );
-  return DambaMakeApi<REQ, RES, NEXT, SK>(api, params?.behaviors, params.events);
+  return DambaMakeApi<REQ, RES, NEXT, SK>(
+    api,
+    params?.behaviors,
+    params.events
+  );
 };
 
 export type DambaService<T = any, REQ = any, RES = any, NEXT = any> = {
@@ -277,7 +282,7 @@ export const createBehaviors = <
   REQ,
   RES,
   NEXT,
-  ENTITY extends EntityCtor = EntityCtor,
+  ENTITY extends EntityCtor = EntityCtor
 >(
   name: string,
   entity?: ENTITY,
@@ -291,7 +296,7 @@ export const createBehaviors = <
   Entity: ENTITY | undefined;
 } => {
   const routes: Record<string, any> = {};
-  const events: Record<string, EventHandler> = {}
+  const events: Record<string, EventHandler> = {};
 
   name = name.trim();
   let service_name: string = name;
@@ -306,7 +311,6 @@ export const createBehaviors = <
   }
   const simple_service_name = createSimpleName(service_name);
 
-
   const DAction = (
     path: string,
     behavior: any, // Express handler(s) ou array de handlers
@@ -316,8 +320,6 @@ export const createBehaviors = <
   ) => {
     routes[path] = { behavior, middleware, extras, config: cfg };
   };
-
-
 
   /**
    * Enveloppe une fonction `(de: DEvent)` en handler Express
@@ -388,9 +390,9 @@ export const createBehaviors = <
   const DDelete = makeRoute("DELETE");
   const DPatch = makeRoute("PATCH");
   const DPut = makeRoute("PUT");
-  const on = (name: string, on: EventHandler)=>{
-     events[name] = on;
-  }
+  const on = (name: string, on: EventHandler) => {
+    events[name] = on;
+  };
 
   const getContextOrThrow = () => {
     const ctx = DambaContext.get<REQ, RES, NEXT>();
@@ -796,7 +798,7 @@ export const createBehaviors = <
         {},
         config?.crud?.patch?.middlewares
       );
-      
+
     if (config?.crud?.delete?.active)
       DDelete(
         config?.crud_path + config?.crud?.delete.path + "/:id",
@@ -860,24 +862,27 @@ export const createBehaviors = <
       if (entity) {
         runCrud();
       }
-      ServiceRegistry._init().populate(service_name, routes);
+
       const middleware = getMiddlewares(_fmiddleware);
-      return middleware && middleware.length > 0
+      const isMiddlewaye = middleware && middleware.length > 0;
+      ServiceRegistry._init().populate(service_name);
+      const IProvider = isMiddlewaye
         ? {
             [service_name]: {
               service: routes,
               middleware,
               dbEntity: entity,
-              events
+              events,
             },
           }
         : {
             [service_name]: {
               service: routes,
               dbEntity: entity,
-              events
+              events,
             },
           };
+      return IProvider as IServiceProvider<REQ, RES, NEXT>;
     },
   };
 };

@@ -7,7 +7,7 @@ import {
   CanvasBoxMapConfig,
   CanvasBoxStatus,
   EntityStereotype,
-} from '@Common/Entity/CanvasBox';
+} from '@Damba/v2/Entity/CanvasBox';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('entities')
 export class Entities extends DambaFullMeta {

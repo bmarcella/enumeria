@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { SessionUser } from '../../common/Entity/UserDto';
+import { SessionUser } from '../../common/Damba/v2/Entity/UserDto';
 import 'reflect-metadata';
 import 'tsconfig-paths/register';
 import bodyParser from 'body-parser';
@@ -21,6 +21,7 @@ import { ChatOllama } from '@langchain/ollama';
 import { ChatOpenAI } from '@langchain/openai';
 import { TavilySearch } from '@langchain/tavily';
 import Damba from '@Damba/v2';
+import IORedis from "ioredis";
 
 declare global {
   namespace Express {
@@ -36,6 +37,7 @@ declare global {
       data: any;
       ollama: ChatOllama;
       tavily: TavilySearch;
+      redis: IORedis 
     }
   }
 }
@@ -62,7 +64,7 @@ async function main() {
       express,
       cors,
       bodyParser,
-      session
+      session,
     });
   } catch (err) {
     console.error(err);

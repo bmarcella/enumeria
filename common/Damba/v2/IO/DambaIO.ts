@@ -27,7 +27,7 @@ export class DambaIOApp<IO = any> {
 
             if (events) {
                for (const [event, handler] of Object.entries(events)) {
-                  socket.on(event, (payload: any) => handler(socket, payload));
+                  socket.on(event, (payload: any, _callback: any) => handler(socket, payload, _callback, this.io));
                }
             }
 

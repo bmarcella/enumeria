@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ErrorMessage } from '../../../../../common/error/error';
-import { DambaEnvironmentType } from '../../../../../common/Entity/env';
+import { DambaEnvironmentType } from '../../../../../common/Damba/v2/Entity/env';
 import { Project } from '../../../entities/Project';
 import { DEvent } from '@App/damba.import';
 

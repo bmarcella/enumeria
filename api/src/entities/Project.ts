@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { Organization } from './Organization';
 import { AppBaseEntity } from './BaseEntity';
 import { Application } from './Application';
-import { DambaEnvironmentType } from '../../../common/Entity/env';
+import { DambaEnvironmentType } from '../../../common/Damba/v2/Entity/env';
 
 /** Project: child records of an Organization */
 @Entity('projects')

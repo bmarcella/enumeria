@@ -2,7 +2,7 @@
 import { JoinTable, ManyToMany, OneToMany } from 'typeorm';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { Role } from './Role';
-import { CurrentSetting } from '@Common/Entity/UserDto';
+import { CurrentSetting } from '@Damba/v2/Entity/UserDto';
 import { AppBaseEntity } from './BaseEntity';
 import { Organization } from './Organization';
 

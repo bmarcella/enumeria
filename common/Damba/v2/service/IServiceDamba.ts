@@ -30,7 +30,7 @@ export enum Http {
   DELETE = "DELETE",
   PATCH = "PATCH",
 }
-export type  EventHandler<SK = any> = (sokect : SK, payload?: any) => void 
+export type  EventHandler<SK = any, IO= any> = (sokect : SK, payload?: any, _callback?:any, io?: IO) => void 
 
 export type ServiceFn<REQ, RES, NEXT> = (
   damba_event: DEvent<REQ, RES, NEXT>

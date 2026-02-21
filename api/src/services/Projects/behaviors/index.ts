@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Project } from '../../../entities/Project';
 import { CheckIfOrgAndUserExist, GetCurrentOrg } from '../middlewares';
-import { DambaEnvironmentType } from '../../../../../common/Entity/env';
+import { DambaEnvironmentType } from '../../../../../common/Damba/v2/Entity/env';
 import { ProjectDto } from '../dtos/ProjectsDto';
-import { CurrentSetting } from '../../../../../common/Entity/UserDto';
+import { CurrentSetting } from '../../../../../common/Damba/v2/Entity/UserDto';
 import { ErrorMessage } from '../../../../../common/error/error';
 import { auth, createService, DEvent } from '@App/damba.import';
 import { Application } from '@App/entities/Application';

@@ -48,17 +48,8 @@ export type PostAiChatResponse = {
 }
 
 export type PostAiChatResponseLangChain = {
-     id : string [],
-     lc: number,
-     
-     kwargs : {
-        id: string,
-        content: string
-     }
-
-     type: string
+    content: string
 }
-
 
 export type ChatHistory = {
     id: string

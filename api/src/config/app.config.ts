@@ -30,7 +30,7 @@ import createWelcomeHandler from '@Damba/v2/welcome';
 import { TavilySearch } from '@langchain/tavily';
 import { ChatOpenAI } from '@langchain/openai';
 import { socketConfig } from './SocketConfig';
-
+import IORedis from "ioredis";
 dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -117,6 +117,10 @@ export const AppConfig: IAppConfig<DataSource> = {
         temperature: 0,
         model:"qwen2.5-coder:32b-instruct"
       });
+
+      const redis = new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+        maxRetriesPerRequest: null,
+      });
       
       const tavily = new TavilySearch({
            maxResults: 5,
@@ -131,6 +135,7 @@ export const AppConfig: IAppConfig<DataSource> = {
         req.oauth2Google = oauth2Google;
         req.ollama = ollama;
         req.tavily = tavily;
+        req.redis = redis;
         next();
       };
     },

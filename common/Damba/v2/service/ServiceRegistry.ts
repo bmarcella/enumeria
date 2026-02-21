@@ -15,6 +15,11 @@ export class ServiceRegistry<Request, Response, NextFunction> {
   public populate = (path: string, service: any) => {
     this.services[path] = service;
   };
+
+  public clear = () => {
+    this.services = {};
+  };
+
   public get() {
     return this.services;
   }

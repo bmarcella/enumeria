@@ -1,7 +1,7 @@
 import { usGenerativeChatStore } from '../store/generativeChatStore'
 import dayjs from 'dayjs'
 import uniqueId from 'lodash/uniqueId'
-import type { PostAiChatResponse, PostAiChatResponseLangChain } from '../types'
+import type { PostAiChatResponseLangChain } from '../types'
 import { apiPostChat } from '@/services/AiService'
 
 const useChatSend = () => {
@@ -33,31 +33,33 @@ const useChatSend = () => {
         prompt: string,
         attachments?: File[],
     ) => {
-
         // const resp = await apiPostChat<PostAiChatResponse>({
         //     prompt,
         //     attachments,
         // })
-         const resp = await apiPostChat<PostAiChatResponseLangChain>({
-            prompt,
-            attachments,
-        })
-
-        pushConversation(id, {
-            id: uniqueId('ai-conversation-'),
-            sender: {
-                id: 'ai',
-                name: 'Chat AI',
-                avatarImageUrl: '/img/thumbs/ai.jpg',
-            },
-            content: resp.kwargs.content || '',
-            timestamp: dayjs().toDate(),
-            type: 'regular',
-            isMyMessage: false,
-            fresh: true,
-        });
-
-        setIsTyping(false)
+        try {
+            const resp = await apiPostChat<PostAiChatResponseLangChain>({
+                prompt,
+                attachments,
+            })
+            pushConversation(id, {
+                id: uniqueId('ai-conversation-'),
+                sender: {
+                    id: 'ai',
+                    name: 'Chat AI',
+                    avatarImageUrl: '/img/thumbs/ai.jpg',
+                },
+                content: resp.content || '',
+                timestamp: dayjs().toDate(),
+                type: 'regular',
+                isMyMessage: false,
+                fresh: true,
+            })
+            setIsTyping(false)
+        } catch (error) {
+            setIsTyping(false)
+            console.error('Error sending message:', error)
+        }
     }
 
     const createConversation = async (

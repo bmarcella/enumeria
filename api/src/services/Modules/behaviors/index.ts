@@ -3,7 +3,7 @@ import { auth, createService, DEvent } from '@App/damba.import';
 import { Application } from '@App/entities/Application';
 import { AppServices } from '@App/entities/AppServices';
 import { Modules } from '@App/entities/Modules';
-import { CurrentSetting } from '@Common/Entity/UserDto';
+import { CurrentSetting } from '@Damba/v2/Entity/UserDto';
 import z from 'zod';
 
 const api = createService('/modules', Modules, undefined, [auth?.check(['user'])]);
