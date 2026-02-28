@@ -66,6 +66,8 @@ export type SocketConfig<S= any, IO = any> =
       events?: Record<string, (socket: S, payload: any) => void>;
 }
 
+export type QueueConfig = any;
+
 // --- Définition de l'interface principale --- //
 export interface IAppConfig<DS = any,  S = any, IO= any >  {
   appName: string;
@@ -110,5 +112,6 @@ export interface IAppConfig<DS = any,  S = any, IO= any >  {
   };
   processes?: (...args: any[]) => IProcessHandler[];
   databaseConfig?: DatabaseConfig<DS>;
-  socket? : SocketConfig
+  socket? : SocketConfig,
+  queue ? : QueueConfig
 }

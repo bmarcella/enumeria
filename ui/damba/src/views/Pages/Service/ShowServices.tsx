@@ -107,7 +107,7 @@ function ShowServices({ goTo }: { goTo: (key: string | any) => void }) {
                 {/* RIGHT (col-18) */}
                 <main className="col-span-22 lg:col-span-16 ">
                     <Card className="flex flex-col gap-4">
-                        <IDE></IDE>
+                    
                     </Card>
                 </main>
             </div>

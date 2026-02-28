@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DEvent } from "@App/damba.import";
-import { DambaApi, DEventHandlerFactory } from "@Damba/v2/service/DambaService";
+import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { z } from "zod";
@@ -23,13 +23,12 @@ export const searchTool = {
   },
 };
 
-
 // ---- Input validation
 const InputSchema = z.object({
   query: z.string().min(1),
 });
 
-export const pipelineWithToolBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const pipelineWithToolBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     // 1️⃣ Read input
     const getInput = new RunnableLambda({
@@ -38,7 +37,7 @@ export const pipelineWithToolBehavior: DEventHandlerFactory = (api?: DambaApi) =
 
     // 2️⃣ Validate input
     const validateInput = new RunnableLambda({
-      func: (raw) => InputSchema.parse(raw),
+      func: (raw: any) => InputSchema.parse(raw),
     });
 
     // 3️⃣ Call Tool.invoke (IMPORTANT PART)

@@ -16,6 +16,7 @@ import type {
 } from '@/@types/auth'
 import type { ReactNode, Ref } from 'react'
 import type { NavigateFunction } from 'react-router-dom'
+import { CurrentSetting } from '../../../../common/Damba/v2/Entity/UserDto'
 
 type AuthProviderProps = { children: ReactNode }
 
@@ -50,14 +51,21 @@ function AuthProvider({ children }: AuthProviderProps) {
 
     const navigatorRef = useRef<IsolatedNavigatorRef>(null)
 
-    const redirect = () => {
-        const search = window.location.search
-        const params = new URLSearchParams(search)
-        const redirectUrl = params.get(REDIRECT_URL_KEY)
-
-        navigatorRef.current?.navigate(
-            redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath,
+    const redirect = (setthing?: CurrentSetting) => {
+        const projectId = setthing?.projId;
+        let redirectUrl = undefined;
+        if (projectId) {
+            const search = window.location.search
+            const params = new URLSearchParams(search)
+            redirectUrl = params.get(REDIRECT_URL_KEY);
+            navigatorRef.current?.navigate(
+            redirectUrl ? redirectUrl : appConfig.authenticatedProjectPath,
         )
+        } else {
+            navigatorRef.current?.navigate(
+            redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath,
+          )
+        }
     }
 
     const handleSignIn = (tokens: Token, user?: User) => {

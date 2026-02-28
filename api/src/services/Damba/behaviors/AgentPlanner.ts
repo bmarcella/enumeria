@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { DambaApi, DEventHandlerFactory } from '@Damba/v2/service/DambaService';
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { DEvent } from '@Damba/v2/service/DEvent';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import z from 'zod';
@@ -69,7 +69,7 @@ Write a concise final answer.
  * - Phase 2: Executor runs tools in a controlled way (no free-form tool choice)
  * - Phase 3: Synthesizer (LLM) writes final answer based on gathered data
  */
-export const plannerExecutorWithZodBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const plannerExecutorWithZodBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const query = api?.params().query;
 

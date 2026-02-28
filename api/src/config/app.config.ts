@@ -31,6 +31,7 @@ import { TavilySearch } from '@langchain/tavily';
 import { ChatOpenAI } from '@langchain/openai';
 import { socketConfig } from './SocketConfig';
 import IORedis from "ioredis";
+import { QueueConfig } from './QueueConfig';
 dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -237,5 +238,6 @@ export const AppConfig: IAppConfig<DataSource> = {
       },
     ];
   },
-  socket : socketConfig
+  socket : socketConfig,
+  queue : QueueConfig
 } as const;

@@ -58,3 +58,5 @@ export interface IServiceComplete<REQ, RES, NEXT> {
   dbEntity?: new (...args: any[]) => any | any;
   events: Record<string, EventHandler>
 }
+
+export type AnyFn = (...args: any[]) => any;

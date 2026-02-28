@@ -1,8 +1,8 @@
 import { DEvent } from '@App/damba.import';
-import { DambaApi, DEventHandlerFactory } from '@Damba/v2/service/DambaService';
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-export const ChatPromptTemplateLangChain: DEventHandlerFactory = (api?: DambaApi) => {
+export const ChatPromptTemplateLangChain: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const prompt = ChatPromptTemplate.fromMessages([
       ['system', 'You are a helpful assistant.'],
@@ -21,3 +21,13 @@ export const ChatPromptTemplateLangChain: DEventHandlerFactory = (api?: DambaApi
     });
   };
 };
+
+// export const exampleBehavior : Behavior = (api?: DambaApi) => {
+//   return async (e: DEvent) => {
+//     // if you are in a different service
+//     e.in.extras.{service_name}.{extra_name}({params})
+//     // or in you are in the same service 
+//     api?.extras.{extra_name}({params})
+//     e.out.send();
+//   };
+// };

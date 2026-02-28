@@ -14,9 +14,9 @@ import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import {
-    DambaEnvironmentType,
     DambaEnvironments,
-} from '../../../../../../../common/Entity/env'
+    DambaEnvironmentType,
+} from '../../../../../../../common/Damba/v2/Entity/env'
 
 export const projectSchema = z.object({
     name: z.string().min(1, 'Name is required'),

@@ -2,8 +2,8 @@
 // context/OrganizationContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
-import { useSessionUser } from '@/stores/authStore' // your existing auth store
-import { Organization } from '../../../../common/Entity/project'
+import { useSessionUser } from '@/stores/authStore' 
+import { Organization } from '../../../../common/Damba/v2/Entity/project'
 import { useOrganizationStore } from '@/stores/useOrganizationStore'
 import PreLoginLayout from '@/components/layouts/PreLoginLayout'
 import { useAuth } from '@/auth'
@@ -29,7 +29,7 @@ export function OrganizationProvider({
     const setOrganization = useOrganizationStore((s) => s.setOrganization)
     const { authenticated } = useAuth()
     const [initialized, setInitialized] = useState(false)
-    console.log(authenticated, 'authentificated status in org provider')
+    
     useEffect(() => {
         let cancelled = false
         async function init() {

@@ -1,20 +1,44 @@
 
-import { BehaviorsChainLooper, createDambaService, DambaService } from "@Damba/v2/service/DambaService";
-import { reactAgentSimpleSearchBehavior } from "../Damba/behaviors/ReactAgent";
-import { Http } from "@Damba/v2/service/IServiceDamba";
+// import { BehaviorsChainLooper, createDambaService, DambaApi, DambaService } from "@Damba/v2/service/DambaService";
+// import { Http } from "@Damba/v2/service/IServiceDamba";
+// import { DEvent } from "@Damba/v2/service/DEvent";
+// import { Behavior } from "@Damba/v2/Entity/behavior";
 
-const service = {
-    name : "/builder",
-} as DambaService
+// const service = {
+//     name : "/service_name",
+//     entity: {type_orm_entity}
+    
+// } as DambaService
 
-const behaviors: BehaviorsChainLooper = {
-  "/react-agent-simple-search" : {
-      method: Http.GET,
-      behavior: reactAgentSimpleSearchBehavior
-  }
-};
+// export const exampleBehavior : Behavior = (api?: DambaApi) => {
+//   return async (e: DEvent) => {
+//     // Save
+//     api?.DSave(entity)
+//     api?.DDelete({})
+//     api?.DGet({
+//         where: {
+//             key: value 
+//         }
+//     })
+//     e.out.send();
+//   };
+// };
 
-export default  createDambaService( { service, behaviors } ) ;
+// const behaviors: BehaviorsChainLooper = {
+//   "/endpoint" : {
+//       method: Http.POST,
+//       behavior: exampleBehavior,
+//       config: {
+//         validators : {
+//             body : {zod_validator},
+//             query: {zod_validator},
+//             params: {zod_validator}
+//         }
+//       }
+//   }
+// };
+
+// export default  createDambaService( { service, behaviors } ) ;
 
 
 

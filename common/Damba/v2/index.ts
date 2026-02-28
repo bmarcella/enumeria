@@ -5,6 +5,7 @@ import { DambaIO, DambaIOApp } from "./IO/DambaIO";
 import { DambaRoute } from "./route/DambaRoute";
 import DambaApiDocNested from "./route/DambaRouteDoc";
 import { EventHandler, IServiceProvider } from "./service/IServiceDamba";
+import { runWithQueueContext } from "./service/QueuesBull";
 import { ServiceRegistry } from "./service/ServiceRegistry";
 
 export interface IDambaParams<DS = any> {
@@ -19,6 +20,10 @@ export interface IDambaParams<DS = any> {
   };
   session?: (options?: any) => any;
   port?: number;
+  queue?: {
+    tenant : string,
+    correlation: string
+  },
 }
 
 export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
@@ -61,7 +66,7 @@ export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
   }
 
   private registerMiddleware(params: IDambaParams<DS>, extras: any, database?: Database<DS>) {
-    const { AppConfig } = params;
+    const { AppConfig , queue} = params;
 
     // CORS
     if (AppConfig.cors?.corsOptions && params.cors) {
@@ -88,7 +93,31 @@ export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
       (database?.dataSource) ? this.app.use(AppConfig.call.helper( extras, database.dataSource))
       : this.app.use(AppConfig.call.helper(extras))
     }
-    
+    // Queue Context
+    if (queue) {
+        this.app.use(async (req: any, _res: any, next: any) => {
+          try {
+            const tenant = req.header(queue.tenant) ?? "default";
+
+            console.log("\x1b[33mQueue Context is active.\x1b[0m");
+
+            await runWithQueueContext(
+              {
+                keyPrefix: tenant,
+                correlationId: req.header(queue.correlation) ?? undefined,
+              },
+              async () => {
+                console.log("\x1b[33mQueue Context is ready.\x1b[0m");
+                next();
+              }
+            );
+          } catch (err) {
+            next(err);
+          }
+        });
+    } else {
+      console.log("Queue is empty.")
+    }
   }
 
   private registerDocs(AppConfig: IAppConfig<DS>, extras: any, doc: any) {

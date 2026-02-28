@@ -1,8 +1,12 @@
 import { SocketConfig } from "../config/IAppConfig";
 import { EventHandler } from "../service/IServiceDamba";
 
+type Client = { socket: any; requestId: string };
+const clients = new Map<string, Set<any>>(); // requestId -> sockets
+
 export class DambaIOApp<IO = any> {
     sockets : any [] = []
+    clients = new Map<string, Set<any>>(); // requestId -> sockets
 
     constructor (private io: IO | any, private socketConfig : SocketConfig ) {}
 
@@ -27,6 +31,7 @@ export class DambaIOApp<IO = any> {
 
             if (events) {
                for (const [event, handler] of Object.entries(events)) {
+                  console.info('Socket -> '+socket.id+ ' : Now has listen for message -> '+event);
                   socket.on(event, (payload: any, _callback: any) => handler(socket, payload, _callback, this.io));
                }
             }
@@ -34,7 +39,7 @@ export class DambaIOApp<IO = any> {
             socket.on("message", (data: any) => {
                this.socketConfig.onMessage?.(socket, data);
             });
-
+            
             this.sockets.push(socket)
          });
 

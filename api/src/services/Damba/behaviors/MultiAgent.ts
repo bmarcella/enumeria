@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DEvent } from "@App/damba.import";
-import { DambaApi, DEventHandlerFactory } from "@Damba/v2/service/DambaService";
+import { DambaApi, Behavior } from "@Damba/v2/service/DambaService";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createAgent } from "langchain";
 
@@ -15,7 +15,7 @@ Return ONLY one word: codebase or web
   ["user", "{q}"],
 ]);
 
-export const multiAgentsBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const multiAgentsBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const q = api?.params().query;
     if (!q) {

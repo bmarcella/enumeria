@@ -1,8 +1,7 @@
 import {
   CanvasBox,
   CanvasBoxAtributes,
-  VisibilityTypeAttributes,
-  VisibilityTypeClass,
+  VisibilityTypeAttributes
 } from "./CanvasBox";
 import { AppModule, Service } from "./project";
 import { TypeAttbutesTypeOrm } from "./TypeAttributesTypeOrm";

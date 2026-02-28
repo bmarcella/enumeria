@@ -3,7 +3,6 @@
 
 type Ctor<T> = new (...args: any[]) => T;
 
-
 class ORM<T> {
   constructor(private repository: any) {}
 
@@ -52,7 +51,7 @@ class ORMTREE<T> {
   }
 }
 
-export class DambaRepository<DS> {
+export class DambaRepository<DS = any> {
   private DataSource: DS;
 
   public static _instance: DambaRepository<any>;
@@ -68,9 +67,9 @@ export class DambaRepository<DS> {
     return !tree ? new ORM<E>(repo) : new ORMTREE<E>(repo);
   }
 
-  getRepository<E> (e: Ctor<E>) {
+  getRepository<E>(e: Ctor<E>) {
     if (this.DataSource) {
-        return (this.DataSource as any).getRepository(e);
+      return (this.DataSource as any).getRepository(e);
     }
     throw new Error("Datasource is undefined");
   }
@@ -131,17 +130,17 @@ export class DambaRepository<DS> {
    * @param tree   — If true, uses tree repository behavior.
    */
   public DGet = async (
-    T : new (...args: any[]) => any,
+    T: new (...args: any[]) => any,
     predicates?: any,
     all = false,
     tree = false
   ): Promise<any> => {
     const crud = this.init<typeof T>(T, tree);
     all = !predicates ? true : all;
-    return (predicates ? crud.get(all, predicates) : crud.get(all));
+    return predicates ? crud.get(all, predicates) : crud.get(all);
   };
 
-   /**
+  /**
    * Generic data fetch helper for TypeORM entities, it allows to load unique data.
    *
    * 🔹 Parameters:
@@ -150,32 +149,28 @@ export class DambaRepository<DS> {
    * @param tree   — If true, uses tree repository behavior.
    */
 
-   public DGet1 = async <E> (
-    T : Ctor<E>,
+  public DGet1 = async <E>(
+    T: Ctor<E>,
     predicates?: any,
     tree = false
   ): Promise<E> => {
-    return this.DGet(T, predicates, false, tree)
+    return this.DGet(T, predicates, false, tree);
   };
 
-   /**
+  /**
    * Generic data fetch helper for TypeORM entities, it allows to load array of data.
    * 🔹 Parameters:
    * @param T      — The Entity class (constructor) you want to query.
    * @param preds  — (Optional) TypeORM-style filter or "where" object.
    * @param tree   — If true, uses tree repository behavior.
    */
-   public DGetAll = async <E> (
-    T : Ctor<E>,
+  public DGetAll = async <E>(
+    T: Ctor<E>,
     predicates?: any,
     tree = false
   ): Promise<E[]> => {
     return this.DGet(T, predicates, true, tree);
   };
-
-
-
-
 
   public DDelete = async (
     T: new (...args: any[]) => any,

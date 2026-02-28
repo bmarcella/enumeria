@@ -3,7 +3,7 @@ import { OpenAIEmbeddings } from '@langchain/openai';
 import { Document } from '@langchain/core/documents';
 import { LoadFiles, IDambaFile } from '@Damba/v2/helper/readFile';
 import { resolve } from 'path';
-import { DambaApi, DEventHandlerFactory } from '@Damba/v2/service/DambaService';
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { DEvent } from '@Damba/v2/service/DEvent';
 import { createAgent } from 'langchain';
 
@@ -27,7 +27,7 @@ export async function buildQdrantRetriever() {
 
 let retrieverPromise: Promise<any> | null = null;
 
-export const agentRagQdrantBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const agentRagQdrantBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const question = api?.params().query;
 
@@ -38,8 +38,9 @@ export const agentRagQdrantBehavior: DEventHandlerFactory = (api?: DambaApi) => 
 
     // Build retriever once (lazy init)
     if (!retrieverPromise) {
-      retrieverPromise = buildQdrantRetriever();
+        retrieverPromise = buildQdrantRetriever();
     }
+    
     const retriever = await retrieverPromise;
 
     // Wrap retriever as a tool

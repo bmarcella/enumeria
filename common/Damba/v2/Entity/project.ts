@@ -1,11 +1,5 @@
-import {
-  CanvasBox,
-  RelationshipType,
-  VisibilityTypeAttributes,
-  VisibilityTypeClass,
-} from "./CanvasBox";
+
 import { DambaEnvironmentType } from "./env";
-import { TypeAttbutesTypeOrm } from "./TypeAttributesTypeOrm";
 
 export type ServiceKind =
   | "api"

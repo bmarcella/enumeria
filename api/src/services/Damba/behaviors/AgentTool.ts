@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DEvent } from "@App/damba.import";
-import { DambaApi, DEventHandlerFactory } from "@Damba/v2/service/DambaService";
+import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { z } from "zod";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
@@ -30,7 +30,7 @@ Rules:
   ["user", "{request}"],
 ]);
 
-export const toolOnlySearchBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const toolOnlySearchBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const request = api?.params().query;
     if (!request) {

@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DEvent } from '@App/damba.import';
 import { IDambaFile, LoadFiles } from '@Damba/v2/helper/readFile';
-import { DEventHandlerFactory, DambaApi } from '@Damba/v2/service/DambaService';
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { SystemMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { resolve } from 'path';
 
-export const addChatBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const addChatBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     console.log("e.in.ollama model =", (e.in.ollama as any)?.model);
     try {

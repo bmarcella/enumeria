@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ClientTokenDTO, UserDto } from '../../../../common/Entity/UserDto'
+import { ClientTokenDTO, UserDto } from '../../../../common/Damba/v2/Entity/UserDto'
 
 export type SignInCredential = {
     email: string
@@ -55,5 +55,5 @@ export type Token = ClientTokenDTO
 
 export type OauthSignInCallbackPayload = {
     onSignIn: (tokens: Token, user?: User) => void
-    redirect: () => void
+    redirect: (setthing?: any) => void
 }

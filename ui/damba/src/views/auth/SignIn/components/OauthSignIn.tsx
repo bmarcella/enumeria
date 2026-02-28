@@ -5,10 +5,7 @@ import Button from '@/components/ui/Button'
 import { useAuth } from '@/auth'
 import { apiGoogleOauthSignIn } from '@/services/OAuthServices'
 import { useEffect } from 'react'
-import {
-    AuthErrorDTO,
-    AuthResponseDTO,
-} from '../../../../../../../common/Entity/UserDto'
+import { AuthErrorDTO , AuthResponseDTO} from '../../../../../../../common/Damba/v2/Entity/UserDto';
 type OauthSignInProps = {
     setMessage?: (message: string) => void
     disableSubmit?: boolean
@@ -25,12 +22,11 @@ const OauthSignIn = ({ setMessage, disableSubmit }: OauthSignInProps) => {
                             resp.code!,
                         )) as AuthResponseDTO
                         const { user, tokens } = auth
-                        console.log('Google OAuth response:', auth)
                         if (auth.tokens && user) {
                             await onSignIn(tokens, user)
                             setTimeout(() => {
-                                redirect()
-                            }, 3000)
+                                redirect(user.currentSetting);
+                            }, 2000)
                         }
                     } catch (error) {
                         setMessage?.((error as string)?.toString() || '')

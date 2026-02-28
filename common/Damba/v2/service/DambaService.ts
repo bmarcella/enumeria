@@ -2,6 +2,7 @@
 /* eslint-disable prefer-const */
 
 import {
+  AnyFn,
   EventHandler,
   Http,
   IDActionConfig,
@@ -9,7 +10,7 @@ import {
   ServiceFn,
 } from "./IServiceDamba";
 import { DambaContext } from "./DambaContext";
-import { createSimpleName } from "./DambaHelper";
+import { createSimpleName, isArrayOfObjects } from "./DambaHelper";
 import { DEvent } from "./DEvent";
 import {
   ServiceConfig,
@@ -20,12 +21,22 @@ import {
 } from "./ServiceConfig";
 import { ServiceRegistry } from "./ServiceRegistry";
 import { defaultDMiddlewares } from "./GenericMiddleware";
+import { QueueBehaviorContent } from "./QueueService";
+import { getQueue, getQueueEvents, QCtor } from "./QueuesBull";
+import { DambaRepository } from "../dao";
+import { DambaApiType } from "./DambaApiType";
+
+export type DambaApi<
+  T = any,
+  REQ = any,
+  RES = any,
+  NEXT = any,
+  ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any
+> =  DambaApiType;
 
 export type DExtrasHandler = Record<string, AnyFn>;
 
-export type DExtrasHandlerFactory<API = DambaApi> = (
-  api?: API
-) => DExtrasHandler;
+type DExtrasHandlerFactory<API = DambaApi> = (api?: API) => DExtrasHandler;
 
 export type Extras<API = DambaApi> = DExtrasHandlerFactory<API>;
 
@@ -33,12 +44,7 @@ export type DEventHandler<REQ = any, RES = any, NEXT = any> = (
   e: DEvent<REQ, RES, NEXT>
 ) => Promise<any> | any;
 
-export type DEventHandlerFactory<
-  API = DambaApi,
-  REQ = any,
-  RES = any,
-  NEXT = any
-> = (
+type DEventHandlerFactory<API = DambaApi, REQ = any, RES = any, NEXT = any> = (
   api?: API
 ) => DEventHandler<REQ, RES, NEXT> | DEventHandler<REQ, RES, NEXT>[];
 
@@ -54,7 +60,7 @@ export type BehaviorsChain<REQ = any, RES = any, NEXT = any> = Record<
   DEventHandler<REQ, RES, NEXT> | DEventHandler<REQ, RES, NEXT>[]
 >;
 
-export type BehaviorsChainLooperContent<
+type BehaviorChainLooperContent<
   T = any,
   REQ = any,
   RES = any,
@@ -71,6 +77,14 @@ export type BehaviorsChainLooperContent<
   config?: IDActionConfig;
 };
 
+export type BehaviorsChainLooperContent<
+  T = any,
+  REQ = any,
+  RES = any,
+  NEXT = any
+> = BehaviorChainLooperContent<T, REQ, RES, NEXT> |
+    BehaviorChainLooperContent<T, REQ, RES, NEXT>[];
+
 export type BehaviorsChainLooper<
   T = any,
   REQ = any,
@@ -78,167 +92,19 @@ export type BehaviorsChainLooper<
   NEXT = any
 > = Record<string, BehaviorsChainLooperContent<T, REQ, RES, NEXT>>;
 
-export type EventBehaviorChainLooperContent<API = DambaApi, SK = any> = (
+type EventBehaviorChainLooperContent<API = DambaApi, SK = any> = (
   api?: API
 ) => EventHandler<SK>;
-
 export type EventBehavior = EventBehaviorChainLooperContent;
-
-export type EventBehaviorChainLooper<API = DambaApi, SK = any> = Record<
-  string,
-  EventBehaviorChainLooperContent<API, SK>
->;
-
+export type EventBehaviorChainLooper<API = DambaApi, SK = any> = Record<string, EventBehaviorChainLooperContent<API, SK>>;
 export type EBChain = EventBehaviorChainLooper;
 
-type AnyFn = (...args: any[]) => any;
+// Queues
+export type QueueBehavior<Q=any, EQ= any> = Record<string, QueueBehaviorContent<Q, EQ>>
 
-/**
- * The typed return shape of createBehaviors.
- * (Kept mostly `any` to match the current implementation, but now the API is typed.)
- */
-export type DambaApi<
-  T = any,
-  REQ = any,
-  RES = any,
-  NEXT = any,
-  ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any
-> = {
-  simple_service_name: string;
-  Entity: ENTITY | undefined; // runtime "typeof entity" is not representable; see below note
-  DRepository: () => any;
-  QueryBuilder: (name?: boolean) => any;
-  on: <SK>(name: string, on: EventHandler<SK>) => void;
-  DFindOne: (where: any) => Promise<any>;
-  DFindAll: (where: any) => Promise<any>;
-  DFindOneById: () => Promise<any>;
 
-  middlewares: any;
-
-  data: () => any;
-  setData: (new_data: any) => void;
-
-  body: () => any;
-  params: () => any;
-  query: () => any;
-
-  DSave: (obj: any) => Promise<any>;
-
-  DGet: (
-    _path: string,
-    _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
-    _extras?: Record<string, AnyFn>,
-    _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
-  ) => void;
-
-  DPost: (
-    _path: string,
-    _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
-    _extras?: Record<string, AnyFn>,
-    _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
-  ) => void;
-
-  DDelete: (
-    _path: string,
-    _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
-    _extras?: Record<string, AnyFn>,
-    _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
-  ) => void;
-
-  DPatch: (
-    _path: string,
-    _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
-    _extras?: Record<string, AnyFn>,
-    _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
-  ) => void;
-
-  DPut: (
-    _path: string,
-    _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
-    _extras?: Record<string, AnyFn>,
-    _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
-  ) => void;
-
-  extras: any;
-
-  done: () => IServiceProvider<REQ, RES, NEXT>;
-};
-
-export const DambaMakeApi = <REQ = any, RES = any, NEXT = any, SK = any>(
-  api: DambaApi,
-  behaviors?: BehaviorsChainLooper,
-  events?: EventBehaviorChainLooper
-): IServiceProvider<REQ, RES, NEXT> => {
-  if (behaviors) {
-    for (const [path, chain] of Object.entries(behaviors)) {
-      const extras = chain.extras ? chain.extras(api) : undefined;
-      switch (chain.method) {
-        case Http.GET:
-          api.DGet(
-            path,
-            chain.behavior(api),
-            extras,
-            chain.middlewares ?? [],
-            chain.config
-          );
-          break;
-        case Http.DELETE:
-          api.DDelete(
-            path,
-            chain.behavior(api),
-            extras,
-            chain.middlewares ?? [],
-            chain.config
-          );
-          break;
-        case Http.PATCH:
-          api.DPatch(
-            path,
-            chain.behavior(api),
-            extras,
-            chain.middlewares ?? [],
-            chain.config
-          );
-          break;
-        case Http.POST:
-          api.DPost(
-            path,
-            chain.behavior(api),
-            extras,
-            chain.middlewares ?? [],
-            chain.config
-          );
-          break;
-        case Http.PUT:
-          api.DPatch(
-            path,
-            chain.behavior(api),
-            extras,
-            chain.middlewares ?? [],
-            chain.config
-          );
-          break;
-      }
-    }
-  }
-  if (events) {
-    for (const [name, on] of Object.entries(events)) {
-      api.on<SK>(`${api.simple_service_name}:${name}`, on(api));
-    }
-  }
-  return api.done();
-};
-
-export type ServiceBuilderParams<T = any, REQ = any, RES = any, NEXT = any> = {
-  service: DambaService<T, REQ, RES, NEXT>;
-  behaviors?: BehaviorsChainLooper;
-  events?: EventBehaviorChainLooper;
-};
+// CHANGE: dedupe listeners to prevent memory leaks
+const __queueListenerRegistry = new Set<string>();
 
 export const createDambaService = <
   T = any,
@@ -249,32 +115,162 @@ export const createDambaService = <
 >(
   params: ServiceBuilderParams
 ): IServiceProvider<REQ, RES, NEXT> => {
+
   const api = createBehaviors<T, REQ, RES, NEXT>(
     params.service.name,
     params.service.entity as any,
     params.service.config,
-    params.service.middlewares
+    params.service.middlewares,
+    params.service.redis
   );
-  return DambaMakeApi<REQ, RES, NEXT, SK>(
+
+  if(params.service.Queue) api.setQueue(params.service.Queue);
+
+  return DambaMakeApi<REQ, RES, NEXT, SK,typeof params.service.Queue , typeof params.service.QueueEvents>(
     api,
     params?.behaviors,
-    params.events
+    params?.events,
+    params.queues,
+    params.service.Queue,
+    params.service.QueueEvents
   );
+
 };
 
-export type DambaService<T = any, REQ = any, RES = any, NEXT = any> = {
+export const DambaMakeApi = <
+  REQ = any,
+  RES = any,
+  NEXT = any,
+  SK = any,
+  Q = any, 
+  EQ = any
+>(
+  api: DambaApi,
+  behaviors?: BehaviorsChainLooper,
+  events?: EBChain,
+  queues?: QueueBehavior<any, any>,
+  QueueCtor?: QCtor<Q>,
+  QueueEventsCtor?: QCtor<EQ>
+): IServiceProvider<REQ, RES, NEXT> => {
+  if (behaviors) {
+  for (const [path, chains] of Object.entries(behaviors)) {
+      const lchains = Array.isArray(chains) ? chains : [chains];
+      for(let chain of lchains){
+        const handler = chain.behavior(api);
+        const extras = chain.extras ? chain.extras(api) : undefined;
+        const middlewares = chain.middlewares ?? [];
+        switch (chain.method) {
+          case Http.GET:
+            api.DGet(path, handler, extras, middlewares, chain.config);
+            break;
+
+          case Http.DELETE:
+            api.DDelete(path, handler, extras, middlewares, chain.config);
+            break;
+
+          case Http.PATCH:
+            api.DPatch(path, handler, extras, middlewares, chain.config);
+            break;
+
+          case Http.POST:
+            api.DPost(path, handler, extras, middlewares, chain.config);
+            break;
+
+          case Http.PUT:
+            api.DPut(path, handler, extras, middlewares, chain.config);
+            break;
+
+          default:
+            // optional: throw or ignore
+              throw new Error(`Unsupported HTTP method: ${String(chain.method)}`);
+        }
+      }
+    }
+  }
+
+  if (events) {
+    for (const [name, on] of Object.entries(events)) {
+      const messageName = `${api.simple_service_name}:${name}`;
+      api.on<SK>(messageName, on(api));
+    }
+  }
+  
+  if (queues) {
+    const redisConnection = (api as any).__redis;
+    if (!redisConnection) throw new Error("Redis connection missing for queues");
+
+    if (!QueueCtor) throw new Error("Queue ctor missing (pass service.Queue)");
+    if (!QueueEventsCtor) throw new Error("QueueEvents ctor missing (pass service.QueueEvents)");
+
+    for (const [name, cfg] of Object.entries(queues)) {
+      const fullQueueName = cfg.queueName ?? `${api.simple_service_name}-${name}`;
+      // instantiate
+      getQueue(QueueCtor, fullQueueName, redisConnection);
+      const qe = getQueueEvents(QueueEventsCtor, fullQueueName, redisConnection) as any;
+
+      const ev = cfg?.events;
+
+      // completed
+      const onCompleted = ev?.completed;
+      if (onCompleted) {
+        const key = `${fullQueueName}:completed`;
+        if (!__queueListenerRegistry.has(key)) {
+          __queueListenerRegistry.add(key);
+          qe.on("completed", ({ jobId, returnvalue }: any) => {
+            onCompleted(api, { jobId: String(jobId), returnvalue });
+          });
+        }
+      }
+      // failed
+      const onFailed = ev?.failed;
+      if (onFailed) {
+        const key = `${fullQueueName}:failed`;
+        if (!__queueListenerRegistry.has(key)) {
+          __queueListenerRegistry.add(key);
+          qe.on("failed", ({ jobId, failedReason }: any) => {
+            onFailed(api, { jobId: String(jobId), failedReason });
+          });
+        }
+      }
+      // progress
+      const onProgress = ev?.progress;
+      if (onProgress) {
+        const key = `${fullQueueName}:progress`;
+        if (!__queueListenerRegistry.has(key)) {
+          __queueListenerRegistry.add(key);
+          qe.on("progress", ({ jobId, data }: any) => {
+            onProgress(api, { jobId: String(jobId), data });
+          });
+        }
+      }
+    }
+    
+  }
+
+  return api.done();
+};
+
+
+export type ServiceBuilderParams<T = any, REQ = any, RES = any, NEXT = any> = {
+  service: DambaService<T, REQ, RES, NEXT>;
+  behaviors?: BehaviorsChainLooper;
+  events?: EventBehaviorChainLooper;
+  queues?: QueueBehavior<any, any>;
+};
+
+
+
+export type DambaService<T = any, REQ = any, RES = any, NEXT = any, REDIS = any> = {
   name: string;
   entity?: T;
   config?: ServiceConfig<REQ, RES, NEXT>;
   middlewares?: ((de: DEvent<REQ, RES, NEXT>) => any)[];
+  redis?: REDIS;
+  // BullMQ constructors passed by the app layer
+  Queue?: QCtor<any>;
+  QueueEvents?: QCtor<any>;
 };
 
-/**
- * NOTE:
- * - TypeScript cannot use the runtime identifier `entity` inside a type like `Entity: typeof entity`.
- * - So we type Entity as the constructor type we receive (ENTITY), but since `entity` is optional,
- *   we return `ENTITY | undefined` (or `any` if you prefer).
- */
 export type EntityCtor = new (...args: any[]) => any;
 
 export const createBehaviors = <
@@ -282,7 +278,7 @@ export const createBehaviors = <
   REQ,
   RES,
   NEXT,
-  ENTITY extends EntityCtor = EntityCtor
+  ENTITY extends EntityCtor = EntityCtor,
 >(
   name: string,
   entity?: ENTITY,
@@ -291,17 +287,19 @@ export const createBehaviors = <
     crud_path: "/damba",
     crud: DefaultDCrudValues,
   },
-  _fmiddleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[]
+  _fmiddleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
+  redis?: any
 ): Omit<DambaApi<T, REQ, RES, NEXT, ENTITY>, "Entity"> & {
   Entity: ENTITY | undefined;
 } => {
   const routes: Record<string, any> = {};
   const events: Record<string, EventHandler> = {};
-
+  let Queue : QCtor<any>;
+  
+  const redisConnection = redis;
   name = name.trim();
   let service_name: string = name;
   let DExtras: any = {};
-
   if (!config) {
     config = {
       id_name: "id",
@@ -310,7 +308,6 @@ export const createBehaviors = <
     };
   }
   const simple_service_name = createSimpleName(service_name);
-
   const DAction = (
     path: string,
     behavior: any, // Express handler(s) ou array de handlers
@@ -319,6 +316,28 @@ export const createBehaviors = <
     cfg?: IDActionConfig
   ) => {
     routes[path] = { behavior, middleware, extras, config: cfg };
+  };
+
+  const setQueue = <NQ> (ctor: QCtor<NQ>) => {
+    Queue = ctor;
+  }
+
+  // CHANGE: expose queue/enqueue and ensure redis exists
+  const queue = <NQ = any>( fullQueueName: string) => {
+    if (!redisConnection) throw new Error("Redis connection is required for queues");
+    if (!Queue) throw new Error("Queue ctor is required");
+    return getQueue(Queue, fullQueueName, redisConnection) as NQ;
+  };
+
+  const enqueue =  async <E> (
+    fullQueueName: string,
+    data: E,
+    jobName = "job",
+    opts?: any
+  ) => {
+    const q = queue<typeof Queue>(fullQueueName) as any;
+    const job = await q.add(jobName, data, opts);
+    return { jobId: String(job.id), full: job };
   };
 
   /**
@@ -347,6 +366,7 @@ export const createBehaviors = <
     _middleware?.length
       ? _middleware.map((mw) => wrapDEventFn(mw, routeConfig))
       : [];
+
 
   const getBehaviors = (
     _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
@@ -403,11 +423,9 @@ export const createBehaviors = <
     }
     return ctx;
   };
-
   /**
    * Helpers basés sur le contexte courant (PLUS de dEvent en closure)
    */
-
   const DSave = async (obj: any): Promise<any> => {
     const { event, entity } = getContextOrThrow();
     if (!entity)
@@ -439,7 +457,6 @@ export const createBehaviors = <
     const { event, entity } = getContextOrThrow();
     if (!entity)
       throw new Error("Entity class not provided to createBehaviors");
-
     const req = event.in as any;
     const idName = config?.id_name ?? "id";
     let id = req.params?.[idName];
@@ -488,10 +505,10 @@ export const createBehaviors = <
     return req.query;
   };
 
-  const DRepository = () => {
+  const DRepository = () : DambaRepository=> {
     const { event } = getContextOrThrow();
     const req = event.in as any;
-    return req.DRepository;
+    return req.DRepository as DambaRepository;
   };
 
   const Entity = entity;
@@ -513,106 +530,150 @@ export const createBehaviors = <
       params: LoaderParams,
       e: DEvent,
       callBack: CrudActions,
-      previous: T
+      previous?: T
     ) => {
       try {
-        return !previous ? callBack(e) : callBack(e, previous);
-      } catch (error) {
+        // Only pass "previous" when it exists
+        return previous === undefined
+          ? await callBack(e)
+          : await callBack(e, previous);
+      } catch {
         throw new Error(
-          `Error on Method  ${params.method} in  ${params.action} at position ${params.index} `
+          `Error on Method ${params.method} in ${params.action} at position ${params.index}`
         );
       }
     };
+
     const loader = async <T = any>(
       params: LoaderParams,
       e: DEvent,
       looper: CrudWorkerHandler,
-      prev?: T | Partial<T> | any,
-      before?: T | Partial<T> | any
+      prev?: T,
+      _before?: any
     ) => {
-      return new Promise(async (resolve) => {
-        let previous: T | any = prev;
-        let i = 0;
-        try {
-          for (let l of looper) {
-            params.index = i;
-            previous = await run<T>(params, e, l, previous);
-            i++;
-          }
-          resolve(previous);
-        } catch (error) {
-          throw new Error(
-            `Error on Method  ${params.method} in  ${params.action} at position ${params.index} `
-          );
-        }
-      });
+      let previous: T | any = prev;
+      let i = 0;
+
+      for (const l of looper) {
+        params.index = i;
+        previous = await run<T>(params, e, l, previous);
+        i++;
+      }
+
+      return previous as T;
     };
 
-    if (config?.crud?.all.active)
+    // ---------------------------
+    // GET ALL
+    // ---------------------------
+    if (config?.crud?.all?.active)
       DGet(
         config?.crud_path + config?.crud?.all.path,
         async (e: DEvent<REQ, RES, NEXT>) => {
           const req = e.in as any;
           const res = e.out as any;
+
           const befores = config?.crud?.all?.before ?? [];
           const afters = config?.crud?.all?.after ?? [];
 
-          const before: T | Partial<T> | any = await loader<
-            typeof entity | Partial<typeof entity>
-          >({ method: "GET ALL", action: "BEFORE" }, e, befores, undefined);
+          let before: any | undefined;
+
+          if (befores.length > 0) {
+            before = await loader<typeof entity | Partial<typeof entity>>(
+              { method: "GET ALL", action: "BEFORE" },
+              e,
+              befores,
+              undefined
+            );
+          }
+
+          const predicate =
+            before?.predicate && typeof before.predicate === "object"
+              ? before.predicate
+              : {};
 
           const entities = (await req.DRepository.DGet(
             entity,
-            before.predicate && typeof before.predicate !== typeof entity
-              ? before.predicate
-              : {},
+            predicate,
             true
           )) as (typeof entity)[];
 
-          const after: T | Partial<T> | any = await loader<(typeof entity)[]>(
-            { method: "GET ALL", action: "AFTER" },
-            e,
-            afters,
-            entities,
-            before
-          );
+          let after: any = entities;
+          if (afters.length > 0) {
+            after = await loader<(typeof entity)[]>(
+              { method: "GET ALL", action: "AFTER" },
+              e,
+              afters,
+              entities,
+              before
+            );
+          }
+
           return res.send(after);
         },
         {},
-        config?.crud?.get.middlewares
-      );
-
-    if (config?.crud?.get.active)
+        config?.crud?.all?.middlewares
+    );
+    // ---------------------------
+    // GET ONE
+    // ---------------------------
+    if (config?.crud?.get?.active)
       DGet(
         config?.crud_path + config?.crud?.get.path + "/:id",
         async (e: DEvent<REQ, RES, NEXT>) => {
           const req = e.in as any;
           const res = e.out as any;
           const id = req.params.id;
+
           const befores = config?.crud?.get?.before ?? [];
           const afters = config?.crud?.get?.after ?? [];
 
-          const before: T | Partial<T> | any = await loader<
-            typeof entity | Partial<typeof entity>
-          >({ method: "GET ONE", action: "BEFORE" }, e, befores, undefined);
+          let before: any | undefined;
 
-          const entities = (await req.DRepository.DGet(entity, {
-            where: {
-              [config?.id_name || "id"]: id,
-            },
+          if (befores.length > 0) {
+            before = await loader<typeof entity | Partial<typeof entity>>(
+              { method: "GET ONE", action: "BEFORE" },
+              e,
+              befores,
+              undefined
+            );
+          }
+
+          const where =
+            before?.predicate && typeof before.predicate === "object"
+              ? before.predicate
+              : { [config?.id_name || "id"]: id };
+
+          const entityResult = (await req.DRepository.DGet(entity, {
+            where,
           })) as typeof entity;
-          return res.send(entities);
+
+          let after: any = entityResult;
+          if (afters.length > 0) {
+            after = await loader<typeof entity>(
+              { method: "GET ONE", action: "AFTER" },
+              e,
+              afters,
+              entityResult,
+              before
+            );
+          }
+
+          return res.send(after);
         },
         {},
-        config?.crud?.get.middlewares
+        config?.crud?.get?.middlewares
       );
-
-    if (config?.crud?.get.active)
+    // ---------------------------
+    // GET RELATION (collection)
+    // ---------------------------
+    if (config?.crud?.get?.active)
       DGet(
         config?.crud_path + config?.crud?.get.path + "/:id/:relation",
         async (e: DEvent<REQ, RES, NEXT>) => {
           const req = e.in as any;
           const res = e.out as any;
+
           const id = req.params.id;
           const relation = String(req.params.relation) as any;
 
@@ -622,28 +683,36 @@ export const createBehaviors = <
           if (!entity)
             return res.status(500).send({ message: "Entity not found" });
 
-          const before: T | Partial<T> | any = await loader<
-            typeof entity | Partial<typeof entity>
-          >({ method: "GET ALL", action: "BEFORE" }, e, befores, undefined);
+          let before: any | undefined;
+          if (befores.length > 0) {
+            before = await loader<typeof entity | Partial<typeof entity>>(
+              { method: "GET RELATION", action: "BEFORE" },
+              e,
+              befores,
+              undefined
+            );
+          }
 
           const DRep = req.DRepository as any;
-
           const rel = DRep.getRelation(entity, relation);
-          let all = false;
-          if (!rel)
+
+          if (!rel) {
             return res
               .status(400)
               .json({ error: `Unknown relation: ${relation}` });
+          }
 
           if (["many-to-one"].includes(rel.relationType)) {
             return res.status(400).json({
               error: "This endpoint is for collection relations only.",
             });
           }
-          if (["one-to-many", "many-to-many"].includes(rel.relationType)) {
-            all = true;
-          }
-          const entities = await DRep.DGet(
+
+          const all = ["one-to-many", "many-to-many"].includes(
+            rel.relationType
+          );
+
+          const entityWithRel = await DRep.DGet(
             entity,
             {
               where: { id },
@@ -651,15 +720,30 @@ export const createBehaviors = <
             },
             all
           );
-          return res.json((entities as any)[relation]);
+
+          let result: any = (entityWithRel as any)[relation];
+
+          if (afters.length > 0) {
+            result = await loader<any>(
+              { method: "GET RELATION", action: "AFTER" },
+              e,
+              afters,
+              result,
+              before
+            );
+          }
+
+          return res.json(result);
         },
         {},
-        config?.crud?.get.middlewares
+        config?.crud?.get?.middlewares
       );
-
+    // ---------------------------
+    // POST
+    // ---------------------------
     if (config?.crud?.post?.active)
       DPost(
-        config?.crud_path + config?.crud?.post.path + "",
+        config?.crud_path + config?.crud?.post.path,
         async (e: DEvent<REQ, RES, NEXT>) => {
           const req = e.in as any;
           const res = e.out as any;
@@ -669,79 +753,81 @@ export const createBehaviors = <
 
           const object = req.body as Partial<typeof entity>;
 
-          const before: T | Partial<T> | any = await loader<
-            typeof entity | Partial<typeof entity>
-          >({ method: "POST", action: "BEFORE" }, e, befores, object);
+          let before: any | undefined = object;
 
-          let entities = {};
-
-          if (before && befores.length > 0) {
-            entities = await req.DRepository.DSave(entity, before);
+          if (befores.length > 0) {
+            before = await loader<typeof entity | Partial<typeof entity>>(
+              { method: "POST", action: "BEFORE" },
+              e,
+              befores,
+              object
+            );
           }
 
-          if (!before && befores.length == 0) {
-            entities = await req.DRepository.DSave(entity, object);
+          if (!before) return res.status(404).send({ message: "" });
+
+          const saved = await req.DRepository.DSave(entity, before);
+
+          let after: any = saved;
+          if (afters.length > 0) {
+            after = await loader<any>(
+              { method: "POST", action: "AFTER" },
+              e,
+              afters,
+              saved,
+              before
+            );
           }
 
-          if (!before && befores.length > 0) {
-            res.status(404).send({ message: `` });
-          }
-
-          const after: T | Partial<T> | any = await loader<(typeof entity)[]>(
-            { method: "POST", action: "AFTER" },
-            e,
-            afters,
-            entities,
-            before
-          );
           return res.send(after);
         },
         {},
         config?.crud?.post?.middlewares
       );
 
+    // ---------------------------
+    // PATCH
+    // ---------------------------
     if (config?.crud?.patch?.active)
       DPatch(
         config?.crud_path + config?.crud?.patch.path + "/:id",
         async (e: DEvent<REQ, RES, NEXT>) => {
           const req = e.in as any;
           const res = e.out as any;
-          const object = req.body as Partial<typeof entity> & { id: any };
+
+          if (!req.params.id) return res.status(404).send({});
+
           const befores = config?.crud?.patch?.before ?? [];
           const afters = config?.crud?.patch?.after ?? [];
 
-          if (!req.params.id) res.status(404).send({});
+          const object = req.body as Partial<typeof entity> & { id: any };
           object.id = req.params.id;
 
-          const before: T | Partial<T> | any = await loader<
-            typeof entity | Partial<typeof entity>
-          >({ method: "PATCH", action: "BEFORE" }, e, befores, object);
+          let before: any | undefined = object;
 
-          let entities: any = {};
-
-          if (before && befores.length > 0) {
-            entities = (await req.DRepository.DSave(entity, before)) as
-              | typeof entity
-              | undefined;
+          if (befores.length > 0) {
+            before = await loader<typeof entity | Partial<typeof entity>>(
+              { method: "PATCH", action: "BEFORE" },
+              e,
+              befores,
+              object
+            );
           }
 
-          if (!before && befores.length == 0) {
-            entities = (await req.DRepository.DSave(entity, object)) as
-              | typeof entity
-              | undefined;
-          }
+          if (!before) return res.status(404).send({ message: "" });
 
-          if (!before && befores.length > 0) {
-            res.status(404).send({ message: `` });
-          }
+          const saved = await req.DRepository.DSave(entity, before);
 
-          const after: T | Partial<T> | any = await loader<(typeof entity)[]>(
-            { method: "PATCH", action: "AFTER" },
-            e,
-            afters,
-            entities,
-            before
-          );
+          let after: any = saved;
+          if (afters.length > 0) {
+            after = await loader<any>(
+              { method: "PATCH", action: "AFTER" },
+              e,
+              afters,
+              saved,
+              before
+            );
+          }
 
           return res.status(200).json(after);
         },
@@ -749,86 +835,99 @@ export const createBehaviors = <
         config?.crud?.patch?.middlewares
       );
 
+    // ---------------------------
+    // PUT
+    // ---------------------------
     if (config?.crud?.put?.active)
       DPut(
         config?.crud_path + config?.crud?.put.path + "/:id",
         async (e: DEvent<REQ, RES, NEXT>) => {
           const req = e.in as any;
           const res = e.out as any;
-          const object = req.body as typeof entity & { id: any };
+
+          if (!req.params.id) return res.status(404).send({});
 
           const befores = config?.crud?.put?.before ?? [];
           const afters = config?.crud?.put?.after ?? [];
 
-          if (!req.params.id) res.status(404).send({});
-
-          const before: T | Partial<T> | any = await loader<
-            typeof entity | Partial<typeof entity>
-          >({ method: "PUT", action: "BEFORE" }, e, befores, object);
-
-          let entities: any = {};
-
+          const object = req.body as typeof entity & { id: any };
           object.id = req.params.id;
 
-          if (before && befores.length > 0) {
-            entities = (await req.DRepository.DSave(
-              entity,
-              before
-            )) as typeof entity;
+          let before: any | undefined = object;
+
+          if (befores.length > 0) {
+            before = await loader<typeof entity | Partial<typeof entity>>(
+              { method: "PUT", action: "BEFORE" },
+              e,
+              befores,
+              object
+            );
           }
 
-          if (!before && befores.length == 0) {
-            entities = (await req.DRepository.DSave(
-              entity,
-              object
-            )) as typeof entity;
+          if (!before) return res.status(404).send({ message: "" });
+
+          const saved = await req.DRepository.DSave(entity, before);
+
+          let after: any = saved;
+          if (afters.length > 0) {
+            after = await loader<any>(
+              { method: "PUT", action: "AFTER" },
+              e,
+              afters,
+              saved,
+              before
+            );
           }
-          if (!before && befores.length > 0) {
-            res.status(404).send({ message: `` });
-          }
-          const after: T | Partial<T> | any = await loader<(typeof entity)[]>(
-            { method: "PUT", action: "AFTER" },
-            e,
-            afters,
-            entities,
-            before
-          );
+
           return res.send(after);
         },
         {},
-        config?.crud?.patch?.middlewares
+        config?.crud?.put?.middlewares // ✅ was patch.middlewares in your code
       );
 
+    // ---------------------------
+    // DELETE
+    // ---------------------------
     if (config?.crud?.delete?.active)
       DDelete(
         config?.crud_path + config?.crud?.delete.path + "/:id",
         async (e: DEvent<REQ, RES, NEXT>) => {
           const req = e.in as any;
           const res = e.out as any;
-          const befores = config?.crud?.put?.before ?? [];
-          const afters = config?.crud?.put?.after ?? [];
 
-          if (!req.params.id) res.status(404).send({});
+          if (!req.params.id) return res.status(404).send({});
+
           const id = req.params.id;
 
-          const before: T | Partial<T> | any = await loader<
-            typeof entity | Partial<typeof entity>
-          >({ method: "DELETE", action: "BEFORE" }, e, befores, undefined);
+          const befores = config?.crud?.delete?.before ?? [];
+          const afters = config?.crud?.delete?.after ?? [];
 
-          let entities: any = {};
+          let before: any | undefined;
 
-          entities = await req.DRepository.DDelete(entity, {
-            where: {
-              [config?.id_name || "id"]: id,
-            },
+          if (befores.length > 0) {
+            before = await loader<typeof entity | Partial<typeof entity>>(
+              { method: "DELETE", action: "BEFORE" },
+              e,
+              befores,
+              undefined
+            );
+          }
+
+          const deleted = await req.DRepository.DDelete(entity, {
+            [config?.id_name || "id"]: id,
           });
-          const after: T | Partial<T> | any = await loader<(typeof entity)[]>(
-            { method: "DELETE", action: "AFTER" },
-            e,
-            afters,
-            entities,
-            before
-          );
+
+          let after: any = deleted;
+          if (afters.length > 0) {
+            after = await loader<any>(
+              { method: "DELETE", action: "AFTER" },
+              e,
+              afters,
+              deleted,
+              before
+            );
+          }
+
           return res.send(after);
         },
         {},
@@ -838,7 +937,12 @@ export const createBehaviors = <
 
   return {
     simple_service_name,
+    __redis: redisConnection,
     Entity,
+     // CHANGE: expose queue helpers
+    queue,
+    setQueue,
+    enqueue,
     DRepository,
     QueryBuilder,
     DFindOne,
@@ -862,7 +966,6 @@ export const createBehaviors = <
       if (entity) {
         runCrud();
       }
-
       const middleware = getMiddlewares(_fmiddleware);
       const isMiddlewaye = middleware && middleware.length > 0;
       ServiceRegistry._init().populate(service_name);
@@ -885,4 +988,5 @@ export const createBehaviors = <
       return IProvider as IServiceProvider<REQ, RES, NEXT>;
     },
   };
+
 };

@@ -1,3 +1,4 @@
+import { AgentMarketplaceEntities } from "@App/entities/agents";
 import { Application } from "@App/entities/Application";
 import { AppServices } from "@App/entities/AppServices";
 import { Behavior, CodeFile } from "@App/entities/Behaviors";
@@ -39,5 +40,6 @@ export const DBEntities = [
   CodeFile,
   Entities,
   Invitation,
-  DambaCoreCode
+  DambaCoreCode,
+  ...AgentMarketplaceEntities
 ];

@@ -6,7 +6,7 @@ import { Document } from '@langchain/core/documents';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { LoadFiles, IDambaFile } from '@Damba/v2/helper/readFile';
 import { resolve } from 'path';
-import { DambaApi, DEventHandlerFactory } from '@Damba/v2/service/DambaService';
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { DEvent } from '@Damba/v2/service/DEvent';
 
 let retrieverPromise: Promise<any> | null = null;
@@ -148,7 +148,7 @@ export async function buildQdrantRetriever() {
  * - LLM answers ONLY using retrieved context
  * - If retrieval doesn't contain enough, returns exact fallback
  */
-export const agentRagQdrantBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const agentRagQdrantBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const question = api?.body().prompt;
 

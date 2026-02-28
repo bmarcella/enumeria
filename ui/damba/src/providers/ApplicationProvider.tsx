@@ -3,8 +3,7 @@ import { useEffect, useState } from 'react'
 import { useOrganizationStore, selectSelectedOrganization } from '@/stores/useOrganizationStore'
 import { useApplicationStore } from '@/stores/useApplicationStore'
 import { useSessionUser } from '@/stores/authStore'
-import { useProjectStore } from '@/stores/useProjectStore'
-import { Application } from '../../../../common/Entity/project'
+import { Application } from '../../../../common/Damba/v2/Entity/project'
 
 type Props = {
   children: React.ReactNode
@@ -20,15 +19,14 @@ export function ApplicationProvider({ children, autoSelectSingle = true, fetchAp
   const cApp = useApplicationStore((s) => s.cApp)
   const setApplication = useApplicationStore((s) => s.setApplication)
   const [initialized, setInitialized] = useState(false)
-  const project = useProjectStore((s) => s.cProject)
 
   useEffect(() => {
     let cancelled = false
     async function init() {
-      setScope(user?.id, org?.id, project?.id)
-      if(!project?.id) return;
+      setScope(user?.id, org?.id, user.currentSetting?.projId)
+      if(!user.currentSetting?.projId) return;
       if (cancelled ) return
-      const apps = await fetchApplicationsByProjectId(project?.id)
+      const apps = await fetchApplicationsByProjectId(user.currentSetting?.projId)
       setApplications(apps);
       if (autoSelectSingle && apps.length == 1 && !cApp?.id) {
         const a = apps[0]
@@ -38,7 +36,7 @@ export function ApplicationProvider({ children, autoSelectSingle = true, fetchAp
     }
     init()
     return () => { cancelled = true }
-  }, [user?.id, org?.id, project, cApp?.id, setScope, setApplications, setApplication, autoSelectSingle])
+  }, [user?.id, org?.id, user.currentSetting?.projId,  cApp?.id, setScope, setApplications, setApplication, autoSelectSingle])
 
 
   return <>{children}</>

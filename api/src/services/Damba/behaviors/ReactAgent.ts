@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DEvent } from '@App/damba.import';
-import { DambaApi, DEventHandlerFactory } from '@Damba/v2/service/DambaService';
+import { DambaApi, Behavior } from '@Damba/v2/service/DambaService';
 import { createAgent, SystemMessage } from 'langchain';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { LoadFiles, IDambaFile } from '@Damba/v2/helper/readFile';
@@ -13,7 +13,7 @@ const AnswerSchema = z.object({
   sources: z.array(z.object({ title: z.string(), url: z.string() })).default([]),
 });
 
-export const ChatPromptTemplateLangChain: DEventHandlerFactory = (api?: DambaApi) => {
+export const ChatPromptTemplateLangChain: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const prompt = ChatPromptTemplate.fromMessages([
       ['system', 'You are a helpful assistant.'],
@@ -39,7 +39,7 @@ export const ChatPromptTemplateLangChain: DEventHandlerFactory = (api?: DambaApi
   };
 };
 
-export const reactAgentSimpleSearchBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const reactAgentSimpleSearchBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const tool = e.in.tavily;
     const query = api?.extras?.helper.getQuery();
@@ -52,7 +52,7 @@ export const reactAgentSimpleSearchBehavior: DEventHandlerFactory = (api?: Damba
   };
 };
 
-export const searchBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const searchBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const tool = e.in.tavily;
     const llm = e.in.openAi;
@@ -77,7 +77,7 @@ export const searchBehavior: DEventHandlerFactory = (api?: DambaApi) => {
   };
 };
 
-export const addChatBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const addChatBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     try {
       const files = (await LoadFiles(

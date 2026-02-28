@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DEvent } from '@App/damba.import';
-import { DambaApi, DEventHandlerFactory } from '@Damba/v2/service/DambaService';
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { createAgent } from 'langchain';
-import { ChatPromptTemplate } from 'node_modules/@langchain/core/dist/prompts/chat.cjs';
-import z from 'zod';
 
-export const simpleAgentBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const simpleAgentBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const query = api?.params().query;
 
@@ -40,7 +38,7 @@ export const simpleAgentBehavior: DEventHandlerFactory = (api?: DambaApi) => {
   };
 };
 
-export const multiStepAgentBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const multiStepAgentBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const query = api?.params().query;
 
@@ -81,7 +79,7 @@ Use tools when useful.
   };
 };
 
-export const statefulAgentBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const statefulAgentBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const query = api?.params().query;
 

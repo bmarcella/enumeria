@@ -9,8 +9,8 @@ import {
     useProjectStore,
     selectProjects,
     selectProjectId,
+    selectSelectedProject,
 } from '@/stores/useProjectStore'
-import { useProjectActions } from '@/stores/useProjectSelectors'
 import { useDialogContext } from '@/providers/DialogProvider'
 import { useSessionUser } from '@/stores/authStore'
 import useTranslation from '@/utils/hooks/useTranslation'
@@ -25,11 +25,15 @@ export const ProjectAppHeaderSwitchers = ({ initialized }: Props) => {
     // ---- Project side
     const projects = useProjectStore(selectProjects)
     const projectId = useProjectStore(selectProjectId)
-    const { addProject, setProject, cProject } = useProjectActions()
     const { closeDialog } = useDialogContext()
     const user = useSessionUser((state) => state.user)
     const setUser = useSessionUser((state) => state.setUser)
     const setSetting = useSessionUser((state) => state.setSetting)
+    const setProject = useProjectStore((s) => s.setProject)
+    const addProject = useProjectStore((s) => s.addProject)
+
+    const cProject = useProjectStore(selectSelectedProject);
+
     const { t } = useTranslation()
 
     const projectOptions: Option[] = useMemo(

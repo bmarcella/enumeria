@@ -10,6 +10,21 @@ export enum DLLM {
   ANTHROPIC = 'ANTHROPIC',
 }
 
+export const sleep  = (ms: number) => {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+export const  isTransient = (err: unknown) => {
+  const msg = String((err as any)?.message ?? err);
+  return (
+    msg.includes('ETIMEDOUT') ||
+    msg.includes('ECONNRESET') ||
+    msg.includes('429') ||
+    msg.includes('rate limit') ||
+    msg.includes('503')
+  );
+}
+
 /**
  * IMPORTANT:
  * These should be the *runtime values you pass to processors* (instances/config objects),
@@ -51,7 +66,6 @@ export const startWorker = <D, R, X extends string = string, P extends DLLM = DL
   makeProcessor: MakeAiAgentProcessor<D, R, X, LlmProviderMap[P]>,
 ) => {
   const llm = getLLM(provider);
-
   return new Worker<D, R, X>(name, makeProcessor(AppConfig, llm), {
     connection,
     concurrency: Number(process.env.WORKER_CONCURRENCY ?? 5),

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DEvent } from "@App/damba.import";
-import { DambaApi, DEventHandlerFactory } from "@Damba/v2/service/DambaService";
+import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda, RunnablePassthrough } from "@langchain/core/runnables";
 import { z } from "zod";
@@ -28,7 +28,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["user", "Explain {topic} clearly in a {tone} tone."],
 ]);
 
-export const pipelineNoAgentBehavior: DEventHandlerFactory = (api?: DambaApi) => {
+export const pipelineNoAgentBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     // Runnable: get raw input from Damba API params
     const getParams = new RunnableLambda({

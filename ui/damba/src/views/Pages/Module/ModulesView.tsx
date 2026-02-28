@@ -20,6 +20,7 @@ import { useAppServiceStore } from '@/stores/ServiceStore'
 import { useEntityStore } from '@/stores/useEntityStore'
 import { useSessionUser } from '@/stores/authStore'
 import { useState } from 'react'
+import { deleteModule } from '@/services/module'
 const ModulesView = ({ goTo }: any) => {
     const module = useModuleStore((s) => s.module)
     const modules = useModuleStore((s) => s.modules)
@@ -49,6 +50,14 @@ const ModulesView = ({ goTo }: any) => {
         setEntities([])
         setModule(mod)
         goTo(mod.name)
+    }
+
+    const handleDeleteModule = async (mod: any) => {
+        setLoading((prev: any) => ({ ...prev, [mod.id]: true }))
+        await deleteModule(mod)
+        const updatedModules = modules.filter((m) => m.id !== mod.id)
+        useModuleStore.getState().setModules(updatedModules)
+        setLoading((prev: any) => ({ ...prev, [mod.id]: false }))
     }
 
     return (
@@ -113,7 +122,7 @@ const ModulesView = ({ goTo }: any) => {
                                                 icon={<HiOutlineCheckCircle />}
                                                 aria-label="Set active module"
                                                 title="Set active module"
-                                                loading={loading[project!.id!]}
+                                                disabled={loading[project!.id!]}
                                                 onClick={async () => {
                                                     changeModule(project)
                                                 }}
@@ -123,9 +132,14 @@ const ModulesView = ({ goTo }: any) => {
                                                 size="xs"
                                                 variant="default"
                                                 icon={<HiTrash />}
-                                                aria-label="Set active module"
-                                                title="Set active module"
-                                                onClick={async () => {}}
+                                                aria-label="Delete module"
+                                                title="Delete module"
+                                                loading={loading[project!.id!]}
+                                                onClick={async () => {
+                                                    await handleDeleteModule(
+                                                        project,
+                                                    )
+                                                }}
                                             />
                                         </>
                                     ) : (
@@ -150,7 +164,7 @@ const ModulesView = ({ goTo }: any) => {
                 {/* RIGHT (col-18) */}
                 <main className="col-span-22 lg:col-span-16 ">
                     <Card className="flex flex-col gap-4">
-                        <IDE></IDE>
+                        <IDE serverFiles={[]}></IDE>
                     </Card>
                 </main>
             </div>

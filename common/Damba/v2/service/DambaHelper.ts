@@ -36,3 +36,8 @@ export const toHttpEnum = (value: string): Http | undefined => {
 
 /** A key is a "route" if it is exactly "/" OR contains a "/" */
 export type RouteKey = '/' | `${string}/${string}`;
+
+export const  isArrayOfObjects = (value : any) => {
+  return Array.isArray(value) &&
+         value.every(item => typeof item === "object" && item !== null && !Array.isArray(item));
+}

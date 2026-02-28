@@ -1,9 +1,15 @@
-import IORedis from "ioredis";
+import IORedis from 'ioredis';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const connection = new IORedis(process.env.REDIS_URL ?? "redis://localhost:6379", {
+const RedisConnection = new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
   maxRetriesPerRequest: null,
 });
 
-export default  connection;
+export const connection = new IORedis({
+  host: process.env.REDIS_HOST ?? '127.0.0.1',
+  port: Number(process.env.REDIS_PORT ?? 6379),
+  maxRetriesPerRequest: null, // recommandé BullMQ
+});
+
+export default RedisConnection;

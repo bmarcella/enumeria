@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { z } from 'zod';
-import { VisibilityTypeAttributes, RelationshipType, VisibilityTypeClass, CanvasBoxClassification, EntityStereotype } from '../../../../../../common/Entity/CanvasBox';
+import { VisibilityTypeAttributes, RelationshipType, VisibilityTypeClass, CanvasBoxClassification, EntityStereotype } from '../../../../../../common/Damba/v2/Entity/CanvasBox';
 
 const attributeSchema = z.object({
   id: z.string().optional(),

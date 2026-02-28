@@ -54,6 +54,7 @@
     "adminapi": "file:",
     "axios": "^1.6.7",
     "bullmq": "^5.67.2",
+    "chalk": "^5.6.2",
     "chromadb": "^3.2.2",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",

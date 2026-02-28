@@ -1,5 +1,5 @@
-import { CanvasBox, CanvasBoxAtributes, RelationshipType, RelationshipTypeEnum, VisibilityTypeAttributes, VisibilityTypeClass } from "../../../../../common/Entity/CanvasBox";
-import { TypeAttbutesTypeOrm } from "../../../../../common/Entity/TypeAttributesTypeOrm";
+import { CanvasBox, CanvasBoxAtributes, RelationshipType, RelationshipTypeEnum, VisibilityTypeAttributes, VisibilityTypeClass } from "../../../../../common/Damba/v2/Entity/CanvasBox";
+import { TypeAttbutesTypeOrm } from "../../../../../common/Damba/v2/Entity/TypeAttributesTypeOrm";
 import { DrawCallbacks, HitTest, PointerHandlers } from "./GenericCanvasEngine";
 
 
