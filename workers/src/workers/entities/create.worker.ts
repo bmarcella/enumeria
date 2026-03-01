@@ -1,11 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DQueues } from '../../../../common/Damba/core/Queues';
-import { DefaultlLLM,  isTransient,  LlmProviderMap, MakeAiAgentProcessor, sleep, startWorker } from '..';
-import {  UnrecoverableError } from 'bullmq';
+import {
+  DefaultlLLM,
+  isTransient,
+  LlmProviderMap,
+  MakeAiAgentProcessor,
+  sleep,
+  startWorker,
+} from '..';
+import { UnrecoverableError } from 'bullmq';
 import { JobData, JobResult } from './dtos';
 
-
-
-async function runAgent(job: any) {
+async function runAgent(job: any, llm: any, config: any) {
   const { requestId, prompt } = job.data as { requestId: string; prompt: string };
 
   await job.updateProgress({ requestId, step: 'start', pct: 5, message: 'Starting agent' });
@@ -27,16 +34,17 @@ async function runAgent(job: any) {
   return { requestId, answer: `AI result for: ${prompt}` };
 }
 
-const agent: MakeAiAgentProcessor<JobData, JobResult, string, LlmProviderMap[typeof DefaultlLLM]> = (
-  config,
-  llm,
-) => {
+const agent: MakeAiAgentProcessor<
+  JobData,
+  JobResult,
+  string,
+  LlmProviderMap[typeof DefaultlLLM]
+> = (config, llm) => {
   return async (job) => {
-
     try {
-      const {  conversation_id } = job.data;
-      const answer = await runAgent(job);
-      return { conversation_id , request_id: answer.requestId , answer: answer.answer };
+      const { conversation_id } = job.data;
+      const answer = await runAgent(job, llm, config);
+      return { conversation_id, request_id: answer.requestId, answer: answer.answer };
     } catch (err) {
       // Retrying only on transient errors
       if (isTransient(err)) throw err;
@@ -46,4 +54,8 @@ const agent: MakeAiAgentProcessor<JobData, JobResult, string, LlmProviderMap[typ
   };
 };
 
-startWorker<JobData, JobResult, string, typeof DefaultlLLM>(DQueues.CREATE_ENTITIES, DefaultlLLM, agent);
+startWorker<JobData, JobResult, string, typeof DefaultlLLM>(
+  DQueues.CREATE_ENTITIES,
+  DefaultlLLM,
+  agent,
+);

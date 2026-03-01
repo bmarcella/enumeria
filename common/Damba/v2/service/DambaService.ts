@@ -32,7 +32,7 @@ export type DambaApi<
   RES = any,
   NEXT = any,
   ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any
-> =  DambaApiType;
+> = DambaApiType;
 
 export type DExtrasHandler = Record<string, AnyFn>;
 
@@ -60,12 +60,7 @@ export type BehaviorsChain<REQ = any, RES = any, NEXT = any> = Record<
   DEventHandler<REQ, RES, NEXT> | DEventHandler<REQ, RES, NEXT>[]
 >;
 
-type BehaviorChainLooperContent<
-  T = any,
-  REQ = any,
-  RES = any,
-  NEXT = any
-> = {
+type BehaviorChainLooperContent<T = any, REQ = any, RES = any, NEXT = any> = {
   behavior:
     | DEventHandlerFactory<DambaApi<T, REQ, RES, NEXT>, REQ, RES, NEXT>
     | Behavior<DambaApi<T, REQ, RES, NEXT>, REQ, RES, NEXT>;
@@ -82,8 +77,9 @@ export type BehaviorsChainLooperContent<
   REQ = any,
   RES = any,
   NEXT = any
-> = BehaviorChainLooperContent<T, REQ, RES, NEXT> |
-    BehaviorChainLooperContent<T, REQ, RES, NEXT>[];
+> =
+  | BehaviorChainLooperContent<T, REQ, RES, NEXT>
+  | BehaviorChainLooperContent<T, REQ, RES, NEXT>[];
 
 export type BehaviorsChainLooper<
   T = any,
@@ -95,16 +91,26 @@ export type BehaviorsChainLooper<
 type EventBehaviorChainLooperContent<API = DambaApi, SK = any> = (
   api?: API
 ) => EventHandler<SK>;
+
 export type EventBehavior = EventBehaviorChainLooperContent;
-export type EventBehaviorChainLooper<API = DambaApi, SK = any> = Record<string, EventBehaviorChainLooperContent<API, SK>>;
+
+export type EventBehaviorContent<API = any, SK = any, IO = any> = {
+  message: EventBehavior;
+  middleware: any[];
+};
+
+export type EventBehaviorChainLooper<
+  API = DambaApi,
+  SK = any,
+  IO = any
+> = Record<string, EventBehaviorContent<API, SK, IO>>;
 export type EBChain = EventBehaviorChainLooper;
 
 // Queues
-export type QueueBehavior<Q=any, EQ= any> = Record<string, QueueBehaviorContent<Q, EQ>>
-
-
-// CHANGE: dedupe listeners to prevent memory leaks
-const __queueListenerRegistry = new Set<string>();
+export type QueueBehavior<Q = any, EQ = any> = Record<
+  string,
+  QueueBehaviorContent<Q, EQ>
+>;
 
 export const createDambaService = <
   T = any,
@@ -115,7 +121,6 @@ export const createDambaService = <
 >(
   params: ServiceBuilderParams
 ): IServiceProvider<REQ, RES, NEXT> => {
-
   const api = createBehaviors<T, REQ, RES, NEXT>(
     params.service.name,
     params.service.entity as any,
@@ -124,9 +129,16 @@ export const createDambaService = <
     params.service.redis
   );
 
-  if(params.service.Queue) api.setQueue(params.service.Queue);
+  if (params.service.Queue) api.setQueue(params.service.Queue);
 
-  return DambaMakeApi<REQ, RES, NEXT, SK,typeof params.service.Queue , typeof params.service.QueueEvents>(
+  return DambaMakeApi<
+    REQ,
+    RES,
+    NEXT,
+    SK,
+    typeof params.service.Queue,
+    typeof params.service.QueueEvents
+  >(
     api,
     params?.behaviors,
     params?.events,
@@ -134,7 +146,6 @@ export const createDambaService = <
     params.service.Queue,
     params.service.QueueEvents
   );
-
 };
 
 export const DambaMakeApi = <
@@ -142,7 +153,7 @@ export const DambaMakeApi = <
   RES = any,
   NEXT = any,
   SK = any,
-  Q = any, 
+  Q = any,
   EQ = any
 >(
   api: DambaApi,
@@ -153,9 +164,9 @@ export const DambaMakeApi = <
   QueueEventsCtor?: QCtor<EQ>
 ): IServiceProvider<REQ, RES, NEXT> => {
   if (behaviors) {
-  for (const [path, chains] of Object.entries(behaviors)) {
+    for (const [path, chains] of Object.entries(behaviors)) {
       const lchains = Array.isArray(chains) ? chains : [chains];
-      for(let chain of lchains){
+      for (let chain of lchains) {
         const handler = chain.behavior(api);
         const extras = chain.extras ? chain.extras(api) : undefined;
         const middlewares = chain.middlewares ?? [];
@@ -182,7 +193,7 @@ export const DambaMakeApi = <
 
           default:
             // optional: throw or ignore
-              throw new Error(`Unsupported HTTP method: ${String(chain.method)}`);
+            throw new Error(`Unsupported HTTP method: ${String(chain.method)}`);
         }
       }
     }
@@ -191,65 +202,30 @@ export const DambaMakeApi = <
   if (events) {
     for (const [name, on] of Object.entries(events)) {
       const messageName = `${api.simple_service_name}:${name}`;
-      api.on<SK>(messageName, on(api));
+      api.on<SK>(messageName, on.message(api));
     }
   }
-  
+
   if (queues) {
     const redisConnection = (api as any).__redis;
-    if (!redisConnection) throw new Error("Redis connection missing for queues");
+    if (!redisConnection)
+      throw new Error("Redis connection missing for queues");
 
     if (!QueueCtor) throw new Error("Queue ctor missing (pass service.Queue)");
-    if (!QueueEventsCtor) throw new Error("QueueEvents ctor missing (pass service.QueueEvents)");
+    if (!QueueEventsCtor)
+      throw new Error("QueueEvents ctor missing (pass service.QueueEvents)");
 
     for (const [name, cfg] of Object.entries(queues)) {
-      const fullQueueName = cfg.queueName ?? `${api.simple_service_name}-${name}`;
-      // instantiate
-      getQueue(QueueCtor, fullQueueName, redisConnection);
-      const qe = getQueueEvents(QueueEventsCtor, fullQueueName, redisConnection) as any;
-
+      // instantiate Queue
+      getQueue(QueueCtor, name, redisConnection, cfg.options);
+      // instantiate EventQueue
       const ev = cfg?.events;
-
-      // completed
-      const onCompleted = ev?.completed;
-      if (onCompleted) {
-        const key = `${fullQueueName}:completed`;
-        if (!__queueListenerRegistry.has(key)) {
-          __queueListenerRegistry.add(key);
-          qe.on("completed", ({ jobId, returnvalue }: any) => {
-            onCompleted(api, { jobId: String(jobId), returnvalue });
-          });
-        }
-      }
-      // failed
-      const onFailed = ev?.failed;
-      if (onFailed) {
-        const key = `${fullQueueName}:failed`;
-        if (!__queueListenerRegistry.has(key)) {
-          __queueListenerRegistry.add(key);
-          qe.on("failed", ({ jobId, failedReason }: any) => {
-            onFailed(api, { jobId: String(jobId), failedReason });
-          });
-        }
-      }
-      // progress
-      const onProgress = ev?.progress;
-      if (onProgress) {
-        const key = `${fullQueueName}:progress`;
-        if (!__queueListenerRegistry.has(key)) {
-          __queueListenerRegistry.add(key);
-          qe.on("progress", ({ jobId, data }: any) => {
-            onProgress(api, { jobId: String(jobId), data });
-          });
-        }
-      }
+      getQueueEvents(QueueEventsCtor, name, redisConnection, api, ev) as any;
     }
-    
   }
 
   return api.done();
 };
-
 
 export type ServiceBuilderParams<T = any, REQ = any, RES = any, NEXT = any> = {
   service: DambaService<T, REQ, RES, NEXT>;
@@ -258,9 +234,13 @@ export type ServiceBuilderParams<T = any, REQ = any, RES = any, NEXT = any> = {
   queues?: QueueBehavior<any, any>;
 };
 
-
-
-export type DambaService<T = any, REQ = any, RES = any, NEXT = any, REDIS = any> = {
+export type DambaService<
+  T = any,
+  REQ = any,
+  RES = any,
+  NEXT = any,
+  REDIS = any
+> = {
   name: string;
   entity?: T;
   config?: ServiceConfig<REQ, RES, NEXT>;
@@ -278,7 +258,7 @@ export const createBehaviors = <
   REQ,
   RES,
   NEXT,
-  ENTITY extends EntityCtor = EntityCtor,
+  ENTITY extends EntityCtor = EntityCtor
 >(
   name: string,
   entity?: ENTITY,
@@ -294,8 +274,8 @@ export const createBehaviors = <
 } => {
   const routes: Record<string, any> = {};
   const events: Record<string, EventHandler> = {};
-  let Queue : QCtor<any>;
-  
+  let Queue: QCtor<any>;
+
   const redisConnection = redis;
   name = name.trim();
   let service_name: string = name;
@@ -318,24 +298,26 @@ export const createBehaviors = <
     routes[path] = { behavior, middleware, extras, config: cfg };
   };
 
-  const setQueue = <NQ> (ctor: QCtor<NQ>) => {
+  const setQueue = <NQ>(ctor: QCtor<NQ>) => {
     Queue = ctor;
-  }
-
-  // CHANGE: expose queue/enqueue and ensure redis exists
-  const queue = <NQ = any>( fullQueueName: string) => {
-    if (!redisConnection) throw new Error("Redis connection is required for queues");
-    if (!Queue) throw new Error("Queue ctor is required");
-    return getQueue(Queue, fullQueueName, redisConnection) as NQ;
   };
 
-  const enqueue =  async <E> (
-    fullQueueName: string,
+  // CHANGE: expose queue/enqueue and ensure redis exists
+  const queue = <NQ = any>(name: string) => {
+    if (!redisConnection)
+      throw new Error("Redis connection is required for queues");
+    if (!Queue) throw new Error("Queue ctor is required");
+    return getQueue(Queue, name, redisConnection) as NQ;
+  };
+
+  const enqueue = async <E = any>(
+    name: string,
     data: E,
-    jobName = "job",
-    opts?: any
+    opts?: any,
+    jobName = "job"
   ) => {
-    const q = queue<typeof Queue>(fullQueueName) as any;
+    const q = queue<typeof Queue>(name) as any;
+    if (!q) throw new Error("Queue does not exist.");
     const job = await q.add(jobName, data, opts);
     return { jobId: String(job.id), full: job };
   };
@@ -366,7 +348,6 @@ export const createBehaviors = <
     _middleware?.length
       ? _middleware.map((mw) => wrapDEventFn(mw, routeConfig))
       : [];
-
 
   const getBehaviors = (
     _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
@@ -505,7 +486,7 @@ export const createBehaviors = <
     return req.query;
   };
 
-  const DRepository = () : DambaRepository=> {
+  const DRepository = (): DambaRepository => {
     const { event } = getContextOrThrow();
     const req = event.in as any;
     return req.DRepository as DambaRepository;
@@ -613,7 +594,7 @@ export const createBehaviors = <
         },
         {},
         config?.crud?.all?.middlewares
-    );
+      );
     // ---------------------------
     // GET ONE
     // ---------------------------
@@ -939,7 +920,7 @@ export const createBehaviors = <
     simple_service_name,
     __redis: redisConnection,
     Entity,
-     // CHANGE: expose queue helpers
+    // CHANGE: expose queue helpers
     queue,
     setQueue,
     enqueue,
@@ -988,5 +969,4 @@ export const createBehaviors = <
       return IProvider as IServiceProvider<REQ, RES, NEXT>;
     },
   };
-
 };

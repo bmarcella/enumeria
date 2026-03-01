@@ -24,8 +24,8 @@ export type DambaApiType<
   enqueue: <E> (
     fullQueueName: string,
     data: E,
+    opts?: any,
     jobName?: string,
-    opts?: any
   ) => Promise<{ jobId: string }>;
 
   middlewares: any;

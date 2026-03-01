@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { Database, IAppConfig, IProcessHandler } from "./config/IAppConfig";
+import type {
+  Database,
+  IAppConfig,
+  IProcessHandler,
+} from "./config/IAppConfig";
 import { DambaIO, DambaIOApp } from "./IO/DambaIO";
+import { RegistryContext } from "./Registry/RegistryContext";
 import { DambaRoute } from "./route/DambaRoute";
 import DambaApiDocNested from "./route/DambaRouteDoc";
 import { EventHandler, IServiceProvider } from "./service/IServiceDamba";
@@ -21,18 +26,22 @@ export interface IDambaParams<DS = any> {
   session?: (options?: any) => any;
   port?: number;
   queue?: {
-    tenant : string,
-    correlation: string
-  },
+    tenant: string;
+    correlation: string;
+  };
 }
 
-export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
+export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   public readonly app: any;
   public readonly server?: any;
   public dambaIo: DambaIOApp | undefined = undefined;
-  constructor(params: IDambaParams<DS>, database?: Database<DS>) { 
+  constructor(params: IDambaParams<DS>, database?: Database<DS>) {
     this.assertValid(params);
-    const { route, extras, doc, events  } = this.DambaServices(params._SPS_, params.AppConfig, params);
+    const { route, extras, doc, events } = this.DambaServices(
+      params._SPS_,
+      params.AppConfig,
+      params
+    );
     this.app = params.express();
     this.registerMiddleware(params, extras, database);
     this.registerDocs(params.AppConfig, extras, doc);
@@ -42,19 +51,21 @@ export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
   }
 
   DambaServices = (
-  _SPS_: IServiceProvider<REQ, RES, NEXT>,
-  AppConfig: IAppConfig<DS>,
-  params: IDambaParams<DS>) => {
-  ServiceRegistry._init();
-  const root = params.express.Router();
-  const express = params.express as any;
-  const { route, extras , events} = DambaRoute<REQ, REQ, NEXT, any>( { root, express },
-    params._SPS_,
-    AppConfig,
-  );
-  const { doc } = DambaApiDocNested<REQ, RES, NEXT>(_SPS_, AppConfig);
-  return { route, extras, doc, events };
-};
+    _SPS_: IServiceProvider<REQ, RES, NEXT>,
+    AppConfig: IAppConfig<DS>,
+    params: IDambaParams<DS>
+  ) => {
+    ServiceRegistry._init();
+    const root = params.express.Router();
+    const express = params.express as any;
+    const { route, extras, events } = DambaRoute<REQ, REQ, NEXT, any>(
+      { root, express },
+      params._SPS_,
+      AppConfig
+    );
+    const { doc } = DambaApiDocNested<REQ, RES, NEXT>(_SPS_, AppConfig);
+    return { route, extras, doc, events };
+  };
 
   private assertValid(params: IDambaParams<DS>) {
     if (!params?.AppConfig)
@@ -65,8 +76,12 @@ export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
       );
   }
 
-  private registerMiddleware(params: IDambaParams<DS>, extras: any, database?: Database<DS>) {
-    const { AppConfig , queue} = params;
+  private registerMiddleware(
+    params: IDambaParams<DS>,
+    extras: any,
+    database?: Database<DS>
+  ) {
+    const { AppConfig, queue } = params;
 
     // CORS
     if (AppConfig.cors?.corsOptions && params.cors) {
@@ -89,44 +104,45 @@ export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
     }
 
     // Helper
-    if (AppConfig.call?.helper  ) {
-      (database?.dataSource) ? this.app.use(AppConfig.call.helper( extras, database.dataSource))
-      : this.app.use(AppConfig.call.helper(extras))
+    if (AppConfig.call?.helper) {
+      database?.dataSource
+        ? this.app.use(AppConfig.call.helper(extras, database.dataSource))
+        : this.app.use(AppConfig.call.helper(extras));
     }
     // Queue Context
     if (queue) {
-        this.app.use(async (req: any, _res: any, next: any) => {
-          try {
-            const tenant = req.header(queue.tenant) ?? "default";
-
-            console.log("\x1b[33mQueue Context is active.\x1b[0m");
-
-            await runWithQueueContext(
-              {
-                keyPrefix: tenant,
-                correlationId: req.header(queue.correlation) ?? undefined,
-              },
-              async () => {
-                console.log("\x1b[33mQueue Context is ready.\x1b[0m");
-                next();
-              }
-            );
-          } catch (err) {
-            next(err);
-          }
-        });
-    } else {
-      console.log("Queue is empty.")
+      this.app.use(async (req: any, _res: any, next: any) => {
+        const tenant = req.header(queue.tenant) ?? "default";
+        const correlationId = req.header(queue.correlation) ?? undefined;
+        try {
+          await runWithQueueContext(
+            { keyPrefix: tenant, correlationId },
+            async () => {
+              return await new Promise<void>((resolve, reject) => {
+                RegistryContext.run(
+                  { queue: { keyPrefix: tenant, correlationId } },
+                  () => {
+                    try {
+                      next();
+                      resolve();
+                    } catch (e) {
+                      reject(e);
+                    }
+                  }
+                );
+              });
+            }
+          );
+        } catch (err) {
+          next(err);
+        }
+      });
     }
   }
 
   private registerDocs(AppConfig: IAppConfig<DS>, extras: any, doc: any) {
     // Extras docs
-    if (
-      AppConfig.path?.docs?.extras &&
-      AppConfig.call?.extrasDoc &&
-      extras
-    ) {
+    if (AppConfig.path?.docs?.extras && AppConfig.call?.extrasDoc && extras) {
       this.app.use(
         AppConfig.path.docs.extras,
         AppConfig.call.extrasDoc(extras)
@@ -140,9 +156,8 @@ export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
   }
 
   private registerRoutes(AppConfig: IAppConfig<DS>, route: any) {
-
     if (AppConfig.call?.welcome) {
-        this.app.get("/", AppConfig.call.welcome(AppConfig));
+      this.app.get("/", AppConfig.call.welcome(AppConfig));
     }
 
     if (AppConfig.path?.basic && route) {
@@ -150,13 +165,16 @@ export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
     }
   }
 
-  private launch(params: IDambaParams<DS>, events: EventHandler): any | undefined {
+  private launch(
+    params: IDambaParams<DS>,
+    events: EventHandler
+  ): any | undefined {
     const { AppConfig } = params;
 
     // Prefer explicit param port, fallback to AppConfig.port if present
     const port = params.port ?? (AppConfig as any).port;
     if (!AppConfig.call?.launch || !port) return undefined;
-    const server =  this.app.listen(port, () => {
+    const server = this.app.listen(port, () => {
       try {
         AppConfig.call.launch?.();
       } catch (e) {
@@ -168,20 +186,35 @@ export class DambaApp<REQ = any, RES = any, NEXT= any, DS = any , IO = any> {
         );
       }
     });
+    if (this.app && AppConfig.socket?.launch) {
+      const io = AppConfig.socket.launch(server);
+      this.app.locals.io = io;
+      this.dambaIo = DambaIO.init<IO>(io, AppConfig.socket);
 
-    if(this.app && AppConfig.socket?.launch){
-       const io = AppConfig.socket.launch(server);
-       this.app.locals.io = io;
-       this.dambaIo = DambaIO.init<IO>(io, AppConfig.socket);
-       this.dambaIo.init(events);
+      RegistryContext.run(
+        {
+          io,
+          dambaIo: this.dambaIo,
+          clients: this.dambaIo.clients,
+          sockets: this.dambaIo.sockets,
+        },
+        () => {
+          this.dambaIo?.init(events);
+        }
+      );
     }
     return server;
   }
 
-  private registerProcessHandlers(params: IDambaParams<DS>, database?: Database<DS>) {
+  private registerProcessHandlers(
+    params: IDambaParams<DS>,
+    database?: Database<DS>
+  ) {
     if (!this.server) return;
-          // process handlers (wired only after server starts, per your DambaApp)
-    const processes = params.AppConfig?.processes ? params.AppConfig?.processes(database?.orm) : [];
+    // process handlers (wired only after server starts, per your DambaApp)
+    const processes = params.AppConfig?.processes
+      ? params.AppConfig?.processes(database?.orm)
+      : [];
     if (!processes?.length) return;
 
     for (const p of processes) {
@@ -204,23 +237,29 @@ export default class Damba {
 
   private constructor() {}
 
-  public static async start<REQ = any, RES = any, NEXT = any, T = any, I = any>(params: IDambaParams<T>): Promise<DambaApp<REQ, RES, NEXT,  T, I>> {
-       
+  public static async start<REQ = any, RES = any, NEXT = any, T = any, I = any>(
+    params: IDambaParams<T>
+  ): Promise<DambaApp<REQ, RES, NEXT, T, I>> {
     if (!this.instance) {
-        let database;
-        if (params.AppConfig.databaseConfig) {
-             database = await params.AppConfig.databaseConfig.initOrm();
-        }
-        this.instance = new DambaApp<REQ, RES, NEXT,  T, I>(params, database);
+      let database;
+      if (params.AppConfig.databaseConfig) {
+        database = await params.AppConfig.databaseConfig.initOrm();
+      }
+      this.instance = new DambaApp<REQ, RES, NEXT, T, I>(params, database);
     }
     return this.instance as DambaApp<REQ, RES, NEXT, T, I>;
   }
 
-  public static getInstance<REQ, RES, NEXT, T = any , I = any>(): DambaApp<REQ, RES, NEXT,  T, I> {
+  public static getInstance<REQ, RES, NEXT, T = any, I = any>(): DambaApp<
+    REQ,
+    RES,
+    NEXT,
+    T,
+    I
+  > {
     if (!this.instance) {
       throw new Error("Damba: instance not started. Call Damba.start() first.");
     }
-    return this.instance as DambaApp<REQ, RES, NEXT,T, I>;
+    return this.instance as DambaApp<REQ, RES, NEXT, T, I>;
   }
-
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AppConfig } from '../config/app.config';
 import { OpenAI } from '../config/OpenAi';
 import connection from '../config/redis';
@@ -10,11 +11,11 @@ export enum DLLM {
   ANTHROPIC = 'ANTHROPIC',
 }
 
-export const sleep  = (ms: number) => {
+export const sleep = (ms: number) => {
   return new Promise((r) => setTimeout(r, ms));
-}
+};
 
-export const  isTransient = (err: unknown) => {
+export const isTransient = (err: unknown) => {
   const msg = String((err as any)?.message ?? err);
   return (
     msg.includes('ETIMEDOUT') ||
@@ -23,7 +24,7 @@ export const  isTransient = (err: unknown) => {
     msg.includes('rate limit') ||
     msg.includes('503')
   );
-}
+};
 
 /**
  * IMPORTANT:

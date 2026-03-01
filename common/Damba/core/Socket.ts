@@ -9,10 +9,17 @@ export enum EntityType {
   AGENT_RUN = "agent_run",
 }
 
+export enum ServiceName {
+  SOCKET = "socket",
+}
+
 export const SocketAction = {
-  create: (entity: EntityType) => `socket:create:${entity}`,
-  update: (entity: EntityType) => `socket:update:${entity}`,
-  delete: (entity: EntityType) => `socket:delete:${entity}`,
+  create: (entity: EntityType, service?: string) =>
+    `${service ? `${service}:` : ""}create:${entity}`,
+  update: (entity: EntityType, service?: string) =>
+    `${service ? `${service}:` : ""}update:${entity}`,
+  delete: (entity: EntityType, service?: string) =>
+    `${service ? `${service}:` : ""}delete:${entity}`,
 };
 
 // how to use it on client

@@ -76,29 +76,16 @@ api.DPost(
           organizations: user.organizations,
           currentSetting: user.currentSetting,
         };
-
-        req.session.user = req.extras?.auth.toSessionUser(user, 'google');
         const dToken = GenTokenJwt(jwt, userDTO, process.env.JWT_PUBLIC_KEY!);
-
-        req.session.tokens = {
-          access_token: tokens.access_token!,
-          refresh_token: tokens.refresh_token!,
-          id_token: tokens.id_token!,
-          expiry_date: tokens.expiry_date!,
-          scope: tokens.scope,
-        };
-
-        req.session.save(() =>
-          res.status(200).json({
-            user: userDTO,
-            tokens: {
-              access_token: `google|${dToken}|${tokens.access_token}`,
-              refresh_token: tokens.refresh_token!,
-              expiry_date: tokens.expiry_date,
-              scope: tokens.scope,
-            },
-          }),
-        );
+        res.status(200).json({
+          user: userDTO,
+          tokens: {
+            access_token: `google|${dToken}|${tokens.access_token}`,
+            refresh_token: tokens.refresh_token!,
+            expiry_date: tokens.expiry_date,
+            scope: tokens.scope,
+          },
+        });
       });
     } catch (e) {
       console.error(e);

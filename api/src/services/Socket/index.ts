@@ -1,65 +1,65 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { connection } from "@App/config/redis";
-import { DQueues } from "@Damba/core/Queues";
-import { SocketAction, EntityType } from "@Damba/core/Socket";
-import {  createDambaService, DambaApi, DambaService, EBChain, EventBehavior, QueueBehavior } from "@Damba/v2/service/DambaService";
-import { EventHandler } from "@Damba/v2/service/IServiceDamba";
-import { Socket } from "socket.io";
-import { Queue, QueueEvents } from 'bullmq' ;
+import { connection } from '@App/config/redis';
+import { DQueues } from '@Damba/core/Queues';
+import { SocketAction, EntityType } from '@Damba/core/Socket';
+import {
+  createDambaService,
+  DambaApi,
+  DambaService,
+  EBChain,
+  QueueBehavior,
+} from '@Damba/v2/service/DambaService';
+import { Queue, QueueEvents } from 'bullmq';
+import { emitToRequest, emitAll } from '@Damba/v2/IO/RegistrySocket';
+import { create_project_event } from './Messages';
 
 const service = {
-    name : "/socket",
-    redis: connection,
-    Queue,
-    QueueEvents
+  name: '/socket',
+  redis: connection,
+  Queue,
+  QueueEvents,
 } as DambaService;
 
-const e: EventBehavior = (api?: DambaApi) : EventHandler =>{
-        return (socket: Socket, payload) => {
-             
-             console.log(payload);
-        }
-}
-
-const events : EBChain = {
-  [SocketAction.create(EntityType.PROJECT)] : e
-}
-
-const queues : QueueBehavior = {
-  [DQueues.CREATE_PROJECT] : {
-    options: {},
-    events: {
-      completed:  (api: DambaApi) => {
-        throw new Error("Function not implemented.");
-      }
-    }
+const events: EBChain = {
+  [SocketAction.create(EntityType.PROJECT)]: {
+    message: create_project_event,
+    middleware: [],
   },
+};
 
-  [DQueues.RUN_AGENT]: {
+const queues: QueueBehavior = {
+  [DQueues.CREATE_PROJECT]: {
     options: {
-      // BullMQ options example (tweak for your needs)
       attempts: 2,
-      backoff: { type: "exponential", delay: 2000 },
+      backoff: { type: 'exponential', delay: 2000 },
       removeOnComplete: 1000,
       removeOnFail: 5000,
     },
     events: {
-      completed: async (api: DambaApi, ctx: any) => {
-        // job.returnvalue can contain summary if your worker returns it
-        // emit "agent_run_completed" to org room
-        // api.socket.to(`org:${job.data.orgId}`).emit("agent_run_completed", {...})
+      completed: (api: DambaApi) => {
+        throw new Error('Function not implemented.');
       },
-      failed: async (api: DambaApi, job: any,) => {
-        // emit "agent_run_failed"
-        // api.socket.to(`org:${job.data.orgId}`).emit("agent_run_failed", {...})
-      },
-      // If your Damba wrapper supports "progress" event mapping, add it too.
     },
   },
-}
+  [DQueues.RUN_AGENT]: {
+    options: {
+      attempts: 2,
+      backoff: { type: 'exponential', delay: 2000 },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
+    events: {
+      completed: (api?: DambaApi, ctx?: { jobId: string; returnvalue?: any }) => {
+        const payload = ctx?.returnvalue ?? {};
+        const eventName = SocketAction.update(EntityType.SERVICE);
+        const requestId = String(payload?.request_id ?? '').trim();
+        if (requestId) emitToRequest(requestId, eventName, payload);
+        else emitAll(eventName, payload);
+      },
+    },
+  },
+};
 
-export default createDambaService( { service, events, queues } ) ;
-
-
-
-
+export default createDambaService({ service, events, queues });
