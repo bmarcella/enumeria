@@ -3,11 +3,7 @@
 // config/app-config.ts
 import dotenv from 'dotenv';
 import type { NextFunction, Request, Response } from 'express';
-import nodemailer from 'nodemailer';
-import { OAuth2Client } from 'google-auth-library';
 import type { ExtrasMap } from '@Damba/v1/service/IServiceDamba';
-import { DambaRepository } from '@Damba/v2/dao';
-import { DambaGoogleAuth } from '@Damba/v1/auth/DambaGoogleAuth';
 import { extrasToJSON } from '@Damba/v1/Extras';
 import {
   parseBoolean,
@@ -16,7 +12,6 @@ import {
   AppShutdownParams,
 } from '@Damba/v1/config/ConfigHelper';
 import { IAppConfig } from '@Damba/v2/config/IAppConfig';
-import { Mail } from '@Damba/v2/mail';
 import { Server } from 'http';
 import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
 import { DataSource } from 'typeorm';
@@ -24,13 +19,9 @@ import { DataSource } from 'typeorm';
 import { DEvent } from '@App/damba.import';
 import { authorize } from '@Damba/v1/auth/AuthMiddleware';
 import jwt from 'jsonwebtoken';
-import { ChatOllama } from '@langchain/ollama';
 import { DBEntities } from './db';
 import createWelcomeHandler from '@Damba/v2/welcome';
-import { TavilySearch } from '@langchain/tavily';
-import { ChatOpenAI } from '@langchain/openai';
 import { socketConfig } from './SocketConfig';
-import IORedis from 'ioredis';
 dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -48,7 +39,7 @@ export const AppConfig: IAppConfig<DataSource> = {
   appName: process.env.APP_NAME || 'Damba Workers',
   description: process.env.APP_DESCRIPTION || 'Damba Application - Workers',
   cors: {
-    allowedOrigins: ['http://localhost:5174/'],
+    allowedOrigins: [],
     corsOptions: {
       checkOrigin: (origin: any, callback: any) => {
         if (!origin || AppConfig.cors?.allowedOrigins.indexOf(origin) !== -1) {
@@ -72,7 +63,7 @@ export const AppConfig: IAppConfig<DataSource> = {
       ready: '/damba/cicd/ready',
     },
   },
-  port: String(process.env.PORT ?? '3000'),
+  port: String(process.env.PORT ?? '3001'),
   logRoute: true,
   version: 1,
   json: {
@@ -97,45 +88,7 @@ export const AppConfig: IAppConfig<DataSource> = {
   },
   call: {
     helper: (extras: ExtrasMap, DB?: DataSource) => {
-      const DRepo = DambaRepository.init(DB);
-      const aiApiKey = mustEnv('OPENAI_API_KEY');
-      const openAi = new ChatOpenAI({
-        apiKey: aiApiKey,
-        model: 'gpt-4o-mini',
-        temperature: 0.2,
-      });
-      const smtpUser = mustEnv('SMTP_USER');
-      const smtpPass = mustEnv('SMTP_PASSWORD'); // <-- add this env var (or rename to your existing one)
-      const mail = new Mail(nodemailer, smtpUser, smtpPass);
-      const googleAuth = DambaGoogleAuth.init<OAuth2Client>(OAuth2Client, {
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-        GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
-      });
-      const oauth2Google = googleAuth.getAuth;
-      const ollama = new ChatOllama({
-        temperature: 0,
-        model: 'qwen2.5-coder:32b-instruct',
-      });
-
-      const redis = new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
-        maxRetriesPerRequest: null,
-      });
-
-      const tavily = new TavilySearch({
-        maxResults: 5,
-        tavilyApiKey: process.env.TAVILY_API_KEY,
-      });
-
       return (req: Request, _res: Response, next: NextFunction) => {
-        req.extras = extras;
-        req.DRepository = DRepo;
-        req.openAi = openAi;
-        req.mail = mail;
-        req.oauth2Google = oauth2Google;
-        req.ollama = ollama;
-        req.tavily = tavily;
-        req.redis = redis;
         next();
       };
     },

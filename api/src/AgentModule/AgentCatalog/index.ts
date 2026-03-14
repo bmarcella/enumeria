@@ -5,7 +5,7 @@ import {
   DambaService,
 } from "@Damba/v2/service/DambaService";
 import { Http } from "@Damba/v2/service/IServiceDamba";
-import { AgentListing } from "@App/entities/agents/AgentsConfig";
+import { AgentListing } from "@App/entities/agents/Agents";
 import { BrowseAgentsQuery } from "@App/Validators/agents";
 import { browseAgentsBehavior, getAgentBehavior } from "./Behavior";
 

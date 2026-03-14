@@ -1,4 +1,4 @@
-import { AgentProposal, ProposalStatus } from "@App/entities/agents/AgentsConfig";
+import { AgentProposal, ProposalStatus } from "@App/entities/agents/Agents";
 import { OrgParams, ProposalParams, DecideProposalBody } from "@App/Validators/agents";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { DEvent } from "@Damba/v2/service/DEvent";

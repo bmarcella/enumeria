@@ -1,5 +1,5 @@
 import { Entity, Column, CreateDateColumn, Index } from "typeorm";
-import { BaseModel } from "./AgentsConfig";
+import { BaseModel } from "./BaseModel";
 
 // AuditEvent.ts (reference)
 export enum AuditEventType {

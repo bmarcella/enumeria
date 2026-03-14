@@ -6,6 +6,7 @@ import type {
   IProcessHandler,
 } from "./config/IAppConfig";
 import { DambaIO, DambaIOApp } from "./IO/DambaIO";
+import { SocketRegistry } from "./IO/RegistrySocket";
 import { RegistryContext } from "./Registry/RegistryContext";
 import { DambaRoute } from "./route/DambaRoute";
 import DambaApiDocNested from "./route/DambaRouteDoc";
@@ -102,7 +103,6 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
     if (AppConfig.session && params.session) {
       this.app.use(params.session(AppConfig.session));
     }
-
     // Helper
     if (AppConfig.call?.helper) {
       database?.dataSource
@@ -111,30 +111,16 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
     }
     // Queue Context
     if (queue) {
-      this.app.use(async (req: any, _res: any, next: any) => {
+      this.app.use((req: any, _res: any, next: any) => {
         const tenant = req.header(queue.tenant) ?? "default";
         const correlationId = req.header(queue.correlation) ?? undefined;
+
         try {
-          await runWithQueueContext(
-            { keyPrefix: tenant, correlationId },
-            async () => {
-              return await new Promise<void>((resolve, reject) => {
-                RegistryContext.run(
-                  { queue: { keyPrefix: tenant, correlationId } },
-                  () => {
-                    try {
-                      next();
-                      resolve();
-                    } catch (e) {
-                      reject(e);
-                    }
-                  }
-                );
-              });
-            }
+          return runWithQueueContext({ keyPrefix: tenant, correlationId }, () =>
+            next()
           );
         } catch (err) {
-          next(err);
+          return next(err);
         }
       });
     }
@@ -171,14 +157,13 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   ): any | undefined {
     const { AppConfig } = params;
 
-    // Prefer explicit param port, fallback to AppConfig.port if present
     const port = params.port ?? (AppConfig as any).port;
     if (!AppConfig.call?.launch || !port) return undefined;
+
     const server = this.app.listen(port, () => {
       try {
         AppConfig.call.launch?.();
       } catch (e) {
-        // Fail fast if launch callback is faulty
         // eslint-disable-next-line no-console
         console.error(
           `${params?.AppConfig.appName}: launch callback threw:`,
@@ -186,23 +171,15 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
         );
       }
     });
+
     if (this.app && AppConfig.socket?.launch) {
       const io = AppConfig.socket.launch(server);
       this.app.locals.io = io;
-      this.dambaIo = DambaIO.init<IO>(io, AppConfig.socket);
-
-      RegistryContext.run(
-        {
-          io,
-          dambaIo: this.dambaIo,
-          clients: this.dambaIo.clients,
-          sockets: this.dambaIo.sockets,
-        },
-        () => {
-          this.dambaIo?.init(events);
-        }
-      );
+      this.dambaIo = DambaIO.init<any>(io, AppConfig.socket);
+      SocketRegistry.init({ io });
+      this.dambaIo?.init(events);
     }
+
     return server;
   }
 

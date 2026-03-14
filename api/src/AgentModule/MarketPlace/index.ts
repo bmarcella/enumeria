@@ -12,7 +12,7 @@ import { DEvent } from "@Damba/v2/service/DEvent";
 import { Behavior } from "@Damba/v2/Entity/behavior";
 
 import Ajv from "ajv";
-import { AgentDefinition, AgentDefinitionStatus, AgentListing, License, LicenseStatus, LicenseType, Purchase, PurchaseStatus } from "@App/entities/agents/AgentsConfig";
+import { AgentDefinition, AgentDefinitionStatus, AgentListing, License, LicenseStatus, LicenseType, Purchase, PurchaseStatus } from "@App/entities/agents/Agents";
 import { pingBehavior } from "./Behaviors";
 
 const ajv = new Ajv({ allErrors: true });

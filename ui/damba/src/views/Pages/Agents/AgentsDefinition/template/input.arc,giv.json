@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "required": ["allowedLayers"],
+  "properties": {
+    "allowedLayers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["presentation", "application", "domain", "infrastructure"]
+      },
+      "minItems": 1,
+      "description": "Layers the agent is allowed to modify."
+    },
+    "blockCrossLayerCalls": {
+      "type": "boolean",
+      "default": true
+    },
+    "namingConvention": {
+      "type": "string",
+      "enum": ["camelCase", "PascalCase", "snake_case"]
+    }
+  }
+}

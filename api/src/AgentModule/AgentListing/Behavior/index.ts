@@ -3,7 +3,7 @@
 // --------------------------------------------
 
 import { DEvent } from "@App/damba.import";
-import { AgentDefinition, AgentDefinitionStatus, ListingVisibility, AgentListing } from "@App/entities/agents/AgentsConfig";
+import { AgentDefinition, AgentDefinitionStatus, ListingVisibility, AgentListing } from "@App/entities/agents/Agents";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { CreateListingBody, UpdateListingBody, PublishParams } from "../validators";
 

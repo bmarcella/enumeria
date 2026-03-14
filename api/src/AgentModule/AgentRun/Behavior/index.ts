@@ -10,7 +10,7 @@ import {
   AgentProposal,
   ProposalStatus,
   AgentRun,
-} from "@App/entities/agents/AgentsConfig";
+} from "@App/entities/agents/Agents";
 import { OrgParams } from "@App/Validators/agents";
 import { DambaApi, Behavior } from "@Damba/v2/service/DambaService";
 import { RunRequestBody } from "../validators";
@@ -19,7 +19,6 @@ import {
   buildToolRegistryV2,
   clampStr,
   MarketplaceAgentContext,
-  runArtifactAgent,
   runManifestAgent,
   safeTrace,
   validateAssignmentConfig,
@@ -148,10 +147,7 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
       // -----------------------------
       const manifestMode = (agent as any).agentManifest?.mode ?? "artifact";
 
-      const out =
-        manifestMode === "manifest"
-          ? await runManifestAgent({ agent, ctx })
-          : await runArtifactAgent({ agent, ctx });
+      const out =  await runManifestAgent({ agent, ctx });
 
       // -----------------------------
       // 11) Persist run success

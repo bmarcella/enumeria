@@ -7,7 +7,6 @@
 
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
   Index,
   ManyToOne,
@@ -15,8 +14,8 @@ import {
   JoinColumn,
   Unique,
 } from "typeorm";
-import { AppBaseEntity } from "../BaseEntity";
-import { AgentManifest } from "./AgentDefType";
+import { AgentManifest } from "../../../../common/Damba/core/AgentDefType";
+import { BaseModel } from "./BaseModel";
 
 
 /** ---------------------------------------------------------------------------
@@ -126,19 +125,10 @@ export enum ProposalStatus {
   Superseded = "superseded",
 }
 
-/** ---------------------------------------------------------------------------
- * Base
- * ------------------------------------------------------------------------- */
-
-export abstract class BaseModel extends AppBaseEntity {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string;
-}
 
 /** ---------------------------------------------------------------------------
  * AgentDefinition
  * ------------------------------------------------------------------------- */
-
 @Entity({ name: "agent_definitions" })
 @Index(["publisherOrgId", "status"])
 export class AgentDefinition extends BaseModel {
@@ -189,10 +179,6 @@ export class AgentDefinition extends BaseModel {
   // JSON Schema for buyer assignment config validation
   @Column({ type: "jsonb", nullable: true })
   inputsSchema!: Record<string, any> | null;
-
-  // Points to agent execution artifact (local module path, package ref, runner id, etc.)
-  @Column({ type: "varchar", length: 255 })
-  artifactRef!: string;
 
   /**
    * NEW: Agent manifest (supports multi sub-agents + tool registry + execution plan).
@@ -291,6 +277,53 @@ export class Purchase extends BaseModel {
 
   @OneToMany(() => License, (l) => l.purchase)
   licenses!: License[];
+
+  @Column({ type: "uuid", nullable: true })
+  listingId!: string | null;
+
+  @Column({ type: "enum", enum: PriceType, nullable: true })
+  priceTypeSnapshot!: PriceType | null;
+
+  @Column({ type: "int", nullable: true })
+  unitPriceCentsSnapshot!: number | null;
+
+  @Column({ type: "int", default: 1 })
+  quantity!: number;
+
+  @Column({ type: "jsonb", nullable: true })
+  metadata!: Record<string, any> | null;
+
+}
+
+@Entity({ name: "agent_snapshots" })
+@Index(["publisherOrgId", "agentDefinitionId", "version"])
+@Index(["contentHash"])
+export class AgentSnapshot extends BaseModel {
+
+  @Column({ type: "uuid" })
+  agentDefinitionId!: string;
+
+  @ManyToOne(() => AgentDefinition, { onDelete: "RESTRICT" })
+  @JoinColumn({ name: "agentDefinitionId" })
+  agentDefinition!: AgentDefinition;
+
+  @Column({ type: "uuid" })
+  publisherOrgId!: string;
+
+  @Column({ type: "varchar", length: 32 })
+  version!: string;
+
+  @Column({ type: "varchar", length: 255 })
+  artifactRefSnapshot!: string;
+
+  @Column({ type: "jsonb", nullable: true })
+  manifestSnapshot!: AgentManifest | null;
+
+  @Column({ type: "jsonb", nullable: true })
+  toolsSnapshot!: Record<string, any> | null;
+
+  @Column({ type: "varchar", length: 64 })
+  contentHash!: string;
 }
 
 /** ---------------------------------------------------------------------------
@@ -332,6 +365,16 @@ export class License extends BaseModel {
 
   @OneToMany(() => AgentAssignment, (a) => a.license)
   assignments!: AgentAssignment[];
+
+  @Column({ type: "uuid", nullable: true })
+  agentSnapshotId!: string | null;
+
+  @ManyToOne(() => AgentSnapshot, { onDelete: "RESTRICT" })
+  @JoinColumn({ name: "agentSnapshotId" })
+  agentSnapshot!: AgentSnapshot | null;
+
+  @Column({ type: "varchar", length: 64, nullable: true })
+  agentContentHashSnapshot!: string | null;
 }
 
 /** ---------------------------------------------------------------------------
@@ -380,6 +423,16 @@ export class AgentAssignment extends BaseModel {
 
   @OneToMany(() => AgentRun, (r) => r.assignment)
   runs!: AgentRun[];
+
+  @Column({ type: "uuid" })
+  agentSnapshotId!: string;
+
+  @ManyToOne(() => AgentSnapshot, { onDelete: "RESTRICT" })
+  @JoinColumn({ name: "agentSnapshotId" })
+  agentSnapshot!: AgentSnapshot;
+
+  @Column({ type: "jsonb", default: () => "'[]'::jsonb" })
+  permissionsGranted!: string[];
 }
 
 /** ---------------------------------------------------------------------------
@@ -423,6 +476,25 @@ export class AgentRun extends BaseModel {
 
   @OneToMany(() => AgentProposal, (p) => p.run)
   proposals!: AgentProposal[];
+
+  @Column({ type: "uuid" })
+  agentSnapshotId!: string;
+ 
+  @ManyToOne(() => AgentSnapshot, { onDelete: "RESTRICT" })
+  @JoinColumn({ name: "agentSnapshotId" })
+  agentSnapshot!: AgentSnapshot;
+
+  @Column({ type: "varchar", length: 64 })
+  contentHashSnapshot!: string;
+
+  @Column({ type: "enum", enum: ScopeType })
+  scopeType!: ScopeType;
+
+  @Column({ type: "uuid" })
+  scopeId!: string;
+
+  @Column({ type: "uuid", nullable: true })
+  correlationId!: string | null;
 }
 
 /** ---------------------------------------------------------------------------
@@ -457,3 +529,5 @@ export class AgentProposal extends BaseModel {
   @Column({ type: "timestamptz", nullable: true })
   decidedAt!: Date | null;
 }
+
+

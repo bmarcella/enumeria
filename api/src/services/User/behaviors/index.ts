@@ -33,9 +33,15 @@ api.DPost(
       );
     },
 
-    getCurrentSetting: async (e: DEvent, id) => {
+    loadCurrentSetting: async (e: DEvent, id) => {
       const qb = e.in.DRepository.QueryBuilder(User, 'u');
       return qb.select('u.currentSetting').where('u.id = :id', { id }).getRawOne();
+    },
+    getCurrentSetting: async (e: DEvent) => {
+      const userId = e.in.payload?.id;
+      if (!userId) throw new Error('Unauthorized');
+      const config = await e.in.extras.users.loadCurrentSetting(e, userId);
+      return config.u_currentSetting;
     },
   },
 );

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { USER_ROLES } from "@/views/shared/schema"
 
 export const ADMIN = 'admin'
 export const ASSIST_ACCOUNTANT = 'assist_accoutant'
@@ -36,7 +35,7 @@ export const getRolesByAhth = (auth: string ) => {
        auth = auth.toLowerCase().trim();
         switch (auth) {
            case "admin":
-               roles  = [...USER_ROLES];
+               roles  = [];
               break;
           case "coordonator":
             roles = roles.concat(["agent_immobilier","assist_coordonator"])

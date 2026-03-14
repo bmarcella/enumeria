@@ -73,7 +73,7 @@ export interface IAppConfig<DS = any,  S = any, IO= any >  {
   appName: string;
   description?: string;
   cors?: {
-    allowedOrigins: any[];
+    allowedOrigins: ReadonlyArray<any> | any[];
     corsOptions: {
       checkOrigin: (origin: any, callback: any) => void;
       credentials: boolean;

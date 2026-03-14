@@ -1,6 +1,12 @@
 import { DambaRepository } from "../dao";
 import { DEvent } from "./DEvent";
-import { EventHandler, ServiceFn, IDActionConfig, IServiceProvider, AnyFn } from "./IServiceDamba";
+import {
+  EventHandler,
+  ServiceFn,
+  IDActionConfig,
+  IServiceProvider,
+  AnyFn,
+} from "./IServiceDamba";
 import { QCtor } from "./QueuesBull";
 
 export type DambaApiType<
@@ -19,14 +25,14 @@ export type DambaApiType<
   DFindOne: (where: any) => Promise<any>;
   DFindAll: (where: any) => Promise<any>;
   DFindOneById: () => Promise<any>;
-  setQueue : <NQ> (ctor: QCtor<NQ>) => void;
-  queue: <NQ>( fullQueueName: string) => NQ;
-  enqueue: <E> (
+  setQueue: <NQ>(ctor: QCtor<NQ>) => void;
+  queue: <NQ>(fullQueueName: string) => NQ;
+  enqueue: <E>(
     fullQueueName: string,
     data: E,
     opts?: any,
-    jobName?: string,
-  ) => Promise<{ jobId: string }>;
+    jobName?: string
+  ) => Promise<{ id: string; full: any }>;
 
   middlewares: any;
   data: () => any;

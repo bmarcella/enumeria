@@ -1,5 +1,5 @@
 // src/services/AgentAssignmentService.ts
-import { AgentAssignment } from "@App/entities/agents/AgentsConfig";
+import { AgentAssignment } from "@App/entities/agents/Agents";
 import { OrgParams, CreateAssignmentBody } from "@App/Validators/agents";
 import {
   BehaviorsChainLooper,

@@ -1,5 +1,5 @@
 
-import { PriceType } from "@App/entities/agents/AgentsConfig";
+import { PriceType } from "@App/entities/agents/Agents";
 import { z } from "zod";
 
 export const CreateListingBody = z.object({

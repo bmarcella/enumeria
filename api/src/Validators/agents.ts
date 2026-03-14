@@ -1,5 +1,5 @@
 
-import { ScopeType, RunTrigger, ProposalType } from "@App/entities/agents/AgentsConfig";
+import { ScopeType, RunTrigger, ProposalType } from "@App/entities/agents/Agents";
 import { z } from "zod";
 
 export const InstallAgentDto = z.object({

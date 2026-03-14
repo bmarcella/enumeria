@@ -22,7 +22,15 @@ import {
 import { ServiceRegistry } from "./ServiceRegistry";
 import { defaultDMiddlewares } from "./GenericMiddleware";
 import { QueueBehaviorContent } from "./QueueService";
-import { getQueue, getQueueEvents, QCtor } from "./QueuesBull";
+import {
+  getKeyPrefix,
+  getQueue,
+  getQueueContext,
+  getQueueEvents,
+  QCtor,
+  shardQueueName,
+  RedisConnectionFactory,
+} from "./QueuesBull";
 import { DambaRepository } from "../dao";
 import { DambaApiType } from "./DambaApiType";
 
@@ -144,7 +152,9 @@ export const createDambaService = <
     params?.events,
     params.queues,
     params.service.Queue,
-    params.service.QueueEvents
+    params.service.QueueEvents,
+    params.service.queuePrefix ?? false,
+    params.service.redisConnectionFactory
   );
 };
 
@@ -161,7 +171,10 @@ export const DambaMakeApi = <
   events?: EBChain,
   queues?: QueueBehavior<any, any>,
   QueueCtor?: QCtor<Q>,
-  QueueEventsCtor?: QCtor<EQ>
+  QueueEventsCtor?: QCtor<EQ>,
+  isQueuePrefix = false,
+  /** Factory that produces a fresh ioredis connection per QueueEvents. Required when using queues. */
+  redisConnectionFactory?: RedisConnectionFactory
 ): IServiceProvider<REQ, RES, NEXT> => {
   if (behaviors) {
     for (const [path, chains] of Object.entries(behaviors)) {
@@ -215,12 +228,43 @@ export const DambaMakeApi = <
     if (!QueueEventsCtor)
       throw new Error("QueueEvents ctor missing (pass service.QueueEvents)");
 
-    for (const [name, cfg] of Object.entries(queues)) {
-      // instantiate Queue
-      getQueue(QueueCtor, name, redisConnection, cfg.options);
-      // instantiate EventQueue
-      const ev = cfg?.events;
-      getQueueEvents(QueueEventsCtor, name, redisConnection, api, ev) as any;
+    if (!redisConnectionFactory) {
+      console.warn(
+        "[DambaService] No redisConnectionFactory provided. " +
+        "QueueEvents will attempt to duplicate the shared connection. " +
+        "Provide service.redisConnectionFactory to avoid ECONNABORTED errors."
+      );
+    }
+
+    const SHARDS = Number(process.env.QUEUE_SHARDS ?? 3);
+
+    for (const [baseName, cfg] of Object.entries(queues)) {
+      const handlers = cfg?.events;
+
+      for (let i = 0; i < SHARDS; i++) {
+        const shardName = `${baseName}_${i}`;
+
+        // Pre-warm the Queue (non-blocking, safe to share a connection)
+        getQueue(QueueCtor, shardName, redisConnection, {
+          prefixEnabled: false,
+          defaultJobOptions: cfg.options,
+        });
+
+        // Each QueueEvents MUST have its own dedicated ioredis connection.
+        // Sharing one connection across multiple QueueEvents is what causes ECONNABORTED.
+        getQueueEvents(
+          QueueEventsCtor,
+          shardName,
+          redisConnection,
+          api,
+          handlers,
+          {
+            prefixEnabled: false,
+            streams: undefined,
+          },
+          redisConnectionFactory
+        );
+      }
     }
   }
 
@@ -249,6 +293,14 @@ export type DambaService<
   // BullMQ constructors passed by the app layer
   Queue?: QCtor<any>;
   QueueEvents?: QCtor<any>;
+  queuePrefix?: boolean; // if true, the service name will be used as prefix for queues/events
+  /**
+   * Factory that creates a fresh, dedicated ioredis connection.
+   * Required when using QueueEvents — each instance MUST have its own connection.
+   * Example: () => new IORedis({ host: '127.0.0.1', port: 6379 })
+   * or use the `createRedisConnection` export from your redis config.
+   */
+  redisConnectionFactory?: RedisConnectionFactory;
 };
 
 export type EntityCtor = new (...args: any[]) => any;
@@ -311,15 +363,36 @@ export const createBehaviors = <
   };
 
   const enqueue = async <E = any>(
-    name: string,
+    baseName: string,
     data: E,
+    id_user?: string,
     opts?: any,
     jobName = "job"
   ) => {
-    const q = queue<typeof Queue>(name) as any;
+    const tenantId = getKeyPrefix(); // via ALS
+    const correlationId = getQueueContext()?.correlationId; // si exposé
+
+    const shardName = shardQueueName(
+      baseName,
+      tenantId,
+      Number(process.env.QUEUE_SHARDS ?? 128)
+    );
+
+    const q = queue<typeof Queue>(shardName) as any;
     if (!q) throw new Error("Queue does not exist.");
-    const job = await q.add(jobName, data, opts);
-    return { jobId: String(job.id), full: job };
+
+    const payload = {
+      ...(data as any),
+      keyPrefix: tenantId, //
+      correlationId, //
+      enqueuedAt: new Date().toISOString(),
+      shardName,
+      enqueueBy: id_user ? String(id_user) : undefined,
+      from: service_name,
+    };
+
+    const job = await q.add(jobName, payload, opts);
+    return { id: String(job.id), full: job };
   };
 
   /**

@@ -2,7 +2,7 @@
 
 import { DEvent } from "@App/damba.import";
 import { AuditEvent, AuditEventType } from "@App/entities/agents/AuditEvent";
-import { AgentDefinition } from "@App/entities/agents/AgentsConfig";
+import { AgentDefinition } from "@App/entities/agents/Agents";
 import { DambaApi } from "@Damba/v2/service/DambaService";
 
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -390,42 +390,6 @@ function isSafeArtifactRef(ref: string) {
   const absRef = path.resolve(ref);
 
   return absRef.startsWith(absBase + path.sep) || absRef === absBase;
-}
-
-export async function runArtifactAgent(params: {
-  agent: AgentDefinition;
-  ctx: MarketplaceAgentContext;
-}): Promise<MarketplaceAgentResult> {
-  const { agent, ctx } = params;
-
-  if (!agent.artifactRef) throw new Error("artifactRef missing");
-  if (!isSafeArtifactRef(agent.artifactRef)) throw new Error("artifactRef not allowed by AGENT_ARTIFACT_BASEDIR policy");
-
-  const mod = await import(/* webpackIgnore: true */ agent.artifactRef);
-
-  const runner = (mod as any).runMarketplaceAgent;
-  if (typeof runner !== "function") {
-    throw new Error("Invalid agent artifact: missing runMarketplaceAgent(ctx)");
-  }
-
-  // If tools were built by buildToolRegistryV2, tool trace is on deps.tools.__trace
-  const toolTrace = (ctx.deps.tools as any).__trace ?? [];
-
-  const out = await runner(ctx);
-
-  const content = clampStr(out?.content ?? out?.answer ?? "", 50000);
-
-  // merge traces (agent trace + tool trace)
-  const mergedTrace = {
-    toolTrace,
-    agentTrace: out?.trace ?? null,
-  };
-
-  return {
-    content,
-    trace: mergedTrace,
-    proposalPatch: out?.proposalPatch ?? null,
-  };
 }
 
 // -----------------------------

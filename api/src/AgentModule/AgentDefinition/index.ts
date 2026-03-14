@@ -9,22 +9,24 @@ import { Http } from "@Damba/v2/service/IServiceDamba";
 
 
 
-import { AgentDefinition } from "@App/entities/agents/AgentsConfig";
-import { approveAgentDefinitionBehavior, createAgentDefinitionBehavior, delistAgentDefinitionBehavior, getAgentDefinitionBehavior, rejectAgentDefinitionBehavior, submitAgentDefinitionBehavior, updateAgentDefinitionBehavior } from "./Behavior";
+import { AgentDefinition } from "@App/entities/agents/Agents";
+import { approveAgentDefinitionBehavior, createAgentDefinitionBehavior, delistAgentDefinitionBehavior, getAgentDefinitionBehavior, rejectAgentDefinitionBehavior, submitAgentDefinitionBehavior, updateAgentDefinitionBehavior, updateAgentManifestBehavior } from "./Behavior";
 import { AgentIdParams, ApprovalListingDefaults, CreateAgentDefinitionBody, ModerationBody, UpdateAgentDefinitionBody } from "./validators";
+import { AppConfig } from "@App/config/app.config";
 
+const auth = AppConfig.authoriztion;
 
 const service = {
   name: "/agent_definitions",
   entity: AgentDefinition,
 } as DambaService;
 
-
 const behaviors: BehaviorsChainLooper = {
-  "/create": {
+  "/": {
     method: Http.POST,
     behavior: createAgentDefinitionBehavior,
     config: { validators: { body: CreateAgentDefinitionBody } },
+    middlewares: [auth?.check(['user'])]
   },
   "/:agentDefinitionId": [{
     method: Http.PUT,
@@ -55,6 +57,10 @@ const behaviors: BehaviorsChainLooper = {
     method: Http.POST,
     behavior: rejectAgentDefinitionBehavior,
     config: { validators: { params: AgentIdParams, body: ModerationBody } },
+  },
+   "/:agentDefinitionId/updateManifest": {
+    method: Http.PATCH,
+    behavior: updateAgentManifestBehavior
   }
 };
 

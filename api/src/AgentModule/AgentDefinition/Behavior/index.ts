@@ -1,15 +1,55 @@
 
 import { DEvent } from "@App/damba.import";
-import { AgentDefinitionStatus, AgentDefinition, AgentListing, ListingVisibility } from "@App/entities/agents/AgentsConfig";
+import { AgentDefinitionStatus, AgentDefinition, AgentListing, ListingVisibility, AgentSnapshot } from "@App/entities/agents/Agents";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { CreateAgentDefinitionBody, AgentIdParams, UpdateAgentDefinitionBody, ApprovalListingDefaults, ModerationBody, AgentManifestSchema, ParamsSchema } from "../validators";
 import { AuditEvent, AuditEventType } from "@App/entities/agents/AuditEvent";
 import { audit, clampStr } from "../../helper";
+import crypto from "crypto";
+import { z } from "zod";
+
+function stableStringify(value: any): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+
+  const keys = Object.keys(value).sort();
+  const entries = keys.map(
+    (k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`
+  );
+
+  return `{${entries.join(",")}}`;
+}
+
+export function computeContentHash(snap: AgentSnapshot): string {
+  const payload = {
+    version: snap.version,
+    artifactRef: snap.artifactRefSnapshot,
+    manifest: snap.manifestSnapshot ?? null,
+    tools: snap.toolsSnapshot ?? null,
+  };
+
+  const canonical = stableStringify(payload);
+
+  return crypto
+    .createHash("sha256")
+    .update(canonical)
+    .digest("hex");
+}
 
 export const createAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const body = CreateAgentDefinitionBody.parse(e.in.body);
-
+    const userId = e.in.payload?.id;
+    const config = await e.in.extras.users.getCurrentSetting(e);
+    const orgId = config.orgId;
+    if (!orgId || !userId) {
+       e.out.status(402).send({})
+    }
     const def = new AgentDefinition();
     def.name = body.name;
     def.description = body.description;
@@ -20,17 +60,15 @@ export const createAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     def.version = body.version;
     def.executionMode = body.executionMode;
 
-    def.publisherOrgId = e.in.payload?.orgId ?? null;
-    def.publisherUserId = e.in.payload?.id ?? null;
+    def.publisherOrgId = orgId;
+    def.publisherUserId = userId;
 
     def.scopes = body.scopes as any;
     def.capabilities = body.capabilities;
     def.permissionsRequested = body.permissionsRequested;
 
     def.inputsSchema = body.inputsSchema ?? null;
-    def.artifactRef = body.artifactRef;
 
-    def.agentManifest = body.agentManifest as any;
 
     def.status = AgentDefinitionStatus.Draft;
 
@@ -41,7 +79,12 @@ export const createAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
       orgId: saved?.publisherOrgId ?? null,
       resourceType: "AgentDefinition",
       resourceId: saved?.id ?? null,
-      metadata: { name: saved?.name, version: saved?.version, mode: saved?.agentManifest?.mode ?? "artifact" },
+      metadata: {
+        name: saved?.name,
+        version: saved?.version,
+        mode: saved?.agentManifest?.mode ?? "artifact",
+        executionMode: saved?.executionMode,
+      },
     });
 
     e.out.send({ agentDefinition: saved });
@@ -79,7 +122,6 @@ export const updateAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     if (body.permissionsRequested !== undefined) def.permissionsRequested = body.permissionsRequested;
 
     if (body.inputsSchema !== undefined) def.inputsSchema = body.inputsSchema ?? null;
-    if (body.artifactRef !== undefined) def.artifactRef = body.artifactRef;
 
     if (body.agentManifest !== undefined) {
       // validate manifest if provided
@@ -100,34 +142,6 @@ export const updateAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
   };
 };
 
-export const submitAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
-  return async (e: DEvent) => {
-    const repo = api?.DRepository();
-    const { agentDefinitionId } = AgentIdParams.parse(e.in.params);
-
-    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, { where: { id: agentDefinitionId } });
-    if (!def) throw new Error("AgentDefinition not found");
-
-    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId) throw new Error("Forbidden");
-
-    if (![AgentDefinitionStatus.Draft, AgentDefinitionStatus.Rejected].includes(def.status))
-      throw new Error("Only draft/rejected can be submitted");
-
-    def.status = AgentDefinitionStatus.Submitted;
-
-    const saved = await api?.DSave(def);
-
-    await audit(api, e, {
-      type: AuditEventType.AGENT_SUBMITTED,
-      orgId: saved?.publisherOrgId ?? null,
-      resourceType: "AgentDefinition",
-      resourceId: saved?.id ?? null,
-      metadata: { name: saved?.name, version: saved?.version },
-    });
-
-    e.out.send({ agentDefinition: saved });
-  };
-};
 
 export const approveAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
@@ -278,5 +292,87 @@ export const delistAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
       agentDefinitionId,
       listingId: listing.id,
     });
+  };
+};
+
+export const submitAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
+  return async (e: DEvent) => {
+    const repo = api?.DRepository();
+    const { agentDefinitionId } = AgentIdParams.parse(e.in.params);
+
+    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, { where: { id: agentDefinitionId } });
+    if (!def) throw new Error("AgentDefinition not found");
+
+    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId) throw new Error("Forbidden");
+    if (![AgentDefinitionStatus.Draft, AgentDefinitionStatus.Rejected].includes(def.status))
+      throw new Error("Only draft/rejected can be submitted");
+
+    // 1) validate manifest again (submit gate)
+    if (def.agentManifest) {
+      def.agentManifest = AgentManifestSchema.parse(def.agentManifest) as any;
+    }
+
+  
+
+    def.status = AgentDefinitionStatus.Submitted;
+    const saved = await api?.DSave(def);
+
+    // 3) create candidate snapshot (hard-freeze)
+    const snap = new AgentSnapshot();
+    snap.agentDefinitionId = saved!.id;
+    snap.publisherOrgId = saved!.publisherOrgId;
+    snap.version = saved!.version;
+    snap.artifactRefSnapshot = saved!.artifactRef; // ideally normalized to immutable
+    snap.manifestSnapshot = (saved!.agentManifest as any) ?? null;
+    snap.toolsSnapshot = null;
+
+    // TODO: compute sha256 of stable payload
+    // snap.contentHash = computeContentHash(snap);
+    snap.contentHash = computeContentHash(snap);
+
+    const savedSnap = await repo?.DSave(AgentSnapshot, snap);
+
+    await audit(api, e, {
+      type: AuditEventType.AGENT_SUBMITTED,
+      orgId: saved?.publisherOrgId ?? null,
+      resourceType: "AgentDefinition",
+      resourceId: saved?.id ?? null,
+      metadata: { name: saved?.name, version: saved?.version, snapshotId: savedSnap?.id, contentHash: savedSnap?.contentHash },
+    });
+
+    // (optional) add a SNAPSHOT_CREATED audit type too
+    e.out.send({ agentDefinition: saved, candidateSnapshot: savedSnap });
+  };
+};
+
+export const updateAgentManifestBehavior: Behavior = (api?: DambaApi) => {
+  return async (e: DEvent) => {
+    const repo = api?.DRepository();
+    const { agentDefinitionId } = AgentIdParams.parse(e.in.params);
+
+    const body = z.object({
+      agentManifest: AgentManifestSchema.nullable(),
+    }).parse(e.in.body);
+
+    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, { where: { id: agentDefinitionId } });
+    if (!def) throw new Error("AgentDefinition not found");
+
+    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId) throw new Error("Forbidden");
+    if (![AgentDefinitionStatus.Draft, AgentDefinitionStatus.Rejected].includes(def.status))
+      throw new Error("Only draft/rejected can be edited");
+
+    def.agentManifest = (body.agentManifest ?? null) as any;
+
+    const saved = await api?.DSave(def);
+
+    await audit(api, e, {
+      type: AuditEventType.AGENT_UPDATED,
+      orgId: saved?.publisherOrgId ?? null,
+      resourceType: "AgentDefinition",
+      resourceId: saved?.id ?? null,
+      metadata: { updated: "agentManifest" },
+    });
+
+    e.out.send({ agentDefinition: saved });
   };
 };

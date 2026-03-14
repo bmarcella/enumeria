@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "mode": "manifest",
+  "entry": {
+    "kind": "multi_step",
+    "systemPrompt": "You are a multi-step agent. First analyze, then produce a structured plan, then propose patch."
+  },
+  "tools": [
+    {
+      "name": "arch_read",
+      "type": "damba_architecture_read",
+      "enabled": true
+    },
+    {
+      "name": "search",
+      "type": "tavily_search",
+      "enabled": true,
+      "config": {
+        "maxResults": 5
+      }
+    },
+    {
+      "name": "propose_patch",
+      "type": "damba_propose_patch",
+      "enabled": true
+    }
+  ],
+  "subAgents": [
+    {
+      "id": "planner",
+      "kind": "multi_step",
+      "systemPrompt": "Create a short step-by-step plan to solve the task. Keep it technical and concrete.",
+      "tools": ["arch_read", "search"],
+      "maxIterations": 6,
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "plan": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["plan"]
+      }
+    },
+    {
+      "id": "patcher",
+      "kind": "tool_only",
+      "systemPrompt": "Generate patch proposals only. Do not add commentary.",
+      "tools": ["propose_patch"],
+      "maxIterations": 2
+    }
+  ],
+  "defaults": {
+    "model": "gpt-4.1-mini",
+    "temperature": 0.1
+  }
+}

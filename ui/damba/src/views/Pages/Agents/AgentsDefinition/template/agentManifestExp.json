@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "mode": "manifest",
+  "entry": {
+    "kind": "simple",
+    "systemPrompt": "You are a senior software engineer. Read the user's request and propose safe, minimal code changes. Always explain assumptions briefly."
+  },
+  "tools": [
+    {
+      "name": "arch_read",
+      "type": "damba_architecture_read",
+      "enabled": true,
+      "config": {
+        "maxNodes": 2000
+      }
+    },
+    {
+      "name": "propose_patch",
+      "type": "damba_propose_patch",
+      "enabled": true
+    }
+  ],
+  "defaults": {
+    "model": "gpt-4.1-mini",
+    "temperature": 0.2,
+    "maxOutputChars": 12000
+  }
+}

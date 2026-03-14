@@ -13,8 +13,10 @@
     "prepare": "husky",
     "worker:create-entity": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/entities/create.worker.ts",
     "worker:update-entity": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/entities/update.worker.ts",
-    "worker:run-agent": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/agents/runAgent.worker.ts",
-    "workers": "concurrently -k \"npm run worker:create-entity\" \"npm run worker:update-entity\" \" npm run worker:run-agent\" "
+    "worker:run-agent": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/agents/startAgentRunWorkers.ts",
+    "worker:create-project": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/projects/create.worker.ts",
+    "worker:update-project": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/projects/update.worker.ts",
+    "workers": "concurrently -k \"npm run worker:create-entity\" \"npm run worker:update-entity\" \"npm run worker:create-project\" \"npm run worker:update-project\" \"npm run worker:run-agent\" "
   },
   "lint-staged": {
     "**/*.{js,cjs,mjs,ts,tsx,json,md,yml,yaml,css,scss,html}": "prettier --write"
@@ -57,6 +59,8 @@
     "@langchain/tavily": "^1.2.0",
     "@types/uuid": "^10.0.0",
     "adminapi": "file:",
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1",
     "axios": "^1.6.7",
     "bullmq": "^5.67.2",
     "chromadb": "^3.2.2",
@@ -73,6 +77,7 @@
     "keycloak-connect": "^23.0.6",
     "langchain": "^1.2.12",
     "multer": "^1.4.5-lts.1",
+    "nats": "^2.29.3",
     "nodemailer": "^6.10.0",
     "openai": "^4.83.0",
     "passport": "^0.7.0",

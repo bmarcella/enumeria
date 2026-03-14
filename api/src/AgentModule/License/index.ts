@@ -1,5 +1,5 @@
 // src/services/AgentLicenseService.ts
-import { License } from "@App/entities/agents/AgentsConfig";
+import { License } from "@App/entities/agents/Agents";
 import { OrgParams, InstallAgentBody, PurchaseAgentBody } from "@App/Validators/agents";
 import {
   BehaviorsChainLooper,

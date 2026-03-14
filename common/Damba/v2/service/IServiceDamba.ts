@@ -35,7 +35,7 @@ export type EventHandler<SK = any, IO = any> = (
   payload?: any,
   _callback?: any,
   io?: IO
-) => void;
+) => void | any | Promise<void> | Promise<any>;
 
 export type ServiceFn<REQ, RES, NEXT> = (
   damba_event: DEvent<REQ, RES, NEXT>

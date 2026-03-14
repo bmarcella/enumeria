@@ -59,6 +59,7 @@ declare module 'express-session' {
 }
 
 const _SPS_ = { ..._SPS_INDEX_, ..._SPS_AGENT_MODULE_ };
+
 async function main() {
   dotenv.config();
   try {

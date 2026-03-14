@@ -2,11 +2,10 @@
 import React, { useEffect, useState } from 'react'
 import { useEntityStore } from '@/stores/useEntityStore'
 import { useWindowSize } from '@/utils/hooks/useWindowSize'
-import { EntityScene } from '@/views/Canvas/entityScene'
-import JsonDiagram from '@/views/Canvas/JsonDiagram'
 import AddProject from '@/views/components/Layout/ShowPopupOnClick'
 import AddEntityForm from '@/views/Form/entity/AddEntityForm'
 import { useModuleStore } from '@/stores/useModuleStore'
+import { EntityScene } from '@/views/components/Canvas/entityScene'
 
 function EntityViewDiagram() {
     const entities = useEntityStore((s) => s.entities)

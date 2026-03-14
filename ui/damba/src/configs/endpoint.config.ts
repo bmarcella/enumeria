@@ -1,4 +1,4 @@
-export const apiPrefix = '/api/v1'
+export const apiPrefix = ''
 
 const endpointConfig = {
     signIn: '/sign-in',
@@ -19,6 +19,14 @@ const endpointConfig = {
     auth: '/auth',
     behavior: '/behavior',
     helper: '/helper',
+    // AGENTS 
+   agentDefinitions: "/agent_definitions",
+   agentCatalog: "/agent_catalog",
+   agentListings: "/agent_listings",
+   agentLicenses: "/agent_licenses",
+   agentAssignments: "/agent_assignments",
+   toolArtifacts: "/tool_artifacts",
+   runnableLambdas: "runnable-lambdas"
 }
 
 export default endpointConfig

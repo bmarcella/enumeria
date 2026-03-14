@@ -1,4 +1,4 @@
-import { AgentListing, ListingVisibility, AgentDefinition, AgentDefinitionStatus } from "@App/entities/agents/AgentsConfig";
+import { AgentListing, ListingVisibility, AgentDefinition, AgentDefinitionStatus } from "@App/entities/agents/Agents";
 import { BrowseAgentsQuery } from "@App/Validators/agents";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { DEvent } from "@Damba/v2/service/DEvent";

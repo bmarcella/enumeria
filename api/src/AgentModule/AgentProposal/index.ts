@@ -5,7 +5,7 @@ import {
   DambaService,
 } from "@Damba/v2/service/DambaService";
 import { Http } from "@Damba/v2/service/IServiceDamba";
-import { AgentProposal } from "@App/entities/agents/AgentsConfig";
+import { AgentProposal } from "@App/entities/agents/Agents";
 import { OrgParams, ProposalParams, DecideProposalBody } from "@App/Validators/agents";
 import { decideProposalBehavior } from "./Behavior";
 
