@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "projectId": {
+      "type": "string",
+      "description": "Injected automatically by system, not user editable."
+    }
+  }
+}

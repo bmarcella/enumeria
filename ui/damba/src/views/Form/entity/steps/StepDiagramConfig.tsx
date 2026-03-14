@@ -6,7 +6,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { Input, Checkbox, Select } from '@/components/ui';
 import { Field, Section } from '../CanvasBoxFormLayout';
 import { CanvasBoxFormValues } from '../canvasBoxSchema';
-import { VisibilityTypeClass } from '../../../../../../../common/Entity/CanvasBox';
+import { VisibilityTypeClass } from '../../../../../../../common/Damba/v2/Entity/CanvasBox';
 import IconPicker from '@/views/components/IconPicker';
 const visibilityClassOptions = Object.values(VisibilityTypeClass).map((v) => ({
   value: v,

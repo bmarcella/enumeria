@@ -5,11 +5,8 @@ import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { Card, Button, Input, Checkbox, Select } from '@/components/ui';
 import { Field, Section } from '../CanvasBoxFormLayout';
 import { CanvasBoxFormValues } from '../canvasBoxSchema';
-import {
-  VisibilityTypeAttributes,
-  RelationshipType,
-} from '../../../../../../../common/Entity/CanvasBox';
 import { useEntityStore } from '@/stores/useEntityStore';
+import { RelationshipType, VisibilityTypeAttributes } from '../../../../../../../common/Damba/v2/Entity/CanvasBox';
 
 // ----------------------
 // Helpers

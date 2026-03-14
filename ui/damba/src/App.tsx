@@ -11,6 +11,7 @@ import { ApplicationProvider } from './providers/ApplicationProvider'
 import { ModuleProvider } from './providers/ModuleProvider'
 import { DialogProvider } from './providers/DialogProvider'
 import { fetchModulesByAppId } from './services/Application'
+import { SocketProvider } from './providers/SocketProvider'
 
 if (appConfig.enableMock) {
     import('./mock')
@@ -21,19 +22,22 @@ function App() {
         <Theme>
             <BrowserRouter>
                 <AuthProvider>
-                    <OrganizationProvider fetchOrganizations={fetchOrganizations} autoSelectSingle={true}>
-                        <ProjectProvider fetchProjectsByUserAndOrg={fetchProject} autoSelectSingle={true} >
-                            <ApplicationProvider  fetchApplicationsByProjectId={fetchApplicationsByProjectId} autoSelectSingle={true} >
-                                <ModuleProvider fetchModulesByAppId={fetchModulesByAppId} autoSelectSingle={true} >
-                                    <DialogProvider>
-                                        <Layout>
-                                            <Views />
-                                        </Layout>
-                                    </DialogProvider>
-                                </ModuleProvider>
-                            </ApplicationProvider>
-                        </ProjectProvider>
-                    </OrganizationProvider>
+                     <SocketProvider>
+                        <OrganizationProvider fetchOrganizations={fetchOrganizations} autoSelectSingle={true}>
+                            <ProjectProvider fetchProjectsByUserAndOrg={fetchProject} autoSelectSingle={true} >
+                                <ApplicationProvider  fetchApplicationsByProjectId={fetchApplicationsByProjectId} autoSelectSingle={true} >
+                                    <ModuleProvider fetchModulesByAppId={fetchModulesByAppId} autoSelectSingle={true} >
+                                        <DialogProvider>
+                                            <Layout>
+                                                <Views />
+                                            </Layout>
+                                        </DialogProvider>
+                                    </ModuleProvider>
+                                </ApplicationProvider>
+                            </ProjectProvider>
+                        </OrganizationProvider>
+                     </SocketProvider>
+                  
                 </AuthProvider>
             </BrowserRouter>
         </Theme>

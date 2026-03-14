@@ -3,13 +3,13 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useSessionUser } from '@/stores/authStore';
 import { useOrganizationStore, selectSelectedOrganization } from '@/stores/useOrganizationStore';
 import { useProjectStore } from '@/stores/useProjectStore';
-import { Project } from '../../../../common/Entity/project';
+import { Project } from '../../../../common/Damba/v2/Entity/project';
 type ProjCtx = { initProject: boolean }
 const ProjectContext = createContext<ProjCtx | undefined>(undefined)
 type Props = {
   children: React.ReactNode;
   /** Must return ONLY the projects for this user in this org */
-  fetchProjectsByUserAndOrg: (idProj: string, env: string) => Promise<Project[]>;
+  fetchProjectsByUserAndOrg: (idProj: string, idOrg: string) => Promise<Project[]>;
   /** Auto-select the single project (DX nice-to-have) */
   autoSelectSingle?: boolean;
 };
@@ -45,8 +45,8 @@ export function ProjectProvider({
       setProjects(projects);
 
       if (autoSelectSingle && projects.length === 1 && !projectId) {
-        const p = projects[0];
-        setProject(p.id ?? p.slug ?? p.name);
+           const p = projects.find((p)=> p.id == user.currentSetting?.projId);
+           if (p && p.id) setProject(p.id!);
       }
       setInitialized(true);
     }
@@ -55,10 +55,10 @@ export function ProjectProvider({
     return () => {
       cancelled = true;
     };
-  }, [user.id, org?.id, setScope, setProjects, projectId, setProject, fetchProjectsByUserAndOrg, autoSelectSingle]);
+  }, [user.id, org?.id, setScope, setProjects, fetchProjectsByUserAndOrg, autoSelectSingle]);
 
   return (<ProjectContext.Provider value={{ initProject }}>
-    {children}
+    { children }
   </ProjectContext.Provider>);
 }
 

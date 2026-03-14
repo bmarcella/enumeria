@@ -1,55 +1,41 @@
-// stores/useProjectStore.ts
-import { create } from 'zustand';
-import { persist, subscribeWithSelector } from 'zustand/middleware';
-import { Project, Application, AppModule } from '../../../../common/Entity/project';
+import { create } from 'zustand'
+import { persist, subscribeWithSelector } from 'zustand/middleware'
+import type { Project } from '../../../../common/Damba/v2/Entity/project'
 
 type ProjectState = {
-  // scope
-  userId?: string;
-  orgId?: string;
-  // data
-  projects: Project[];
-  cProject?: Project;
-  // selections
-  projectId: string;
-  applicationIds: string[];
-  moduleIds: string[];
-};
+  userId?: string
+  orgId?: string
+
+  projects: Project[]
+  projectId: string // '' = none selected
+}
 
 type ProjectActions = {
-  /** Set the scope (user + org). Resets selections if scope changes. */
-  setScope: (userId?: string, orgId?: string) => void;
+  setScope: (userId?: string, orgId?: string) => void
 
-  /** Replace project list, reconciling persisted selections to remain valid. */
-  setProjects: (projects: Project[]) => void;
+  setProjects: (projects: Project[]) => void
+  addProject: (project: Project) => void
+  updateProject: (project: Project) => void
 
-  addProject: (project: Project) => void;
-
-  /** Cascading selections */
-  setProject: (projectId: string) => void;
-  getCProject: () => Project | undefined;
-  setApplications: (applicationIds: string[]) => void;
-  setModules: (moduleIds: string[]) => void;
-  
-  /** Reset (keeps current scope) */
-  reset: () => void;
-
-  updateProject: (project: Project) => void;
-
-  /** Helpers */
-  selectAllApplicationsForCurrentProject: () => void;
-  selectAllModulesForSelectedApplications: () => void;
-};
+  setProject: (projectId: string) => void
+  reset: () => void
+}
 
 const initial: ProjectState = {
   userId: undefined,
   orgId: undefined,
   projects: [],
   projectId: '',
-  applicationIds: [],
-  moduleIds: [],
-  cProject: undefined,
-};
+}
+
+function findProject(projects: Project[], key?: string): Project | undefined {
+  if (!key) return undefined
+  for (const p of projects) {
+    const keys = [p.id, p.slug, p.name].filter(Boolean) as string[]
+    if (keys.includes(key)) return p
+  }
+  return undefined
+}
 
 export const useProjectStore = create<ProjectState & ProjectActions>()(
   subscribeWithSelector(
@@ -57,180 +43,59 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
       (set, get) => ({
         ...initial,
 
-       updateProject: (project) => {
-          const { projects, projectId, applicationIds, moduleIds } = get();
-        
-          // replace the project inside the list
-          const nextProjects = projects.map((p) =>
-              p.id === project.id
-              ? project
-              : p
-          );
-        
-          set({ projects: nextProjects });
-        
-          // if the updated project is the current project → update cProject
-          const isCurrent =  project.id  === projectId;
-        
-          if (isCurrent) {
-            set({ cProject: project });
-          }
-        
-          // ---- RECONCILE SELECTIONS ----
-          const proj = isCurrent ? project : findProject(nextProjects, projectId);
-        
-          // current project disappeared?
-          if (!proj) {
-            set({ projectId: '', applicationIds: [], moduleIds: [] });
-            return;
-          }
-        
-          // validate applications
-          const validApps = (proj.applications ?? []).map(a => a.id ?? a.name);
-          const nextAppIds = applicationIds.filter(id => validApps.includes(id));
-        
-          // validate modules
-          const validMods = nextAppIds
-            .flatMap(id => (proj.applications ?? []).find(a => (a.id ?? a.name) === id)?.modules ?? [])
-            .map(m => m.id ?? m.name);
-          const nextModIds = moduleIds.filter(id => validMods.includes(id));
-          set({
-            applicationIds: nextAppIds,
-            moduleIds: nextModIds,
-          });
-        },
-
-
         setScope: (userId, orgId) => {
-          const prev = { userId: get().userId, orgId: get().orgId };
-          const changed = prev.userId !== userId || prev.orgId !== orgId;
-          if (changed) {
-            // scope changed → clear everything except scope
-            set({ ...initial, userId, orgId });
-          } else {
-            set({ userId, orgId });
-          }
+          const prev = { userId: get().userId, orgId: get().orgId }
+          const changed = prev.userId !== userId || prev.orgId !== orgId
+
+          if (changed) set({ ...initial, userId, orgId })
+          else set({ userId, orgId })
         },
 
         setProjects: (projects) => {
-          set({ projects });
-          // Reconcile selections with new list
-          const { projectId, applicationIds, moduleIds } = get();
-
-          const proj = findProject(projects, projectId);
-          if (!proj) {
-            set({ projectId: '', applicationIds: [], moduleIds: [] });
-            return;
-          }
-
-          const validApps = (proj.applications ?? []).map(a => a.id ?? a.name);
-          const nextAppIds = applicationIds.filter(id => validApps.includes(id));
-
-          const validMods = nextAppIds
-            .flatMap(id => (proj.applications ?? []).find(a => (a.id ?? a.name) === id)?.modules ?? [])
-            .map(m => m.id ?? m.name);
-          const nextModIds = moduleIds.filter(id => validMods.includes(id));
-
-          set({ applicationIds: nextAppIds, moduleIds: nextModIds });
+          const { projectId } = get()
+          // if current project no longer exists, clear it
+          const stillValid = !!findProject(projects, projectId)
+          set({ projects, projectId: stillValid ? projectId : '' })
         },
 
         addProject: (project) => {
-          const projects = get().projects;
-          projects.push(project);
-          set({ projects });
-          // Reconcile selections with new list
-          const { projectId, applicationIds, moduleIds } = get();
-
-          const proj = findProject(projects, projectId);
-          if (!proj) {
-            set({ projectId: '', applicationIds: [], moduleIds: [] });
-            return;
-          }
-
-          const validApps = (proj.applications ?? []).map(a => a.id ?? a.name);
-          const nextAppIds = applicationIds.filter(id => validApps.includes(id));
-
-          const validMods = nextAppIds
-            .flatMap(id => (proj.applications ?? []).find(a => (a.id ?? a.name) === id)?.modules ?? [])
-            .map(m => m.id ?? m.name);
-          const nextModIds = moduleIds.filter(id => validMods.includes(id));
-
-          set({ applicationIds: nextAppIds, moduleIds: nextModIds });
+          const { projects, projectId } = get()
+          const nextProjects = [...projects, project]
+          // keep selection if still valid
+          const stillValid = !!findProject(nextProjects, projectId)
+          set({ projects: nextProjects, projectId: stillValid ? projectId : '' })
         },
 
-        setProject: (projectId) => { 
-          const project  = get().projects.find((p)=> p.id==projectId)
-          set({ projectId, cProject: project, applicationIds: [], moduleIds: [] })
+        updateProject: (project) => {
+          const { projects, projectId } = get()
+          const nextProjects = projects.map((p) => (p.id === project.id ? project : p))
+          // keep selection if still valid
+          const stillValid = !!findProject(nextProjects, projectId)
+          set({ projects: nextProjects, projectId: stillValid ? projectId : '' })
         },
-        getCProject: () => { 
-          return get().cProject ;
+
+        setProject: (projectId) => {
+          const nextId = projectId ?? ''
+          set({ projectId: nextId })
         },
-        setApplications: (applicationIds) => set({ applicationIds, moduleIds: [] }),
-        setModules: (moduleIds) => set({ moduleIds }),
+
         reset: () => set({ ...initial, userId: get().userId, orgId: get().orgId }),
-
-        selectAllApplicationsForCurrentProject: () => {
-          const { projects, projectId } = get();
-          const p = findProject(projects, projectId);
-          const ids = (p?.applications ?? []).map(a => a.id ?? a.name);
-          set({ applicationIds: ids, moduleIds: [] });
-        },
-
-        selectAllModulesForSelectedApplications: () => {
-          const { projects, projectId, applicationIds } = get();
-          const p = findProject(projects, projectId);
-          const apps = (p?.applications ?? []).filter(a => applicationIds.includes(a.id ?? a.name));
-          const ids = apps.flatMap(a => a.modules ?? []).map(m => m.id ?? m.name);
-          set({ moduleIds: ids });
-        },
       }),
       {
         name: 'damba.project.selection.v2',
-        // Persist only scope + lightweight selections (never the whole project list)
         partialize: (s) => ({
           userId: s.userId,
           orgId: s.orgId,
           projectId: s.projectId,
-          applicationIds: s.applicationIds,
-          moduleIds: s.moduleIds,
-          cProject: s.cProject
         }),
-      }
-    )
-  )
-);
+      },
+    ),
+  ),
+)
 
-/* --------------------------- selectors & helpers --------------------------- */
-export const selectScopeUserId = (s: ProjectState) => s.userId;
-export const selectScopeOrgId  = (s: ProjectState) => s.orgId;
+// selectors
+export const selectProjects = (s: ProjectState) => s.projects
+export const selectProjectId = (s: ProjectState) => s.projectId
 
-export const selectProjects = (s: ProjectState) => s.projects;
-export const selectProjectId = (s: ProjectState) => s.projectId;
-export const selectApplicationIds = (s: ProjectState) => s.applicationIds;
-export const selectModuleIds = (s: ProjectState) => s.moduleIds;
-export const selectCProject = (s: ProjectState) => s.cProject;
-
-export const selectSelectedProject = (s: ProjectState): Project | undefined =>
-  findProject(s.projects, s.projectId);
-
-export const makeSelectApplications = () => (s: ProjectState): Application[] => {
-  const proj = selectSelectedProject(s);
-  if (!proj) return [];
-  const map = new Map((proj.applications ?? []).map(a => [a.id ?? a.name, a]));
-  return s.applicationIds.map(id => map.get(id)).filter(Boolean) as Application[];
-};
-
-export const makeSelectModules = () => (s: ProjectState): AppModule[] => {
-  const apps = makeSelectApplications()(s);
-  const modMap = new Map(apps.flatMap(a => (a.modules ?? [])).map(m => [m.id ?? m.name, m]));
-  return s.moduleIds.map(id => modMap.get(id)).filter(Boolean) as AppModule[];
-};
-
-function findProject(projects: Project[], key?: string): Project | undefined {
-  if (!key) return undefined;
-  for (const p of projects) {
-    const keys = [p.id, p.slug, p.name].filter(Boolean) as string[];
-    if (keys.includes(key)) return p;
-  }
-  return undefined;
-}
+export const selectSelectedProject = (s: ProjectState) =>
+  findProject(s.projects, s.projectId)

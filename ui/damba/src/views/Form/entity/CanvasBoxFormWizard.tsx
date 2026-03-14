@@ -13,7 +13,7 @@ import StepMapConfig from './steps/StepMapConfig';
 import StepDiagramConfig from './steps/StepDiagramConfig';
 import StepAttributes from './steps/StepAttributes';
 import StepMeta from './steps/StepMeta';
-import { VisibilityTypeClass } from '../../../../../../common/Entity/CanvasBox';
+import { VisibilityTypeClass } from '../../../../../../common/Damba/v2/Entity/CanvasBox';
 import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage';
 
 interface CanvasBoxFormWizardProps {

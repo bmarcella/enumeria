@@ -10,10 +10,12 @@ export interface TabNavProps extends CommonProps {
     icon?: string | ReactNode
     ref?: Ref<HTMLDivElement>
     value: TabsValue
+    title?: string
 }
 
 const TabNav = (props: TabNavProps) => {
     const {
+        title,
         value: valueProp,
         disabled,
         className,
@@ -53,6 +55,7 @@ const TabNav = (props: TabNavProps) => {
             onClick={onTabNavClick}
             onKeyDown={onTabNavClick}
             {...rest}
+            title={title}
         >
             {icon && <div className="tab-nav-icon">{icon}</div>}
             {children}

@@ -20,9 +20,9 @@ export const fetchProject = (idUser: string, idOrg: string): Promise<Project[]> 
    })
 }
 
-export const fetchApplicationsByProjectId = (idProj: string ): Promise<Application[]> => {
+export const fetchApplicationsByProjectId = (id: string ): Promise<Application[]> => {
    return ApiService.fetchDataWithAxios({
-      url: `${endpointConfig.applications}/${idProj}/projects`,
+      url: `${endpointConfig.projects}/${id}/applications`,
       method: 'get',
    })
 }

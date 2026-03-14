@@ -1,49 +1,51 @@
-import { SessionUser } from '../../common/Entity/UserDto';
+/* eslint-disable @typescript-eslint/no-namespace */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { SessionUser } from '../../common/Damba/v2/Entity/UserDto';
 import 'reflect-metadata';
 import 'tsconfig-paths/register';
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import express, {
-  Express,
-} from 'express';
+import express from 'express';
 import session from 'express-session';
 import { DataSource } from 'typeorm';
-import { AppDataSource } from '../../common/db/data-source';
-import { AppConfig } from './config/app';
-import { DBConfig } from './config/db';
+import { AppConfig } from './config/app.config';
 import { OAuth2Client } from 'google-auth-library';
 import { JwtPayload } from 'jsonwebtoken';
-import OpenAI from 'openai';
-import { Mail } from '../../common/mail';;
-import { _SPS_ } from './services';
-import { corsConfig } from './config/cors';
-import { DambaServices } from './damba.import';
 import { ExtrasMap } from '@Damba/v1/route/DambaRoute';
-import { DambaRepository } from '@Damba/v1/mvc/CrudService';
+import { DambaRepository } from '@Damba/v2/dao';
+import { Mail } from '@Damba/v2/mail';
+import { ChatOllama } from '@langchain/ollama';
+import { ChatOpenAI } from '@langchain/openai';
+import { TavilySearch } from '@langchain/tavily';
+import Damba from '@Damba/v2';
+import IORedis from 'ioredis';
+import { _SPS_AGENT_MODULE_ } from './AgentModule';
+import { _SPS_INDEX_ } from './services';
 
-//  
-dotenv.config();
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      EurekaClient?: any,
-      payload?: JwtPayload,
-      token?: string
-      DB: any,
-      mail: Mail,
-      AI: OpenAI
-      oauth2Google: OAuth2Client | any,
-      DRepository: DambaRepository<DataSource>,
-      extras: ExtrasMap,
+      EurekaClient?: any;
+      payload?: JwtPayload;
+      token?: string;
+      mail: Mail;
+      openAi: ChatOpenAI;
+      oauth2Google: OAuth2Client | any;
+      DRepository: DambaRepository<DataSource>;
+      extras: ExtrasMap;
       data: any;
+      ollama: ChatOllama;
+      tavily: TavilySearch;
+      redis: IORedis;
+      retrieverTool: any;
+      qdrantRetriever: any;
     }
   }
 }
 
-declare module "express-session" {
+declare module 'express-session' {
   interface SessionData {
     user?: SessionUser;
     tokens?: {
@@ -56,21 +58,30 @@ declare module "express-session" {
   }
 }
 
-AppDataSource<DataSource, Array<any>>(DataSource, process.env, DBConfig.entities).then((DB: DataSource) => {
-  const app: Express = express();
-  app.use(cors(corsConfig.corsOptions));
-  // body-parser
-  app.use(bodyParser.json(AppConfig.json));
-  app.use(bodyParser.urlencoded(AppConfig.urlencoded));
-  app.use(session(AppConfig.session));
-  const { route, extras } = DambaServices(_SPS_, AppConfig);
-  app.use(AppConfig.helper<DataSource>(DB, extras))
-  app.use(AppConfig.extras_path, AppConfig.extrasDoc(extras));
-  app.use(AppConfig.base_path, route);
-  app.listen(AppConfig.port, AppConfig.launch);
+const _SPS_ = { ..._SPS_INDEX_, ..._SPS_AGENT_MODULE_ };
 
-}).catch((error: any) => console.log(error));
+async function main() {
+  dotenv.config();
+  try {
+    Damba.start({
+      _SPS_,
+      AppConfig,
+      express,
+      cors,
+      bodyParser,
+      session,
+      queue: {
+        tenant: 'x-tenant',
+        correlation: 'x-correlation-id',
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    process.exitCode = 1;
+  }
+}
 
-
-
-
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});

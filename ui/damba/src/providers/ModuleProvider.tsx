@@ -1,13 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// providers/ModuleProvider.tsx
-// ...imports unchanged
 
 import { useModuleStore } from "@/stores/useModuleStore"
 import { useEffect } from "react"
 import { useSessionUser } from "@/stores/authStore"
 import { useApplicationStore } from "@/stores/useApplicationStore"
 import { selectSelectedOrganization, useOrganizationStore } from "@/stores/useOrganizationStore"
-import { useProjectActions } from "@/stores/useProjectSelectors"
+import { selectSelectedProject, useProjectStore } from "@/stores/useProjectStore"
+import { useAuth } from "@/auth"
 
 type Props = {
   children: React.ReactNode
@@ -29,16 +27,16 @@ export function ModuleProvider({
   const setModule  = useModuleStore(s => s.setModule)
   const cApp = useApplicationStore((s) => s.cApp)
   const org = useOrganizationStore(selectSelectedOrganization);
-  const { cProject } = useProjectActions();
-
+  const selectedProject = useProjectStore(selectSelectedProject)
+  const { authenticated } = useAuth()
   useEffect(() => {
     let cancelled = false
     async function init() {
       const userId = user?.id;
       const orgId = org?.id
-      const projectId = cProject?.id
+      const projectId = selectedProject?.id
       setScope(userId, orgId, projectId, cApp?.id);
-      if(!cApp?.id) return;
+      if(!cApp?.id || !authenticated) return;
       const mods = await fetchModulesByAppId(cApp?.id);
       if (cancelled) return;
       setModules(mods)
@@ -48,7 +46,7 @@ export function ModuleProvider({
     }
     init()
     return () => { cancelled = true }
-  }, [user?.id, user?.currentSetting?.env, cApp?.id])
+  }, [user?.id, user?.currentSetting?.env, cApp?.id, selectedProject?.id, authenticated])
 
   return <>{children}</>
 }
