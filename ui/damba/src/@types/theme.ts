@@ -8,7 +8,6 @@ export type LayoutType =
     | 'topBarClassic'
     | 'framelessSide'
     | 'contentOverlay'
-
 export type Theme = {
     themeSchema: string
     direction: Direction

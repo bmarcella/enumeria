@@ -8,10 +8,10 @@ import useResponsive from '@/utils/hooks/useResponsive'
 import { LAYOUT_COLLAPSIBLE_SIDE } from '@/constants/theme.constant'
 import type { CommonProps } from '@/@types/common'
 import { InputGroup } from '@/components/ui/InputGroup'
-import { AppSwitcher } from '../../../../views/components/AppSwitcher'
+import { AppSwitcher } from '../../../AppSwitcher'
 import { useProjectContext } from '@/providers/ProjectProvider'
-import { OrgSwitcher } from '@/views/components/OrgSwitcher'
-import { ProjSwitcher } from '@/views/components/ProjSwitcher'
+import { OrgSwitcher } from '@/components/OrgSwitcher'
+import { ProjSwitcher } from '@/components/ProjSwitcher'
 
 const CollapsibleSide = ({ children }: CommonProps) => {
     const { larger, smaller } = useResponsive()

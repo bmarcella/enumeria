@@ -6,7 +6,7 @@ import { CanvasBoxFormWizard } from "./CanvasBoxFormWizard";
 import { CanvasBoxFormValues } from "./canvasBoxSchema";
 import { useSessionUser } from "@/stores/authStore";
 import { addEntityApi, updateEntityApi } from "@/services/canvasBox";
-import { CanvasBox, CanvasBoxDiagramConfig, CanvasBoxMapConfig } from "../../../../../../common/Entity/CanvasBox";
+import { CanvasBox, CanvasBoxDiagramConfig, CanvasBoxMapConfig } from "../../../../../../common/Damba/v2/Entity/CanvasBox";
 
 
 function AddEntityForm() {
@@ -25,6 +25,7 @@ function AddEntityForm() {
         ...user.currentSetting
       } as Partial<CanvasBox>
       const created = await addEntityApi(payload); // your API call
+      console.log(created);
       setCanvasBox(created);
     } else {
       if (!canvasBox) return; // should not happen if step 1 succeeded

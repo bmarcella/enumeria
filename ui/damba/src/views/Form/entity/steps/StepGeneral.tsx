@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Input, Select } from '@/components/ui';
-import { CanvasBoxClassification, EntityStereotype } from '../../../../../../../common/Entity/CanvasBox';
+import { CanvasBoxClassification, EntityStereotype } from '../../../../../../../common/Damba/v2/Entity/CanvasBox';
 import { useFormContext, Controller } from 'react-hook-form';
 import { Section, Field } from '../CanvasBoxFormLayout';
 import { CanvasBoxFormValues } from '../canvasBoxSchema';

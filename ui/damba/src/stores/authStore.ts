@@ -67,9 +67,9 @@ export const useSessionUser = create<AuthState & AuthAction>()(
                     },
                 })),
             setSetting: async () => {
-                const user = get().user;
-                await changeSettingApi(user!.currentSetting!);
-            }
+                const user = get().user
+                await changeSettingApi(user!.currentSetting!)
+            },
         }),
         { name: 'sessionUser', storage: createJSONStorage(() => localStorage) },
     ),

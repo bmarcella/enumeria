@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+  const socket = io("http://localhost:3000");
+  socket.on("connect", () => console.log("Connected!"));
+  socket.emit("ping");
+  socket.on("pong", () => console.log("🏓 pong reçu"));
+</script>
+</body>
+</html>

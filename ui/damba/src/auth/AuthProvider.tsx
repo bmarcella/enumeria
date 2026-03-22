@@ -12,10 +12,11 @@ import type {
     AuthResult,
     OauthSignInCallbackPayload,
     User,
-    Token
+    Token,
 } from '@/@types/auth'
 import type { ReactNode, Ref } from 'react'
 import type { NavigateFunction } from 'react-router-dom'
+import { CurrentSetting } from '../../../../common/Damba/v2/Entity/UserDto'
 
 type AuthProviderProps = { children: ReactNode }
 
@@ -44,20 +45,27 @@ function AuthProvider({ children }: AuthProviderProps) {
     )
 
     const { token, setToken } = useToken()
-    const [byPassLogin, setByPassLogin] = useState<boolean>(false);
+    const [byPassLogin, setByPassLogin] = useState<boolean>(false)
 
     const authenticated = Boolean(token && signedIn)
 
-   const navigatorRef = useRef<IsolatedNavigatorRef>(null)
+    const navigatorRef = useRef<IsolatedNavigatorRef>(null)
 
-    const redirect = () => {
-        const search = window.location.search
-        const params = new URLSearchParams(search)
-        const redirectUrl = params.get(REDIRECT_URL_KEY)
-
-        navigatorRef.current?.navigate(
-            redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath,
+    const redirect = (setthing?: CurrentSetting) => {
+        const projectId = setthing?.projId;
+        let redirectUrl = undefined;
+        if (projectId) {
+            const search = window.location.search
+            const params = new URLSearchParams(search)
+            redirectUrl = params.get(REDIRECT_URL_KEY);
+            navigatorRef.current?.navigate(
+            redirectUrl ? redirectUrl : appConfig.authenticatedProjectPath,
         )
+        } else {
+            navigatorRef.current?.navigate(
+            redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath,
+          )
+        }
     }
 
     const handleSignIn = (tokens: Token, user?: User) => {
@@ -98,8 +106,8 @@ function AuthProvider({ children }: AuthProviderProps) {
         }
     }
 
-    const redirectTo = ()=>{
-        redirect();
+    const redirectTo = () => {
+        redirect()
     }
 
     const signUp = async (values: SignUpCredential): AuthResult => {
@@ -165,5 +173,3 @@ function AuthProvider({ children }: AuthProviderProps) {
 }
 
 export default AuthProvider
-
-

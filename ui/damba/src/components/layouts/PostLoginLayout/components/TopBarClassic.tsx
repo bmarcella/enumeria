@@ -10,12 +10,14 @@ import { LAYOUT_TOP_BAR_CLASSIC } from '@/constants/theme.constant'
 import type { CommonProps } from '@/@types/common'
 import { useProjectContext } from '@/providers/ProjectProvider'
 import { InputGroup } from '@/components/ui/InputGroup'
-import { AppSwitcher } from '../../../../views/components/AppSwitcher'
-import { OrgSwitcher } from '@/views/components/OrgSwitcher'
-import { ProjSwitcher } from '@/views/components/ProjSwitcher'
+import { AppSwitcher } from '../../../AppSwitcher'
+import { OrgSwitcher } from '@/components/OrgSwitcher'
+import { ProjSwitcher } from '@/components/ProjSwitcher'
+import { useProjectStore, selectSelectedProject } from '@/stores/useProjectStore'
 const TopBarClassic = ({ children }: CommonProps) => {
     const { larger, smaller } = useResponsive();
     const { initProject } = useProjectContext()
+    const selectedProject = useProjectStore(selectSelectedProject)
     return (
         <LayoutBase
             type={LAYOUT_TOP_BAR_CLASSIC}
@@ -36,8 +38,11 @@ const TopBarClassic = ({ children }: CommonProps) => {
                             <>
                                 <InputGroup className="mt-6 mb-6">
                                     <OrgSwitcher ></OrgSwitcher>
-                                    <ProjSwitcher initialized={initProject}></ProjSwitcher>
-                                    <AppSwitcher ></AppSwitcher>
+                                    { selectedProject && <>
+                                        <ProjSwitcher initialized={initProject}></ProjSwitcher>
+                                        <AppSwitcher ></AppSwitcher>
+                                    </> }
+                                   
                                 </InputGroup>
                             </>
                         }

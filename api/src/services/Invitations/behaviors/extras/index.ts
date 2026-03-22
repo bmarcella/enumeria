@@ -1,4 +1,2 @@
-const getAllInvitaionExtras = {
-
-} ;
-export getAllInvitaionExtras;
+const getAllInvitaionExtras = {};
+export default getAllInvitaionExtras;

@@ -7,6 +7,16 @@
 /ui/damba/dist
 /ui/.env
 node_modules
+node_modules/
+packages/database/node_modules
+packages/validators/node_modules
+packages/validators/dist
+packages/database/dist
+dist/
+build/
+.env
+.env.local
+coverage/
 # Ignore operating system files
 .DS_Store
 aws.txt

@@ -8,9 +8,7 @@ import PreLoginLayout from './PreLoginLayout'
 
 const Layout = ({ children }: CommonProps) => {
     const layoutType = useThemeStore((state) => state.layout.type)
- 
     const { authenticated } = useAuth();
-    // console.log('Authenticated:', authenticated, 'Layout Type:', layoutType);
     return (
         <Suspense
             fallback={

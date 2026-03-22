@@ -2,7 +2,7 @@
 // providers/BehaviorProvider.tsx
 import React, { useEffect } from 'react'
 import { useBehaviorStore } from '@/stores/useBehaviorStore'
-import { Behavior } from '../../../../common/Entity/behavior'
+import { Behavior } from '../../../../common/Damba/v2/Entity/behavior'
 
 type Props = {
     children: React.ReactNode

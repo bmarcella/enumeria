@@ -1,7 +1,7 @@
 // providers/MiddlewareProvider.tsx
 import React, { useEffect } from 'react'
 import { useMiddlewareStore } from '@/stores/useMiddlewareStore'
-import { Middleware } from '../../../../common/Entity/behavior'
+import { Middleware } from '../../../../common/Damba/v2/Entity/behavior'
 
 type Props = {
     children: React.ReactNode
