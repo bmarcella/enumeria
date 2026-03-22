@@ -42,7 +42,6 @@ const message_prompt =
 
 export const ProjectList = () => {
   const projects = useProjectStore(selectProjects);
-  const model = useMemo(() => "Projects", []);
   const [loading, setLoading] = useState<LoadingMap>({});
   const [message, setMessage] = useTimeOutMessage();
   const { t } = useTranslation();

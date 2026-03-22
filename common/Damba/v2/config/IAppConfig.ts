@@ -40,9 +40,7 @@ export interface DatabaseConfig<DS> {
 }
 
 export interface IProcessHandler {
-  /** NodeJS process event name (e.g. "SIGINT", "SIGTERM", "uncaughtException") */
   name: string;
-  /** If true, handler will be invoked with the error payload */
   error: boolean;
   withoutError?: (server?: any) => void;
   withError?: (e: unknown, server?: any) => void;
@@ -106,9 +104,10 @@ export interface IAppConfig<DS = any,  S = any, IO= any >  {
     shutdown: (params: AppShutdownParams) => void;
     welcome: (appConfig: IAppConfig<DS>) => any;
   };
-  authoriztion?: {
+  authorization?: {
     strategy: string;
     check: (roles: string[]) => any;
+    socketCheck: ( socket: any , roles?: string[]) => any;
   };
   processes?: (...args: any[]) => IProcessHandler[];
   databaseConfig?: DatabaseConfig<DS>;

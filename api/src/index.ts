@@ -24,6 +24,8 @@ import IORedis from 'ioredis';
 import { _SPS_AGENT_MODULE_ } from './AgentModule';
 import { _SPS_INDEX_ } from './services';
 import { initOrm } from '@Database/DataSource';
+import { oauth2Google } from './config/google.auth';
+
 
 declare global {
   namespace Express {
@@ -66,8 +68,9 @@ async function main() {
   const db = await initOrm<DataSource>(process.env as any);
 
   try {
-    Damba.start({
+  await Damba.start({
       _SPS_,
+      googleAuth: oauth2Google,
       AppConfig,
       express,
       cors,

@@ -1,6 +1,7 @@
-import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn } from 'typeorm';
 import { MessageAi } from './MessageAi';
 import { AppBaseEntity } from './BaseEntity';
+import { Project } from './Project';
 
 export enum Service_tier {
   default = 'default',
@@ -14,6 +15,11 @@ export class ChatAi extends AppBaseEntity {
 
   @Column()
   initial_prompt?: string;
+
+
+  @ManyToOne(() => Project, (project) => project.chatAis, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'projectId' })
+  project?: Project;
 
   @Column()
   model?: string;

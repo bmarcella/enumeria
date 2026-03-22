@@ -15,7 +15,7 @@ import { AppConfig }
 from "@App/config/app.config";
 import { AgentIdParams, ApprovalListingDefaults, CreateAgentDefinitionBody, ModerationBody, UpdateAgentDefinitionBody } from "@Validators/contracts/AgentDefinitionValidators";
 
-const auth = AppConfig.authoriztion;
+const auth = AppConfig.authorization;
 
 const service = {
   name: "/agent_definitions",

@@ -10,7 +10,7 @@ export function AppDataSource(
   p: DBEnv,
   entities: any[],
   synchronize = true,
-  logging = true,
+  logging = false,
   subscribers: any[] = [],
   migrations: any[] = [],
   extraOptions: Record<string, any> = {}

@@ -21,7 +21,7 @@ export type DambaApiType<
   __redis: any;
   DRepository: () => DambaRepository;
   QueryBuilder: (name?: boolean) => any;
-  on: <SK>(name: string, on: EventHandler<SK>) => void;
+  on: <SK, IO = any>(name: string, on: EventHandler<SK, IO> | EventHandler<SK, IO> [], middleware?: any[]) => void;
   DFindOne: (where: any) => Promise<any>;
   DFindAll: (where: any) => Promise<any>;
   DFindOneById: () => Promise<any>;

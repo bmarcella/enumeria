@@ -4,6 +4,16 @@ import { Organization } from './Organization';
 import { AppBaseEntity } from './BaseEntity';
 import { Application } from './Application';
 import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
+import { ChatAi } from './ChatAi';
+
+
+export enum BuildStatus {
+  INITIALIZING = 'initializing',
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+}
 
 /** Project: child records of an Organization */
 @Entity('projects')
@@ -21,10 +31,26 @@ export class Project extends AppBaseEntity {
   @Column({ type: 'text', nullable: true })
   description?: string | null;
 
+  @Column({
+    type: 'enum',
+    enum: BuildStatus,
+    nullable: false,
+    default: BuildStatus.INITIALIZING,
+  })
+  buildStatus!: BuildStatus;
+
+  @Column({ type: 'text', nullable: true })
+  initialPrompt!: string;
+
+  @OneToMany(() => ChatAi, (chatAi) => chatAi.project, { cascade: true, nullable: true })
+  chatAis!: ChatAi[];
+
+ 
+
   @Column({ type: 'int', nullable: false, default: 1 })
   version: number | undefined;
 
-  @Column({ type: 'int', nullable: false, default: 1 })
+  @Column({ type: 'int', nullable: false, default: 0 })
   price: number | undefined;
 
   @Column({ type: 'boolean', nullable: false, default: false })
@@ -40,4 +66,12 @@ export class Project extends AppBaseEntity {
     nullable: false,
   })
   environments?: DambaEnvironmentType[];
+
+  @Column({ type: 'varchar', nullable: true })
+  currentPlan?: string;
+
+
+
+
+  
 }

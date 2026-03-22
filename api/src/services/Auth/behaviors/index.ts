@@ -13,7 +13,7 @@ import { GenTokenJwt } from '@Damba/v1/auth/AuthMiddleware';
 import { AppConfig } from '@App/config/app.config';
 import { Role, RoleName } from '@Database/entities/Role';
 import { User } from '@Database/entities/User';
-const auth = AppConfig?.authoriztion;
+const auth = AppConfig?.authorization;
 const api = createService('/auth');
 
 api.DPost(

@@ -4,29 +4,30 @@
 import crypto from "node:crypto";
 import { SocketConfig } from "../config/IAppConfig";
 import { RegistryContext } from "../Registry/RegistryContext";
-import { EventHandler } from "../service/IServiceDamba";
 import { runWithQueueContext } from "../service/QueuesBull";
 import { SocketRegistry } from "./RegistrySocket";
+import { SocketEventHandlerChain } from "../service/IServiceDamba";
 
 export class DambaIOApp<IO = any> {
   sockets: any[] = [];
 
-  constructor(private io: IO | any, private socketConfig: SocketConfig) {}
+  constructor(private io: IO | any, private socketConfig: SocketConfig, private oauth2Google: any) {
 
-  /**
-   * RequestId is now correlation-based (NO userId inside).
-   * If correlationId is not provided, we still produce a unique requestId.
-   */
+  }
+
+
   private createRequestId(correlationId?: string) {
     const c = encodeURIComponent(correlationId ?? "no-correlation");
     const uuid = crypto.randomUUID();
     return `${c}|${uuid}`;
   }
 
-  public init<S = any>(events: EventHandler<S>) {
+  public init<S = any, IO = any>(events: SocketEventHandlerChain) {
+
+  
     this.io.on(
       "connection",
-      (
+      async (
         socket: S & {
           on: Function;
           id?: string;
@@ -35,19 +36,26 @@ export class DambaIOApp<IO = any> {
           emit: (event: string, payload: any) => void;
         }
       ) => {
-        const { tenantId, correlationId, userId } = socket.handshake.auth || {};
+        const { tenantId, correlationId, userId , token} = socket.handshake.auth || {};
 
         // Store base identity on socket (userId is kept separately)
         socket.data.tenantId = tenantId ?? "default";
         socket.data.userId = userId ?? undefined;
         socket.data.correlationId = correlationId ?? undefined;
+        socket.data.token = token ?? undefined;
+
+        // const user = await auth.verifyToken(token);
+        // if (!user) {
+        //   socket.disconnect();
+        //   return;
+        // }
 
         // Register socket globally
         SocketRegistry.addSocket(socket);
 
         // Bind user if provided (optional but useful for emitToUser)
         if (socket.data.userId) {
-          SocketRegistry.bindUser(socket, socket.data.userId);
+           SocketRegistry.bindUser(socket, socket.data.userId);
         }
 
         // Create initial requestId (correlation-based, unique)
@@ -74,7 +82,11 @@ export class DambaIOApp<IO = any> {
         });
 
         if (events) {
-          for (const [event, handler] of Object.entries(events)) {
+          for (const [event, sehc ] of Object.entries(events)) {
+  
+            const handler = sehc.handler;
+            const middleware = sehc.middleware ?? [];
+ 
             console.info(`Socket -> ${socket.id} : Listening for -> ${event}`);
 
             socket.on(event, async (payload: any, _callback: any) => {
@@ -109,13 +121,26 @@ export class DambaIOApp<IO = any> {
                   async () => {
                     // Keep RegistryContext only if you store per-event scoped registries
                     return await RegistryContext.run({}, async () => {
-                      const data = await handler(
-                        socket,
-                        payload,
-                        _callback,
-                        this.io
-                      );
-
+                      let data : any[] | any ;
+                      if ( !Array.isArray(handler)) {
+                         data = await handler(
+                            socket,
+                            payload,
+                            _callback,
+                            this.io
+                          );
+                       } else {
+                        for (const h of handler) {
+                         const  inline_data = await h(
+                            socket,
+                            payload,
+                            _callback,
+                            this.io
+                          );
+                          if(!data) data = [];
+                          data.push(inline_data); 
+                        }
+                      }
                       if (_callback && data !== undefined) {
                         _callback({
                           ok: true,
@@ -167,10 +192,11 @@ export class DambaIO {
 
   public static init<IO>(
     socket: IO,
-    socketConfig: SocketConfig
+    socketConfig: SocketConfig,
+    oauth2Google: any
   ): DambaIOApp<IO> {
     if (!this._dio) {
-      this._dio = new DambaIOApp<IO>(socket, socketConfig);
+      this._dio = new DambaIOApp<IO>(socket, socketConfig, oauth2Google);
     }
     return this._dio as DambaIOApp<IO>;
   }
