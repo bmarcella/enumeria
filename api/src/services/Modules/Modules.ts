@@ -10,7 +10,7 @@ import { createModule, getAllServiceByModuleId, getModulesbyApplicationId } from
 import { auth } from '@App/damba.import';
 import { ModulesExtras } from './extras';
 import z from 'zod';
-import { Modules } from '@App/entities/Modules';
+import { Modules } from '@Database/entities/Modules';
 import { DEvent } from '@Damba/v1/service/DEvent';
 
 export const ModuleSchema = z.object({

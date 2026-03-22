@@ -4,10 +4,8 @@
 import dotenv from 'dotenv';
 import type { NextFunction, Request, Response } from 'express';
 import nodemailer from 'nodemailer';
-import { OAuth2Client } from 'google-auth-library';
 import type { ExtrasMap } from '@Damba/v1/service/IServiceDamba';
 import { DambaRepository } from '@Damba/v2/dao';
-import { DambaGoogleAuth } from '@Damba/v1/auth/DambaGoogleAuth';
 import { extrasToJSON } from '@Damba/v1/Extras';
 import {
   parseBoolean,
@@ -22,16 +20,17 @@ import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
 import { DataSource } from 'typeorm';
 
 import { DEvent } from '@App/damba.import';
-import { authorize } from '@Damba/v1/auth/AuthMiddleware';
+import { authorize, authorizeSocket } from '@Damba/v1/auth/AuthMiddleware';
 import jwt from 'jsonwebtoken';
 import { ChatOllama } from '@langchain/ollama';
-import { DBEntities } from './db';
 import createWelcomeHandler from '@Damba/v2/welcome';
 import { TavilySearch } from '@langchain/tavily';
 import { ChatOpenAI } from '@langchain/openai';
 import { socketConfig } from './SocketConfig';
 import IORedis from "ioredis";
 import { QueueConfig } from './QueueConfig';
+import { oauth2Google } from './google.auth';
+
 dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -99,6 +98,7 @@ export const AppConfig: IAppConfig<DataSource> = {
   call: {
     helper: (extras: ExtrasMap, DB?: DataSource) => {
       const DRepo = DambaRepository.init(DB);
+      
       const aiApiKey = mustEnv('OPENAI_API_KEY');
       const openAi = new ChatOpenAI({
         apiKey: aiApiKey,
@@ -108,12 +108,6 @@ export const AppConfig: IAppConfig<DataSource> = {
       const smtpUser = mustEnv('SMTP_USER');
       const smtpPass = mustEnv('SMTP_PASSWORD'); // <-- add this env var (or rename to your existing one)
       const mail = new Mail(nodemailer, smtpUser, smtpPass);
-      const googleAuth = DambaGoogleAuth.init<OAuth2Client>(OAuth2Client, {
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-        GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
-      });
-      const oauth2Google = googleAuth.getAuth;
       const ollama = new ChatOllama({
         temperature: 0,
         model:"qwen2.5-coder:32b-instruct"
@@ -168,28 +162,22 @@ export const AppConfig: IAppConfig<DataSource> = {
       res.status(ready ? 200 : 503).json({ ready });
     },
   },
-  authoriztion: {
+  authorization: {
     strategy: 'localstorage',
     check: (roles?: string[]) => {
       return authorize<DEvent>(
         mustEnv('JWT_PUBLIC_KEY'),
         jwt,
         roles,
-        AppConfig?.authoriztion?.strategy,
+        AppConfig?.authorization?.strategy,
       );
     },
-  },
-  databaseConfig: {
-    entities: DBEntities,
-    initOrm: async () => {
-      const orm = DambaTypeOrm.get(DataSource, process.env as any, DBEntities, {
-        retries: 8,
-        retryDelayMs: 1000,
-        log: console.log,
-      });
-      const dataSource = (await orm.init()) as DataSource;
-      orm.enableProcessSignalHandlers();
-      return { orm, dataSource };
+    socketCheck: (roles?: string[] ) => {
+      return authorizeSocket(
+        mustEnv('JWT_PUBLIC_KEY'),
+        jwt,
+        roles,
+      );
     },
   },
   processes: (orm: DambaTypeOrm<DataSource>) => {
@@ -219,9 +207,7 @@ export const AppConfig: IAppConfig<DataSource> = {
         error: true,
         withError: (err: any) => {
           console.error('unhandledRejection', err);
-          // If you want fail-fast instead of just logging, uncomment:
-          // void AppConfig.call.shutdown?.({ server: (Damba.instance as any)?.server, name: "unhandledRejection", orm });
-        },
+      },
       },
       {
         name: 'uncaughtException',

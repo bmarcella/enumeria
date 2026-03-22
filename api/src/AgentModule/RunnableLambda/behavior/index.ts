@@ -3,13 +3,13 @@ import crypto from "crypto";
 import { DEvent } from "@App/damba.import";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { audit } from "../../helper";
-import { AuditEventType } from "@App/entities/agents/AuditEvent";
+import { AuditEventType } from "@Database/entities/agents/contracts/AuditEvent";
 import {
   CreateRunnableLambdaBody,
   UpdateRunnableLambdaBody,
   RunnableLambdaIdParams,
-} from "../validators";
-import { RunnableLambda, RunnableLambdaStatus, RunnableLambdaVisibility } from "@App/entities/agents/ToolArtifactAndRunnableLambda";
+} from "../../../../../packages/validators/src/contracts/RunnableLambdaValidators";
+import { RunnableLambda, RunnableLambdaStatus, RunnableLambdaVisibility } from "@Database/entities/agents/contracts/ToolArtifactAndRunnableLambda";
 
 /**
  * Hash reproductible de la lambda

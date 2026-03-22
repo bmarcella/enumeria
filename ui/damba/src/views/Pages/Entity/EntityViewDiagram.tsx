@@ -2,10 +2,11 @@
 import React, { useEffect, useState } from 'react'
 import { useEntityStore } from '@/stores/useEntityStore'
 import { useWindowSize } from '@/utils/hooks/useWindowSize'
-import AddProject from '@/views/components/Layout/ShowPopupOnClick'
+import AddProject from '@/components/Layout/ShowPopupOnClick'
 import AddEntityForm from '@/views/Form/entity/AddEntityForm'
 import { useModuleStore } from '@/stores/useModuleStore'
-import { EntityScene } from '@/views/components/Canvas/entityScene'
+import { EntityScene } from '@/components/Canvas/entityScene'
+import JsonDiagram from '@/components/Canvas/JsonDiagram'
 
 function EntityViewDiagram() {
     const entities = useEntityStore((s) => s.entities)
@@ -40,6 +41,7 @@ function EntityViewDiagram() {
                     <JsonDiagram scene={scene}></JsonDiagram>
                 </>
             )}
+            
             {!scene && (
                 <>
                     <div className="flex items-center justify-center h-full w-full">

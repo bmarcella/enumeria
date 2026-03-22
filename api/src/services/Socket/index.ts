@@ -28,8 +28,7 @@ const service = {
 
 const events: EBChain = {
   [SocketAction.create(EntityType.PROJECT)]: {
-    message: create_project_event,
-    middleware: [],
+    message: create_project_event
   },
 };
 
@@ -60,9 +59,22 @@ const queues: QueueBehavior = {
       completed: (api: DambaApi, ctx?: any) => {
         const payload = ctx?.returnvalue ?? {};
         console.log('Job completed with result:', ctx);
-        const eventName = `update:job:create-project:${ctx.jobId}`; // example (must match client listener)
+        const eventName = `create:job:create-project:${ctx.jobId}`; // example (must match client listener)
         const requestId = String(payload.newRequestId ?? '').trim();
-        console.log(requestId);
+        if (requestId) emitToRequest(requestId, eventName, payload);
+      },
+      failed: (api: DambaApi, ctx?: any) => {
+        const payload = ctx?.returnvalue ?? {};
+        console.log('Job failed with result:', ctx);
+        const eventName = `create:job:create-project:${ctx.jobId}`; 
+        const requestId = String(payload.newRequestId ?? '').trim();
+        if (requestId) emitToRequest(requestId, eventName, payload);
+      },
+      progress: (api: DambaApi, ctx?: any) => {
+        const payload = ctx?.returnvalue ?? {};
+        console.log('Job progress with result:', payload);
+        const eventName = `progress:job:create-project:${ctx.jobId}`; 
+        const requestId = String(payload.requestId ?? '').trim();
         if (requestId) emitToRequest(requestId, eventName, payload);
       },
     },

@@ -38,7 +38,7 @@ export const SubAgentSchema = z.object({
 export const RunnableLambdaRefSchema = z.object({
     id: z.string().min(1),
     runnableLambdaId: z.string().uuid(),
-})
+});
 
 export const PipelineStepSchema = z.discriminatedUnion('type', [
     z.object({
@@ -87,6 +87,7 @@ export const EntrySchema = z.discriminatedUnion('kind', [
             })
             .optional(),
     }),
+    
     z.object({
         kind: z.literal('pipeline'),
         steps: z.array(PipelineStepSchema).default([]),

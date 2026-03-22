@@ -1,6 +1,6 @@
 // src/services/AgentAssignmentService.ts
-import { AgentAssignment } from "@App/entities/agents/Agents";
-import { OrgParams, CreateAssignmentBody } from "@App/Validators/agents";
+import { AgentAssignment } from "@Database/entities/agents/contracts/Agents";
+import { OrgParams, CreateAssignmentBody } from "@Validators/contracts/AgentDefinitionValidators";
 import {
   BehaviorsChainLooper,
   createDambaService,

@@ -1,15 +1,14 @@
-// src/services/AgentRunService.ts
+  // src/services/AgentRunService.ts
 import {
   BehaviorsChainLooper,
   createDambaService,
   DambaService,
 } from '@Damba/v2/service/DambaService';
-import { AgentRun } from '@App/entities/agents/Agents';
 import { Http } from '@Damba/v2/service/IServiceDamba';
 import { createRunnableLambdaBehavior, deleteRunnableLambdaBehavior, getRunnableLambdaBehavior, listRunnableLambdasBehavior, updateRunnableLambdaBehavior } from './behavior';
 import { auth } from '@App/damba.import';
-import { CreateRunnableLambdaBody, RunnableLambdaIdParams, UpdateRunnableLambdaBody } from './validators';
-import { RunnableLambda } from '@App/entities/agents/ToolArtifactAndRunnableLambda';
+import { CreateRunnableLambdaBody, RunnableLambdaIdParams, UpdateRunnableLambdaBody } from '../../../../packages/validators/src/contracts/RunnableLambdaValidators';
+import { RunnableLambda } from '@Database/entities/agents/contracts/ToolArtifactAndRunnableLambda';
 
 const service = {
   name: '/runnable-lambdas',

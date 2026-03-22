@@ -169,7 +169,7 @@ export const AppConfig: IAppConfig<DataSource> = {
         mustEnv('JWT_PUBLIC_KEY'),
         jwt,
         roles,
-        AppConfig?.authoriztion?.strategy,
+        AppConfig?.authorization?.strategy,
       );
     },
   },

@@ -2,22 +2,41 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "C/C++ Runner: Debug Session",
-      "type": "cppdbg",
+      "name": "Launch API",
+      "type": "node-terminal",
       "request": "launch",
-      "args": [],
-      "stopAtEntry": false,
-      "externalConsole": true,
-      "cwd": "c:/Users/Administrator/Documents/Projects/Diag",
-      "program": "c:/Users/Administrator/Documents/Projects/Diag/build/Debug/outDebug",
-      "MIMode": "gdb",
-      "miDebuggerPath": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/api"
+    },
+    {
+      "name": "Launch Workers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run workers",
+      "cwd": "${workspaceFolder}/workers"
+    },
+    {
+      "name": "Launch UI (Damba)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/ui/damba"
+    },
+    {
+      "name": "Launch CLI",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/DambaCli"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch Full Stack",
+      "configurations": [
+        "Launch API",
+        "Launch Workers",
+        "Launch UI (Damba)"
       ]
     }
   ]

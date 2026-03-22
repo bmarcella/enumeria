@@ -5,6 +5,7 @@ import classNames from "classnames";
 import { HiOutlineCube, HiOutlineCheckCircle, HiTrash } from "react-icons/hi";
 
 import { useProjectStore, selectProjects } from "@/stores/useProjectStore";
+import { ProjectStats } from "./ProjectStats";
 import Input from "@/components/ui/Input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +42,6 @@ const message_prompt =
 
 export const ProjectList = () => {
   const projects = useProjectStore(selectProjects);
-  const model = useMemo(() => "Projects", []);
   const [loading, setLoading] = useState<LoadingMap>({});
   const [message, setMessage] = useTimeOutMessage();
   const { t } = useTranslation();
@@ -174,103 +174,29 @@ export const ProjectList = () => {
   }, [socket]);
 
   return (
-    <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <aside className="lg:col-span-4">
-        <Card
-          header={{
-            content: "Available Projects",
-            bordered: true,
-          }}
-        >
-          {projects.map((project) => {
-            const id = String(project.id);
-            const isLoading = !!loading[id];
+    <div className="mt-8 flex flex-col gap-10">
+      {/* Section Supérieure : Création de projet */}
+      <section className="w-full">
+        <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-800 shadow-xl rounded-lg bg-white dark:bg-[#0B1120]">
+          <div className="px-6 py-5 border-b border-gray-200 dark:border-[#1E293B] bg-gray-50 dark:bg-[#0F172A]">
+             <h6 className="font-bold text-lg tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
+               <HiOutlineCube className="text-blue-600 dark:text-blue-500" />
+               New Automation Project
+             </h6>
+             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
+               Describe the application you want to generate with our AI engine
+             </p>
+          </div>
+          
+          <div className="p-6">
+            {message && (
+              <Alert showIcon className="mb-4" type="danger">
+                <span className="break-all text-xs">{message}</span>
+              </Alert>
+            )}
 
-            return (
-              <Card key={id} className="mb-2 p-3">
-                <div className="flex w-full items-center justify-between gap-3">
-                  {/* Left: icon + texts */}
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700">
-                      <HiOutlineCube className="text-xl" />
-                    </div>
-
-                    <div className="min-w-0">
-                      <h6
-                        className={classNames(
-                          "m-0 truncate font-semibold hover:text-primary"
-                        )}
-                      >
-                        {project.name}
-                      </h6>
-                      <p className="m-0 truncate text-xs text-gray-500 dark:text-gray-400">
-                        {project.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right: buttons */}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="default"
-                      aria-label="Set active project"
-                      title="Set active project"
-                      disabled={isLoading}
-                      onClick={async () => {
-                        changeProject(project.id);
-                      }}
-                    >
-                      <HiOutlineCheckCircle />
-                    </Button>
-
-                    <Button
-                      variant="solid"
-                      aria-label={`Delete ${model}`}
-                      title={`Delete ${model}`}
-                      disabled={isLoading || !isConnected}
-                      onClick={async () => {
-                        try {
-                          setLoading((prev) => ({
-                            ...prev,
-                            [id]: true,
-                          }));
-                          // delete project
-                        } finally {
-                          setLoading((prev) => ({
-                            ...prev,
-                            [id]: false,
-                          }));
-                        }
-                      }}
-                    >
-                      <HiTrash />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </Card>
-      </aside>
-
-      <main className="lg:col-span-8">
-        <Card
-          className="p-4"
-          header={{
-            content: "Create Project",
-            bordered: true,
-          }}
-        >
-          {message && (
-            <Alert showIcon className="mb-4" type="danger">
-              <span className="break-all">{message}</span>
-            </Alert>
-          )}
-
-          <div className="space-y-3">
-            <Form onSubmit={handleSubmit(onSubmitProject)} className="space-y-4 p-2">
+            <Form onSubmit={handleSubmit(onSubmitProject)} className="space-y-4">
               <FormItem
-                label={t("project.description") ?? "Description"}
                 invalid={!!errors.description}
                 errorMessage={errors.description?.message as string | undefined}
               >
@@ -281,33 +207,131 @@ export const ProjectList = () => {
                     <Input
                       {...field}
                       textArea
+                      rows={8}
+                      className="text-sm font-mono leading-relaxed resize-none rounded-md bg-gray-50 dark:bg-[#0f172a] border-gray-300 dark:border-[#1E293B] focus:ring-blue-500 focus:border-blue-500 shadow-inner"
+                      placeholder="e.g. Create a todo list app that permits users to..."
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value)} // ✅ keep string for z.string()
+                      onChange={(e) => field.onChange(e.target.value)}
                     />
                   )}
                 />
               </FormItem>
 
-              <div className="flex justify-end gap-3 pt-2">
-                <Button type="submit" variant="solid" loading={saving}>
+              <div className="pt-2 flex justify-end">
+                <Button type="submit" variant="solid" loading={saving} className="px-8 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 font-semibold tracking-wide rounded-md shadow-md shadow-blue-500/20">
                   {saving
-                    ? t("project.saving") ?? "Saving..."
-                    : t("project.save") ?? "Save Project"}
+                    ? (t("project.saving") ?? "Generating...")
+                    : (t("project.save") ?? "Generate with AI")}
                 </Button>
               </div>
             </Form>
           </div>
         </Card>
-         <Card className="p-4">
-           <Button variant="solid" onClick={()=>{
-             navigate('/developer/create-agent')
-           }}> Developper mode</Button>
-        </Card>
 
-        <Card className="p-4">
-          <CardQueue data={jobs} />
-        </Card>
-      </main>
+        {jobs.length > 0 && (
+          <Card className="p-0 overflow-hidden mt-6 border border-gray-200 dark:border-gray-800 rounded-lg">
+            <div className="px-5 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#0F172A]">
+              <h6 className="font-semibold text-sm tracking-wide uppercase text-gray-600 dark:text-gray-300">
+                Active Jobs
+              </h6>
+            </div>
+            <div className="p-4 bg-white dark:bg-[#0B1120]">
+              <CardQueue data={jobs} />
+            </div>
+          </Card>
+        )}
+      </section>
+
+      {/* Section Inférieure : Liste des projets */}
+      <section className="flex flex-col gap-6">
+        <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-[#1E293B]">
+          <div>
+             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+               Projects
+             </h3>
+             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage and access your generated applications</p>
+          </div>
+          <Button 
+             variant="default" 
+             className="border-gray-300 dark:border-gray-700 font-semibold bg-white dark:bg-[#0F172A] hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors" 
+             onClick={() => navigate('/developer/create-agent')}
+          >
+             Advance Developer Mode
+          </Button>
+        </div>
+
+        {projects.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-16 text-center border-2 border-dashed rounded-lg border-gray-300 dark:border-[#1E293B] bg-gray-50/50 dark:bg-[#0f172a]/50">
+            <HiOutlineCube className="text-5xl text-gray-400 mb-4" />
+            <p className="text-gray-500 dark:text-gray-400 font-medium tracking-wide">
+              No projects found. Create one above to get started.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {projects.map((project) => {
+              const id = String(project.id);
+              const isLoading = !!loading[id];
+
+              return (
+                <Card 
+                  key={id} 
+                  className="flex flex-col h-full overflow-hidden border border-gray-200 dark:border-[#1E293B] bg-white dark:bg-[#0B1120] hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 rounded-lg"
+                >
+                  <div className="p-6 flex-grow flex flex-col gap-4">
+                    <div className="flex items-start justify-between">
+                       <div className="flex h-12 w-12 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                         <HiOutlineCube className="text-2xl" />
+                       </div>
+                       <ProjectStats projectId={id} />
+                    </div>
+                    <div>
+                       <h6 
+                         className="m-0 mb-1.5 truncate text-lg font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer" 
+                         onClick={() => changeProject(project.id)}
+                       >
+                         {project.name}
+                       </h6>
+                       <p className="m-0 text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed font-normal">
+                         {project.description}
+                       </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center border-t border-gray-200 dark:border-[#1E293B] bg-gray-50 dark:bg-[#0F172A] p-3 gap-3">
+                    <Button
+                      variant="solid"
+                      size="sm"
+                      className="flex-grow font-semibold tracking-wide bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded shadow-sm"
+                      disabled={isLoading}
+                      onClick={() => changeProject(project.id)}
+                      icon={<HiOutlineCheckCircle className="text-lg" />}
+                    >
+                      {t("project.open") ?? "Open"}
+                    </Button>
+
+                    <Button
+                      variant="plain"
+                      size="sm"
+                      className="text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 px-3 rounded"
+                      disabled={isLoading || !isConnected}
+                      onClick={async () => {
+                        try {
+                          setLoading((prev) => ({ ...prev, [id]: true }));
+                          // delete project
+                        } finally {
+                          setLoading((prev) => ({ ...prev, [id]: false }));
+                        }
+                      }}
+                      icon={<HiTrash className="text-lg" />}
+                    />
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 };

@@ -11,7 +11,7 @@ import SidebarDamba, {
     MenuKey,
     SidebarItem,
     SidebarMenuKey,
-} from './components/Layout/SideBarDambaPure'
+} from '../components/Layout/SideBarDambaPure'
 import {
     HiOutlineViewGrid,
     HiOutlineCode,
@@ -19,7 +19,7 @@ import {
     HiOutlineOfficeBuilding,
     HiOutlineCog,
 } from 'react-icons/hi'
-import MainDamba from './components/Layout/MainDamba'
+import MainDamba from '../components/Layout/MainDamba'
 import Meta from './Meta'
 
 const LS_KEY = 'sidebar_menu_key'
@@ -42,9 +42,15 @@ export const InProjectViewBase = () => {
         return saved && validKeys.has(saved) ? saved : (appName as any)
     })
 
+      useEffect(() => {
+        const appName = app?.name || 'No Application'
+        setAppName(appName)
+        setkey(appName)
+    }, [app])
+
     const items: SidebarItem[] = useMemo(
         () => [
-            { key: appName, icon: <HiOutlineViewGrid /> },
+            { key: appName as string, icon: <HiOutlineViewGrid /> },
             { key: SidebarMenuKey.Editor, icon: <HiOutlineCode /> },
             { key: SidebarMenuKey.Project, icon: <HiOutlineFolder /> },
             {
@@ -55,11 +61,8 @@ export const InProjectViewBase = () => {
         ],
         [appName, app],
     )
-    useEffect(() => {
-        const appName = app?.name || 'No Application'
-        setAppName(appName)
-        setkey(appName)
-    }, [app])
+
+  
 
     const handleView = (key: string) => {
         key = !key ? app?.name || 'No Application' : key

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { DEvent } from "@App/damba.import";
-import { AuditEvent, AuditEventType } from "@App/entities/agents/AuditEvent";
-import { AgentDefinition } from "@App/entities/agents/Agents";
+import { AuditEvent, AuditEventType } from "@Database/entities/agents/contracts/AuditEvent";
+import { AgentDefinition } from "@Database/entities/agents/contracts/Agents";
 import { DambaApi } from "@Damba/v2/service/DambaService";
 
 import { OpenAIEmbeddings } from "@langchain/openai";

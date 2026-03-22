@@ -8,6 +8,8 @@ import {
   IDActionConfig,
   IServiceProvider,
   ServiceFn,
+  SocketEventHandler,
+  SocketEventHandlerChain,
 } from "./IServiceDamba";
 import { DambaContext } from "./DambaContext";
 import { createSimpleName, isArrayOfObjects } from "./DambaHelper";
@@ -104,7 +106,7 @@ export type EventBehavior = EventBehaviorChainLooperContent;
 
 export type EventBehaviorContent<API = any, SK = any, IO = any> = {
   message: EventBehavior;
-  middleware: any[];
+  middleware?: any[];
 };
 
 export type EventBehaviorChainLooper<
@@ -173,7 +175,6 @@ export const DambaMakeApi = <
   QueueCtor?: QCtor<Q>,
   QueueEventsCtor?: QCtor<EQ>,
   isQueuePrefix = false,
-  /** Factory that produces a fresh ioredis connection per QueueEvents. Required when using queues. */
   redisConnectionFactory?: RedisConnectionFactory
 ): IServiceProvider<REQ, RES, NEXT> => {
   if (behaviors) {
@@ -215,7 +216,8 @@ export const DambaMakeApi = <
   if (events) {
     for (const [name, on] of Object.entries(events)) {
       const messageName = `${api.simple_service_name}:${name}`;
-      api.on<SK>(messageName, on.message(api));
+       const handler = Array.isArray(on.message) ? on.message.map((m) => m(api)) : on.message(api);
+       api.on<SK, any>(messageName, handler, on.middleware ?? []);
     }
   }
 
@@ -325,9 +327,10 @@ export const createBehaviors = <
   Entity: ENTITY | undefined;
 } => {
   const routes: Record<string, any> = {};
-  const events: Record<string, EventHandler> = {};
-  let Queue: QCtor<any>;
+  
+  const events: SocketEventHandlerChain = {};
 
+  let Queue: QCtor<any>;
   const redisConnection = redis;
   name = name.trim();
   let service_name: string = name;
@@ -464,8 +467,9 @@ export const createBehaviors = <
   const DDelete = makeRoute("DELETE");
   const DPatch = makeRoute("PATCH");
   const DPut = makeRoute("PUT");
-  const on = (name: string, on: EventHandler) => {
-    events[name] = on;
+
+  const on = (name: string, handler: EventHandler<any, any> | EventHandler<any, any> [], middleware?: any[]) => {
+       events[name] = { handler, middleware };
   };
 
   const getContextOrThrow = () => {
@@ -936,7 +940,7 @@ export const createBehaviors = <
           return res.send(after);
         },
         {},
-        config?.crud?.put?.middlewares // ✅ was patch.middlewares in your code
+        config?.crud?.put?.middlewares 
       );
 
     // ---------------------------

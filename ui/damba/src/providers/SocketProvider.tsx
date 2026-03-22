@@ -155,7 +155,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
                 return { correlationId: opts?.correlationId ?? 'not-sent' }
             }
 
-            const correlationId = opts?.correlationId ?? uuid()
+            const correlationId = opts?.correlationId ?? getCorrelationId()
 
             const messagePayload: any = {
                 ...payload,
@@ -212,7 +212,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
                 send<T>(name, payload, {
                     isAuth: opts?.isAuth,
-                    correlationId: opts?.correlationId,
+                    correlationId: opts?.correlationId ?? getCorrelationId(),
                     ack: (resp) => {
                         clearTimeout(timer)
                         resolve(resp)

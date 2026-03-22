@@ -5,10 +5,10 @@
 // behaviors barrel
 import { DambaAttributesTemplate } from '../../../../../common/Damba/v2/Entity/DambApp';
 import { v4 as uuidv4 } from 'uuid';
-import { Entities } from '../entities/CanvasBox';
+import { Entities } from '../../../../../packages/database/src/entities/CanvasBox';
 import { createService, DEvent } from '@App/damba.import';
 import { AppConfig } from '@App/config/app.config';
-const auth = AppConfig.authoriztion;
+const auth =  AppConfig?.authorization;
 
 const api = createService('/entities', Entities, undefined, [auth?.check(['user'])]);
 

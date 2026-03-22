@@ -8,12 +8,9 @@ import {
 
 import { Http } from "@Damba/v2/service/IServiceDamba";
 import { createAuditEventBehavior, listAuditEventsBehavior } from "./Behavior";
-import { CreateAuditEventBody, QueryAuditEvents } from "./validators";
-import { AuditEvent } from "@App/entities/agents/AuditEvent";
+import { CreateAuditEventBody, QueryAuditEvents } from "../../../../packages/validators/src/contracts/AuditEventValidators";
+import { AuditEvent } from "@Database/entities/agents/contracts/AuditEvent";
 
-// --------------------------------------------------
-// Service
-// --------------------------------------------------
 
 const service = {
   name: "/audit_events",

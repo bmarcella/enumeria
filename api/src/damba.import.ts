@@ -37,4 +37,4 @@ export const createService = <T>(
   return createBehaviors<T, Request, Response, NextFunction>(name, entity, config, fmiddleware);
 };
 
-export const auth = AppConfig.authoriztion;
+export const auth = AppConfig.authorization;

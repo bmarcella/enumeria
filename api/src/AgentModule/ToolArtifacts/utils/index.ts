@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import crypto from 'crypto';
 
-/**
- * Compute a deterministic hash of what will be executed + constraints.
- * IMPORTANT:
- * - Do NOT trust client-provided contentHash.
- * - Always compute server-side from the fields that will actually be executed.
- */
 export function computeToolContentHash(payload: {
   runtime: string;
   sourceType: string;

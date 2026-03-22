@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { CurrentSetting } from '../../../../../common/Damba/v2/Entity/UserDto';
+import { CurrentSetting } from '@Damba/v2/Entity/UserDto';
 import { createService, DEvent } from '@App/damba.import';
 import { AppConfig } from '@App/config/app.config';
-import { User } from '@App/entities/User';
+import { User } from '@Database/entities/User';
 
-const auth = AppConfig.authoriztion;
+const auth =  AppConfig?.authorization;
 const api = createService('/users', User, undefined, [auth?.check(['user'])]);
 
 api.DGet(

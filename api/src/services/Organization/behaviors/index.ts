@@ -1,10 +1,11 @@
 // behaviors barrel
 
 import { AppConfig } from '@App/config/app.config';
-import { ErrorMessage } from '../../../../../common/error/error';
-import { Organization } from '../../../entities/Organization';
+import { ErrorMessage } from '@Common/error/error';
+import { Organization } from '@Database/entities/Organization';
 import { createService, DEvent } from '@App/damba.import';
-const auth = AppConfig?.authoriztion;
+
+const auth = AppConfig?.authorization;
 
 const api = createService('/organizations', Organization, undefined, [auth?.check(['user'])]);
 

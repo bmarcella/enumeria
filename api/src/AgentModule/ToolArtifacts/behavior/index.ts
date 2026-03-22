@@ -2,20 +2,20 @@
 import { DEvent } from '@App/damba.import';
 import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { audit, clampStr } from '../../helper';
-import { AuditEventType } from '@App/entities/agents/AuditEvent';
+import { AuditEventType } from '@Database/entities/agents/contracts/AuditEvent';
 import {
   ToolArtifact,
   ToolVisibility,
-  ToolArtifactStatus,
+  ToolArtifactStatus, 
   ToolSourceType,
-} from '@App/entities/agents/ToolArtifactAndRunnableLambda';
+} from '@Database/entities/agents/contracts/ToolArtifactAndRunnableLambda';
 import {
   CreateToolArtifactBody,
   ToolArtifactIdParams,
   UpdateToolArtifactBody,
   ApproveToolArtifactBody,
   RejectToolArtifactBody,
-} from '../validators';
+} from '../../../../../packages/validators/src/contracts/ToolArtefactValidators';
 import { computeToolContentHash } from '../utils';
 import DResponse from '@Damba/core/DResponse';
 

@@ -1,6 +1,6 @@
 // src/services/AgentLicenseService.ts
-import { License } from "@App/entities/agents/Agents";
-import { OrgParams, InstallAgentBody, PurchaseAgentBody } from "@App/Validators/agents";
+import { License } from "@Database/entities/agents/contracts/Agents";
+import { OrgParams, InstallAgentBody, PurchaseAgentBody } from "@Validators/contracts/AgentDefinitionValidators";
 import {
   BehaviorsChainLooper,
   createDambaService,

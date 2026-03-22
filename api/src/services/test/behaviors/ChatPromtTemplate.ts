@@ -22,12 +22,30 @@ export const ChatPromptTemplateLangChain: Behavior = (api?: DambaApi) => {
   };
 };
 
-// export const exampleBehavior : Behavior = (api?: DambaApi) => {
-//   return async (e: DEvent) => {
-//     // if you are in a different service
-//     e.in.extras.{service_name}.{extra_name}({params})
-//     // or in you are in the same service 
-//     api?.extras.{extra_name}({params})
-//     e.out.send();
-//   };
-// };
+export interface User {
+  name: string;
+}
+
+export interface User {
+  age: number;
+}
+
+function x<T>(p: T) {
+  return p;
+}
+
+x<number>(10);
+
+const t = <T>(p: T) => {
+  return p;
+};
+t<string>('bonjour');
+
+type t<T> = (m: T) => void;
+
+type x = <T>(m: T) => void;
+
+type P<T, X> = {
+  call: () => T;
+  bind: <M>(c: X, g: M) => T;
+};

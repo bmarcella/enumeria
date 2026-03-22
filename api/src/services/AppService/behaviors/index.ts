@@ -2,12 +2,12 @@
 // behaviors barrel
 
 import { auth, createService, DEvent } from '@App/damba.import';
-import { AppServices } from '../../../entities/AppServices';
-import { Entities } from '@App/services/CanvasBox/entities/CanvasBox';
-import { CheckEnv } from '@App/services/Projects';
+import { AppServices } from '@Database/entities/AppServices';
+import { Entities } from '@Database/entities/CanvasBox';
 import { CurrentSetting } from '@Damba/v2/Entity/UserDto';
-import { Application } from '@App/entities/Application';
-import { Modules } from '@App/entities/Modules';
+import { Application } from '@Database/entities/Application';
+import { Modules } from '@Database/entities/Modules';
+import { CheckEnv } from '@App/services/Projects/middlewares';
 
 const api = createService('/services', AppServices, undefined, [auth?.check(['user'])]);
 

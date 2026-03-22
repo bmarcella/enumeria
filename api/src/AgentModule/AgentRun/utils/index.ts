@@ -1,5 +1,5 @@
 import { AgentManifest, AgentExecutionPlan, RunnableLambdaSnapshot, ToolArtifactSnapshot } from "@Damba/core/AgentDefType";
-import { RunnableLambda, ToolArtifact } from "@App/entities/agents/ToolArtifactAndRunnableLambda";
+import { RunnableLambda, ToolArtifact } from "@Database/entities/agents/contracts/ToolArtifactAndRunnableLambda";
 
 
 export async function buildAgentExecutionPlan(

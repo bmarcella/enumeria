@@ -7,7 +7,7 @@ import { Input, Checkbox, Select } from '@/components/ui';
 import { Field, Section } from '../CanvasBoxFormLayout';
 import { CanvasBoxFormValues } from '../canvasBoxSchema';
 import { VisibilityTypeClass } from '../../../../../../../common/Damba/v2/Entity/CanvasBox';
-import IconPicker from '@/views/components/IconPicker';
+import IconPicker from '@/components/IconPicker';
 const visibilityClassOptions = Object.values(VisibilityTypeClass).map((v) => ({
   value: v,
   label: v,

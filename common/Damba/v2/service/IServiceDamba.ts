@@ -57,11 +57,17 @@ export interface IServiceProvider<REQ, RES, NEXT> {
   [path: string]: IServiceComplete<REQ, RES, NEXT>;
 }
 
+export type SocketEventHandler<S = any, IO = any> = { handler: EventHandler<S, IO> | EventHandler<S, IO> [], middleware?: any[] }
+
+
+export type SocketEventHandlerChain<S = any, IO = any> = Record<string, SocketEventHandler<S, IO>>;
+
+
 export interface IServiceComplete<REQ, RES, NEXT> {
   service: IServicesMap<REQ, RES, NEXT>;
   middleware?: ((req: REQ, res: RES, next: NEXT) => any)[] | [];
   dbEntity?: new (...args: any[]) => any | any;
-  events: Record<string, EventHandler>;
+  events?: SocketEventHandlerChain<any, any>;
 }
 
 export type AnyFn = (...args: any[]) => any;

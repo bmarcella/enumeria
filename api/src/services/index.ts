@@ -1,6 +1,6 @@
 import _Org from './Organization/behaviors';
 import _Auth from './Auth/behaviors';
-import _Proj from './Projects/behaviors';
+import _Proj from './Projects';
 import _App from './Application/behaviors';
 import _Mod from './Modules/Modules';
 import _Box from './CanvasBox/behaviors';

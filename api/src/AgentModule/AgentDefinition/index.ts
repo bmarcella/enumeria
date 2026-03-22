@@ -9,12 +9,13 @@ import { Http } from "@Damba/v2/service/IServiceDamba";
 
 
 
-import { AgentDefinition } from "@App/entities/agents/Agents";
-import { approveAgentDefinitionBehavior, createAgentDefinitionBehavior, delistAgentDefinitionBehavior, getAgentDefinitionBehavior, rejectAgentDefinitionBehavior, submitAgentDefinitionBehavior, updateAgentDefinitionBehavior, updateAgentManifestBehavior } from "./Behavior";
-import { AgentIdParams, ApprovalListingDefaults, CreateAgentDefinitionBody, ModerationBody, UpdateAgentDefinitionBody } from "./validators";
-import { AppConfig } from "@App/config/app.config";
+import { AgentDefinition } from "@Database/entities/agents/contracts/Agents";
+import { approveAgentDefinitionBehavior, createAgentDefinitionBehavior, delistAgentDefinitionBehavior, getAgentDefinitionBehavior, getAgentsDefinitionsBehavior, rejectAgentDefinitionBehavior, submitAgentDefinitionBehavior, updateAgentDefinitionBehavior, updateAgentManifestBehavior } from "./Behavior";
+import { AppConfig } 
+from "@App/config/app.config";
+import { AgentIdParams, ApprovalListingDefaults, CreateAgentDefinitionBody, ModerationBody, UpdateAgentDefinitionBody } from "@Validators/contracts/AgentDefinitionValidators";
 
-const auth = AppConfig.authoriztion;
+const auth = AppConfig.authorization;
 
 const service = {
   name: "/agent_definitions",
@@ -22,22 +23,35 @@ const service = {
 } as DambaService;
 
 const behaviors: BehaviorsChainLooper = {
-  "/": {
+  "/": [{
     method: Http.POST,
     behavior: createAgentDefinitionBehavior,
     config: { validators: { body: CreateAgentDefinitionBody } },
     middlewares: [auth?.check(['user'])]
   },
-  "/:agentDefinitionId": [{
-    method: Http.PUT,
-    behavior: updateAgentDefinitionBehavior,
-    config: { validators: { params: AgentIdParams, body: UpdateAgentDefinitionBody } },
-  },
-  {  
+  {
     method: Http.GET,
-    behavior: getAgentDefinitionBehavior,
-    config: { validators: { params: AgentIdParams } },
-  }],
+    behavior: getAgentsDefinitionsBehavior,
+    middlewares: [auth?.check(['user'])]
+  }
+],
+  "/:agentDefinitionId": [
+    {
+      method: Http.PUT,
+      behavior: updateAgentDefinitionBehavior,
+      config: { validators: { params: AgentIdParams, body: UpdateAgentDefinitionBody } },
+    },
+     {
+      method: Http.PATCH,
+      behavior: updateAgentDefinitionBehavior,
+      config: { validators: { params: AgentIdParams, body: UpdateAgentDefinitionBody } },
+    },
+    {  
+      method: Http.GET,
+      behavior: getAgentDefinitionBehavior,
+      config: { validators: { params: AgentIdParams } },
+    }
+],
   "/:agentDefinitionId/submit": {
     method: Http.POST,
     behavior: submitAgentDefinitionBehavior,

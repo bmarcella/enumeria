@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+     "target": "ES2017",          // or ES2018+
+     "lib": ["ES2017"],          // or ["ES2015", "DOM"] if needed
+     "types": ["node"],
+      "baseUrl": "." /* Specify the base directory to resolve non-relative module names. */,
+      "paths": {
+      "@Damba/*": ["../../common/Damba/*"],
+      "@Common/*": ["../../common/*"],
+    } /* Specify a set of entries that re-map imports to additional lookup locations. */,
+  }
+}

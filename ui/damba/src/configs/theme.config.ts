@@ -20,9 +20,9 @@ export type ThemeConfig = {
 export const themeConfig: ThemeConfig = {
     themeSchema: 'orange',
     direction: THEME_ENUM.DIR_LTR,
-    mode: THEME_ENUM.MODE_LIGHT,
+    mode: THEME_ENUM.MODE_DARK,
     panelExpand: false,
-    controlSize: 'md',
+    controlSize: 'sm',
     layout: {
         type: THEME_ENUM.LAYOUT_TOP_BAR_CLASSIC,
         sideNavCollapse: false,

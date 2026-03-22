@@ -1,6 +1,6 @@
-import { Application } from "@App/entities/Application";
-import { AppServices } from "@App/entities/AppServices";
-import { Modules } from "@App/entities/Modules";
+import { Application } from "@Database/entities/Application";
+import { AppServices } from "@Database/entities/AppServices";
+import { Modules } from "@Database/entities/Modules";
 import { CurrentSetting } from "@Damba/v2/Entity/UserDto";
 import { Behavior, DambaApi, DEventHandler } from "@Damba/v2/service/DambaService";
 import { DEvent } from "@Damba/v2/service/DEvent";

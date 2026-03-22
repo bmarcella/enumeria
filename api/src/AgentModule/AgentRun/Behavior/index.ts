@@ -13,7 +13,7 @@ import {
 } from "@App/entities/agents/Agents";
 import { OrgParams } from "@App/Validators/agents";
 import { DambaApi, Behavior } from "@Damba/v2/service/DambaService";
-import { RunRequestBody } from "../validators";
+import { RunRequestBody } from "../../../../../packages/validators/src/contracts/AgentRunValidators";
 import {
   audit,
   buildToolRegistryV2,

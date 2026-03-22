@@ -3,9 +3,9 @@
 // --------------------------------------------
 
 import { DEvent } from "@App/damba.import";
-import { AgentDefinition, AgentDefinitionStatus, ListingVisibility, AgentListing } from "@App/entities/agents/Agents";
+import { AgentDefinition, AgentDefinitionStatus, ListingVisibility, AgentListing } from "@Database/entities/agents/contracts/Agents";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
-import { CreateListingBody, UpdateListingBody, PublishParams } from "../validators";
+import { CreateListingBody, UpdateListingBody, PublishParams } from "../../../../../packages/validators/src/contracts/AgentListingValidators";
 
 export const createListingBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {

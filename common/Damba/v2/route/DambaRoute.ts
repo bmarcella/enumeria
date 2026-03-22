@@ -5,6 +5,7 @@ import {
   IDActionConfig,
   IServiceComplete,
   IServiceProvider,
+  SocketEventHandlerChain,
 } from "../service/IServiceDamba";
 import { toHttpEnum } from "@Damba/v2/service/DambaHelper";
 import {
@@ -21,7 +22,7 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
   AppConfig?: IAppConfig<any>
 ): { route: ROUTER; extras: any; events: any } => {
   let extras: any = {};
-  let all_events: any = {};
+  let all_events: SocketEventHandlerChain = {};
 
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
     const sub = express.Router();
@@ -35,6 +36,9 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
     >;
 
     all_events = { ...all_events, ...events };
+
+    console.log(all_events)
+    
 
     for (const [key, value] of Object.entries(service)) {
       if (!value) continue;

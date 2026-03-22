@@ -14,7 +14,7 @@ import { reactAgentSimpleSearchBehaviorExtras } from './extras/reactAgentsSimple
 import { getDambaCodeByVersion, loadFilesBehavior, saveDambaCode } from './behaviors/loadFiles';
 
 const service = {
-  name: '/helper',
+  name: '/helper'
 } as DambaService;
 
 const behaviors: BehaviorsChainLooper = {
@@ -22,6 +22,9 @@ const behaviors: BehaviorsChainLooper = {
     method: Http.GET,
     behavior: reactAgentSimpleSearchBehavior,
     extras: reactAgentSimpleSearchBehaviorExtras,
+    config: {
+      description: ""
+    }
   },
   '/loadDFiles': {
     method: Http.GET,
