@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // providers/ProjectProvider.tsx
-import DambaDialog from '@/views/components/DambaDialog';
+import DambaDialog from '@/components/DambaDialog';
 import { createContext, ReactNode, useContext, useState } from 'react';
 type DialogContextProps = {
   setTitle: (title: string) => void

@@ -1,10 +1,9 @@
-import { mustEnv } from "../../v1/config/ConfigHelper";
+import { mustEnv } from "../../v2/config/ConfigHelper";
 import { DBEnv } from "./IDb";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type InitableConnection = { initialize: () => Promise<any> };
-export type ConnectionCtor<DS extends InitableConnection = InitableConnection> =
-  new (options: any) => DS;
+export type ConnectionCtor<DS extends InitableConnection = InitableConnection> = new (options: any) => DS;
 
 export function AppDataSource(
   DT: new (...args: any[]) => any,

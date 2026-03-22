@@ -1,7 +1,7 @@
 import { ServiceProvider } from '@/providers/ServiceProvider'
 import { fetchServicesByModuleId } from '@/services/module'
 import ServiceView from '../Service/ServiceView'
-import DambaTabs, { DambaTabItem } from '../../components/Layout/DambaTabs'
+import DambaTabs, { DambaTabItem } from '../../../components/Layout/DambaTabs'
 import { useEffect, useMemo, useState } from 'react'
 import { useModuleStore } from '@/stores/useModuleStore'
 import { HiOutlineCog, HiOutlineCube, HiOutlineMenuAlt2 } from 'react-icons/hi'

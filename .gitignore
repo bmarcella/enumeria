@@ -8,6 +8,10 @@
 /ui/.env
 node_modules
 node_modules/
+packages/database/node_modules
+packages/validators/node_modules
+packages/validators/dist
+packages/database/dist
 dist/
 build/
 .env

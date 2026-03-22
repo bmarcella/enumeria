@@ -1,5 +1,5 @@
-import { Application } from "@App/entities/Application";
-import { Modules } from "@App/entities/Modules";
+import { Application } from "@Database/entities/Application";
+import { Modules } from "@Database/entities/Modules";
 import { Extras, DambaApi, DExtrasHandler } from "@Damba/v2/service/DambaService";
 import { DEvent } from "@Damba/v2/service/DEvent";
 

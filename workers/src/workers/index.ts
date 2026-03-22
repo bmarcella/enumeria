@@ -4,6 +4,10 @@ import { OpenAI } from '../config/OpenAi';
 import connection from '../config/redis';
 import { Worker, Processor } from 'bullmq';
 import type { ChatOpenAI } from '@langchain/openai';
+import "reflect-metadata";
+import { Database } from '@Damba/v2/config/IAppConfig';
+import { DataSource } from 'typeorm';
+import { initOrm } from '@Database/DataSource';
 
 export enum DLLM {
   OPENAI = 'OPENAI',
@@ -20,6 +24,7 @@ export type LlmProviderMap = {
 export type MakeAiAgentProcessor<D, R, X extends string = string, L = unknown> = (
   app: typeof AppConfig,
   llm: L,
+  database?: Database<any>,
 ) => Processor<D, R, X>;
 
 export const getLLM = <P extends DLLM>(provider: P): LlmProviderMap[P] => {
@@ -44,14 +49,14 @@ export type WorkerPoolOptions = {
   concurrency?: number; // default env WORKER_CONCURRENCY
 };
 
-export const startWorkers = <D, R, X extends string = string, P extends DLLM = DLLM>(
+export const startWorkers = async  <D, R, X extends string = string, P extends DLLM = DLLM>(
   baseQueueName: string,
   provider: P,
   makeProcessor: MakeAiAgentProcessor<D, R, X, LlmProviderMap[P]>,
-  opts: WorkerPoolOptions = {},
+  opts: WorkerPoolOptions = {}
 ) => {
   const llm = getLLM(provider);
-  const processor = makeProcessor(AppConfig, llm);
+
 
   const shards = opts.shards ?? Number(process.env.QUEUE_SHARDS ?? 3);
 
@@ -67,7 +72,8 @@ export const startWorkers = <D, R, X extends string = string, P extends DLLM = D
 
   for (let i = shardStart; i <= shardEnd; i++) {
     const queueName = `${baseQueueName}_${i}`;
-
+    const database = await initOrm<DataSource>(process.env as any);
+    const processor = makeProcessor(AppConfig, llm, database);
     const w = new Worker<D, R, X>(queueName, processor, {
       connection,
       concurrency,
@@ -77,7 +83,6 @@ export const startWorkers = <D, R, X extends string = string, P extends DLLM = D
       console.log(`[worker] ready queue=${queueName} concurrency=${concurrency}`),
     );
     w.on('error', (err) => console.error(`[worker] error queue=${queueName}`, err));
-
     workers.push(w as any);
   }
 

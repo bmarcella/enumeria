@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import DambaHeader from '../../components/Layout/DambaHeader'
+import DambaHeader from '../../../components/Layout/DambaHeader'
 import { useAppServiceStore } from '@/stores/ServiceStore'
 import Card from '@/components/ui/Card'
 import {
@@ -11,9 +11,9 @@ import {
 import classNames from 'classnames'
 import Button from '@/components/ui/Button'
 import { TbEyeCheck } from 'react-icons/tb'
-import { SidebarMenuKey } from '../../components/Layout/SideBarDambaPure'
+import { SidebarMenuKey } from '../../../components/Layout/SideBarDambaPure'
 import IDE from '../../IDE'
-import ShowPopupOnClick from '@/views/components/Layout/ShowPopupOnClick'
+import ShowPopupOnClick from '@/components/Layout/ShowPopupOnClick'
 import CreateServiceForm from './Form/CreateServiceForm'
 
 function ShowServices({ goTo }: { goTo: (key: string | any) => void }) {

@@ -1,5 +1,5 @@
-import { AgentAssignment } from "@App/entities/agents/Agents";
-import { OrgParams, CreateAssignmentBody, UpdateAssignmentBody } from "@App/Validators/agents";
+import { AgentAssignment } from "@Database/entities/agents/contracts/Agents";
+import { OrgParams, CreateAssignmentBody, UpdateAssignmentBody } from "@Validators/contracts/AgentDefinitionValidators";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 import { DEvent } from "@Damba/v2/service/DEvent";
 

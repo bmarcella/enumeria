@@ -5,8 +5,8 @@ import {
   DambaService,
 } from "@Damba/v2/service/DambaService";
 import { Http } from "@Damba/v2/service/IServiceDamba";
-import { AgentListing } from "@App/entities/agents/Agents";
-import { BrowseAgentsQuery } from "@App/Validators/agents";
+import { AgentListing } from "@Database/entities/agents/contracts/Agents";
+import { BrowseAgentsQuery } from "@Validators/contracts/AgentDefinitionValidators";
 import { browseAgentsBehavior, getAgentBehavior } from "./Behavior";
 
 const service = {

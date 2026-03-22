@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createService, DEvent } from '@App/damba.import';
-import { Application } from '../../../entities/Application';
-import { Project } from '@App/entities/Project';
+import { Application } from '@Database/entities/Application';
+import { Project } from '@Database/entities/Project';
 
 const api = createService('/applications', Application);
 

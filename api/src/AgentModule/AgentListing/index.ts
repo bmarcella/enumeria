@@ -6,9 +6,9 @@ import {
 } from "@Damba/v2/service/DambaService";
 
 import { Http } from "@Damba/v2/service/IServiceDamba";;
-import { AgentListing } from "@App/entities/agents/Agents";
+import { AgentListing } from "@Database/entities/agents/contracts/Agents";
 import { createListingBehavior, updateListingBehavior, publishListingBehavior, unpublishListingBehavior, deleteListingBehavior } from "./Behavior";
-import { CreateListingBody } from "./validators";
+import { CreateListingBody } from "../../../../packages/validators/src/contracts/AgentListingValidators";
 
 
 // --------------------------------------------

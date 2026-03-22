@@ -4,7 +4,7 @@
 
 import { DEvent } from "@App/damba.import";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
-import { CreateAuditEventBody, QueryAuditEvents } from "../validators";
+import { CreateAuditEventBody, QueryAuditEvents } from "../../../../../packages/validators/src/contracts/AuditEventValidators";
 import { AuditEvent } from "@App/entities/agents/AuditEvent";
 
 /**

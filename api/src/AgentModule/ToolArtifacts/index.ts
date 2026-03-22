@@ -1,5 +1,5 @@
 // src/services/AgentDefinitionService.ts
-import { ToolArtifact } from '@App/entities/agents/ToolArtifactAndRunnableLambda';
+import { ToolArtifact } from '@Database/entities/agents/contracts/ToolArtifactAndRunnableLambda';
 import {
   BehaviorsChainLooper,
   createDambaService,
@@ -13,7 +13,7 @@ import {
   listToolArtifactsBehavior,
   updateToolArtifactBehavior,
 } from './behavior';
-import { CreateToolArtifactBody, ToolArtifactIdParams, UpdateToolArtifactBody } from './validators';
+import { CreateToolArtifactBody, ToolArtifactIdParams, UpdateToolArtifactBody } from '../../../../packages/validators/src/contracts/ToolArtefactValidators';
 import { auth } from '@App/damba.import';
 
 const service = {
@@ -34,7 +34,7 @@ const behaviors: BehaviorsChainLooper = {
       behavior: listToolArtifactsBehavior,
       middlewares: [auth?.check(['user'])],
     },
-],
+  ],
   '/:toolArtifactId': [
     {
       method: Http.PATCH,

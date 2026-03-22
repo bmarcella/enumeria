@@ -8,11 +8,10 @@ import {
   Extras,
 } from "@Damba/v2/service/DambaService";
 import { Http } from "@Damba/v2/service/IServiceDamba";
-import { DEvent } from "@Damba/v2/service/DEvent";
-import { Behavior } from "@Damba/v2/Entity/behavior";
+
 
 import Ajv from "ajv";
-import { AgentDefinition, AgentDefinitionStatus, AgentListing, License, LicenseStatus, LicenseType, Purchase, PurchaseStatus } from "@App/entities/agents/Agents";
+import { AgentDefinition, AgentDefinitionStatus, AgentListing, License, LicenseStatus, LicenseType, Purchase, PurchaseStatus } from "@Database/entities/agents/contracts/Agents";
 import { pingBehavior } from "./Behaviors";
 
 const ajv = new Ajv({ allErrors: true });
@@ -24,11 +23,7 @@ const service = {
   entity: AgentDefinition,
 } as DambaService;
 
-/**
- * ✅ Extras — MUST use api.DRepository().* for all DB writes/reads except
- * service-entity-local DSave, but since extras are cross-used,
- * we treat extras as generic => ALWAYS use repo.* here.
- */
+
 export const marketplaceExtras: Extras = (api?: DambaApi): DExtrasHandler => {
   return {
     // Optional request helpers

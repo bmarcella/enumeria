@@ -3,8 +3,8 @@ import Button from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useModuleStore } from '@/stores/useModuleStore'
 import classNames from '@/utils/classNames'
-import DambaHeader from '@/views/components/Layout/DambaHeader'
-import { SidebarMenuKey } from '@/views/components/Layout/SideBarDambaPure'
+import DambaHeader from '@/components/Layout/DambaHeader'
+import { SidebarMenuKey } from '@/components/Layout/SideBarDambaPure'
 import {
     HiOutlineCheckCircle,
     HiOutlineCog,
@@ -13,7 +13,7 @@ import {
 } from 'react-icons/hi'
 import { TbEyeCheck } from 'react-icons/tb'
 import CreateNewModuleForm from './Forms/CreateNewModuleForm'
-import ShowPopupOnClick from '@/views/components/Layout/ShowPopupOnClick'
+import ShowPopupOnClick from '@/components/Layout/ShowPopupOnClick'
 import { useDialogContext } from '@/providers/DialogProvider'
 import IDE from '@/views/IDE'
 import { useAppServiceStore } from '@/stores/ServiceStore'

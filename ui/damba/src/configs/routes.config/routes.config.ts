@@ -19,43 +19,16 @@ export const protectedRoutes: Routes = [
         authority: ['user', 'admin', 'super_admin', 'bill_admin'],
     },
     {
-        key: 'create-agent',
-        path: '/developer/create/agent',
-        component: lazy(
-            () => import('@/views/Pages/Agents/AgentsDefinition/create'),
-        ),
-        authority: ['user', 'admin', 'super_admin', 'bill_admin'],
-    },
-    {
-        key: 'update-agent-manifest',
-        path: '/developer/update/agent-manifest/:agentId',
-        component: lazy(
-            () =>
-                import(
-                    '@/views/Pages/Agents/AgentsDefinition/update/AgentManifestBuilderPage'
-                ),
-        ),
-        authority: ['user', 'admin', 'super_admin', 'bill_admin'],
-    },
-    {
         key: 'list-tool-artifact',
         path: '/developer/list/tool',
-        component: lazy(() => import('@/views/Pages/Agents/ToolArtifact/list')),
+        component: lazy(() => import('@/views/Pages/Developer/Tool/list')),
         authority: ['user', 'admin', 'super_admin', 'bill_admin'],
     },
     {
         key: 'create-tool-artifact',
         path: '/developer/create/tool',
         component: lazy(
-            () => import('@/views/Pages/Agents/ToolArtifact/create'),
-        ),
-        authority: ['user', 'admin', 'super_admin', 'bill_admin'],
-    },
-    {
-        key: 'create-runnable-artifact',
-        path: '/developer/create/runnable',
-        component: lazy(
-            () => import('@/views/Pages/Agents/RunnableLambda/create'),
+            () => import('@/views/Pages/Developer/Tool/create'),
         ),
         authority: ['user', 'admin', 'super_admin', 'bill_admin'],
     },
@@ -63,7 +36,7 @@ export const protectedRoutes: Routes = [
         key: 'editor-tool-artifact',
         path: '/developer/tool/editor/:id',
         component: lazy(
-            () => import('@/views/Pages/Agents/ToolArtifact/editor'),
+            () => import('@/views/Pages/Developer/Tool/editor'),
         ),
         authority: ['user', 'admin', 'super_admin', 'bill_admin'],
     },

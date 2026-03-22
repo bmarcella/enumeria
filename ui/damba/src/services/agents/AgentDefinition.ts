@@ -7,6 +7,13 @@ export const createAgentDefinition = (data: any): Promise<any> => {
   return ApiPost(url, data);
 };
 
+export const getAgentDefinitions = (): Promise<any> => {
+  const url = `${endpointConfig.agentDefinitions}`;
+  return ApiGet(url);
+};
+
+
+
 export const updateAgentDefinition = (agentDefinitionId: string, data: any): Promise<any> => {
   const url = `${endpointConfig.agentDefinitions}/${agentDefinitionId}`;
   return ApiPatch(url, data);

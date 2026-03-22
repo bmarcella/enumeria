@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { DEvent } from '@App/damba.import';
-import DambaCoreCode from '@App/entities/DambaCoreCode';
+import DambaCoreCode from '@Database/entities/DambaCoreCode';
 import { IDambaFile, LoadFiles } from '@Damba/v2/helper/readFile';
 import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { resolve } from 'path';

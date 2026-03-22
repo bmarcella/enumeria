@@ -6,13 +6,13 @@
 import jwt from 'jsonwebtoken';
 import { ErrorMessage } from '../../../../../common/error/error';
 import { Request, Response } from 'express';
-import { Organization } from '../../../entities/Organization';
-import { SessionUser } from '../../../../../common/Damba/v2/Entity/UserDto';
+import { Organization } from '@Database/entities/Organization';
+import { SessionUser } from '@Damba/v2/Entity/UserDto';
 import { createService, DEvent } from '@App/damba.import';
 import { GenTokenJwt } from '@Damba/v1/auth/AuthMiddleware';
 import { AppConfig } from '@App/config/app.config';
-import { Role, RoleName } from '@App/entities/Role';
-import { User } from '@App/entities/User';
+import { Role, RoleName } from '@Database/entities/Role';
+import { User } from '@Database/entities/User';
 const auth = AppConfig?.authoriztion;
 const api = createService('/auth');
 

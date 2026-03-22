@@ -1,12 +1,12 @@
 
 import { DEvent } from "@App/damba.import";
-import { AgentDefinitionStatus, AgentDefinition, AgentListing, ListingVisibility, AgentSnapshot } from "@App/entities/agents/Agents";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
-import { CreateAgentDefinitionBody, AgentIdParams, UpdateAgentDefinitionBody, ApprovalListingDefaults, ModerationBody, AgentManifestSchema, ParamsSchema } from "../validators";
-import { AuditEvent, AuditEventType } from "@App/entities/agents/AuditEvent";
+import { AgentDefinition, AgentDefinitionStatus, AgentListing, ListingVisibility, AgentSnapshot } from "@Database/entities/agents/contracts/Agents";
 import { audit, clampStr } from "../../helper";
 import crypto from "crypto";
 import { z } from "zod";
+import { AgentIdParams, AgentManifestSchema, ApprovalListingDefaults, CreateAgentDefinitionBody, ModerationBody, ParamsSchema, UpdateAgentDefinitionBody } from "@Validators/contracts/AgentDefinitionValidators";
+import { AuditEvent, AuditEventType } from "@Database/entities/agents/contracts/AuditEvent";
 
 function stableStringify(value: any): string {
   if (value === null || typeof value !== "object") {
@@ -71,6 +71,7 @@ export const createAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
 
 
     def.status = AgentDefinitionStatus.Draft;
+    def.created_by = userId;
 
     const saved = await api?.DSave(def);
 
@@ -218,6 +219,20 @@ export const rejectAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     e.out.send({ agentDefinition: saved });
   };
 };
+
+export const getAgentsDefinitionsBehavior: Behavior = (api?: DambaApi) => {
+  return async (e: DEvent) => {
+    const repo = api?.DRepository();
+    const config = await e.in.extras.users.getCurrentSetting(e);
+    const agents = await repo?.DGet(AgentDefinition, {
+      where: {
+        publisherOrgId: config?.orgId,
+      }
+    });
+    e.out.send({ agents });
+  };
+};
+
 
 export const getAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {

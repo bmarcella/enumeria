@@ -25,7 +25,6 @@ import { DEvent } from '@App/damba.import';
 import { authorize } from '@Damba/v1/auth/AuthMiddleware';
 import jwt from 'jsonwebtoken';
 import { ChatOllama } from '@langchain/ollama';
-import { DBEntities } from './db';
 import createWelcomeHandler from '@Damba/v2/welcome';
 import { TavilySearch } from '@langchain/tavily';
 import { ChatOpenAI } from '@langchain/openai';
@@ -177,19 +176,6 @@ export const AppConfig: IAppConfig<DataSource> = {
         roles,
         AppConfig?.authoriztion?.strategy,
       );
-    },
-  },
-  databaseConfig: {
-    entities: DBEntities,
-    initOrm: async () => {
-      const orm = DambaTypeOrm.get(DataSource, process.env as any, DBEntities, {
-        retries: 8,
-        retryDelayMs: 1000,
-        log: console.log,
-      });
-      const dataSource = (await orm.init()) as DataSource;
-      orm.enableProcessSignalHandlers();
-      return { orm, dataSource };
     },
   },
   processes: (orm: DambaTypeOrm<DataSource>) => {

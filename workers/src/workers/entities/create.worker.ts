@@ -45,8 +45,10 @@ const agent: MakeAiAgentProcessor<
   };
 };
 
-startWorkers<JobData, JobResult, string, typeof DefaultlLLM>(
-  DQueues.CREATE_ENTITIES,
-  DefaultlLLM,
-  agent,
-);
+(async () => {
+  await startWorkers<JobData, JobResult, string, typeof DefaultlLLM>(
+    DQueues.CREATE_ENTITIES,
+    DefaultlLLM,
+    agent,
+  );
+})();

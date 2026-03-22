@@ -1,6 +1,6 @@
 import { DEvent } from "@App/damba.import";
-import { PriceType, License, LicenseStatus } from "@App/entities/agents/Agents";
-import { OrgParams, InstallAgentBody, PurchaseAgentBody } from "@App/Validators/agents";
+import { PriceType, License, LicenseStatus } from "@Database/entities/agents/contracts/Agents";
+import { OrgParams, InstallAgentBody, PurchaseAgentBody } from "@Validators/contracts/AgentDefinitionValidators";
 import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
 
 

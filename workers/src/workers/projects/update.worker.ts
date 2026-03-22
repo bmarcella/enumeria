@@ -23,8 +23,10 @@ const agent: MakeAiAgentProcessor<
   };
 };
 
-startWorkers<JobData, JobResult, string, typeof DefaultlLLM>(
-  DQueues.UPDATE_PROJECT,
-  DefaultlLLM,
-  agent,
-);
+(async () => {
+  await startWorkers<JobData, JobResult, string, typeof DefaultlLLM>(
+    DQueues.UPDATE_PROJECT,
+    DefaultlLLM,
+    agent,
+  );
+})();

@@ -1,4 +1,4 @@
-import DambaHeader from '../../components/Layout/DambaHeader'
+import DambaHeader from '../../../components/Layout/DambaHeader'
 
 function BehaviorView() {
     return (

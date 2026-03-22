@@ -3,11 +3,9 @@
 import type {
   Database,
   IAppConfig,
-  IProcessHandler,
 } from "./config/IAppConfig";
 import { DambaIO, DambaIOApp } from "./IO/DambaIO";
 import { SocketRegistry } from "./IO/RegistrySocket";
-import { RegistryContext } from "./Registry/RegistryContext";
 import { DambaRoute } from "./route/DambaRoute";
 import DambaApiDocNested from "./route/DambaRouteDoc";
 import { EventHandler, IServiceProvider } from "./service/IServiceDamba";
@@ -30,6 +28,7 @@ export interface IDambaParams<DS = any> {
     tenant: string;
     correlation: string;
   };
+  db? : { orm: any; dataSource: DS }
 }
 
 export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
@@ -219,9 +218,14 @@ export default class Damba {
   ): Promise<DambaApp<REQ, RES, NEXT, T, I>> {
     if (!this.instance) {
       let database;
+
       if (params.AppConfig.databaseConfig) {
         database = await params.AppConfig.databaseConfig.initOrm();
-      }
+
+        } else if (params.db) {
+
+          database = params.db;
+       }
       this.instance = new DambaApp<REQ, RES, NEXT, T, I>(params, database);
     }
     return this.instance as DambaApp<REQ, RES, NEXT, T, I>;

@@ -14,11 +14,11 @@ import SidebarDamba, {
     MenuKey,
     SidebarItem,
     SidebarMenuKey,
-} from '../../components/Layout/SideBarDambaPure'
+} from '../../../components/Layout/SideBarDambaPure'
 import BehaviorView from '../Behavior/BehaviorView'
 import PoliciesView from '../Policies/PoliciesView'
 import ServiceSettingView from './ServiceSettingView'
-import MainDamba from '../../components/Layout/MainDamba'
+import MainDamba from '../../../components/Layout/MainDamba'
 import EntityView from '../Entity/EntityView'
 
 const LS_KEY = 'sidebar_menu_key_services'

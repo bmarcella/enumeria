@@ -5,8 +5,10 @@ import { startWorkers, DefaultlLLM } from "..";
 import { agentRunProcessor, AgentRunJobResult } from "./agentRunProcessor";
 
 
-startWorkers<AgentRunJobPayload, AgentRunJobResult, string, typeof DefaultlLLM>(
-  DQueues.AGENT_RUN,
-  DefaultlLLM,
-  agentRunProcessor
-);
+(async () => {
+  await startWorkers<AgentRunJobPayload, AgentRunJobResult, string, typeof DefaultlLLM>(
+    DQueues.AGENT_RUN,
+    DefaultlLLM,
+    agentRunProcessor
+  );
+})();
