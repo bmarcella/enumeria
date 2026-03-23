@@ -17,7 +17,7 @@ const StackedSide = ({ children }: CommonProps) => {
         >
             <div className="flex flex-auto min-w-0">
                 {larger.lg && <StackedSideNav />}
-                <div className="flex flex-col flex-auto min-h-screen min-w-0 relative w-full">
+                <div className="flex flex-col flex-auto h-screen min-w-0 relative w-full overflow-hidden">
                     <Header
                         className="shadow-sm dark:shadow-2xl"
                         headerStart={<>{smaller.lg && <MobileNav />}</>}
@@ -27,7 +27,7 @@ const StackedSide = ({ children }: CommonProps) => {
                             </>
                         }
                     />
-                    <div className="h-full flex flex-auto flex-col">
+                    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                         {children}
                     </div>
                 </div>

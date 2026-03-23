@@ -9,7 +9,7 @@ interface Props {
 
 const MainDamba = ({ sidebar, content }: Props) => {
     return (
-        <main className="w-full h-screen overflow-hidden">
+        <main className="w-full h-full flex-1 overflow-hidden">
             <div
                 className={classNames(
                     'w-full h-full grid',
