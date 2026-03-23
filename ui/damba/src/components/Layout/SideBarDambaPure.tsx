@@ -17,7 +17,11 @@ export enum ToolSidebarMenuKey {
 
 export enum HomeSidebarMenuKey {
     Home = 'Home',
+    Workspace = 'Workspace',
+    DataModeler = 'DataModeler',
+    UseCases = 'UseCases',
     Developer = 'Developer',
+    BD = 'BD',
     MarketPlace = 'MarketPlace',
     Settings = 'Settings',
     Plans = 'Plans',

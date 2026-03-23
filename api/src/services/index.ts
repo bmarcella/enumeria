@@ -9,6 +9,10 @@ import _Serv from './AppService/behaviors';
 import _Helper from './Damba';
 import _AI from './AiAgentChat/AiChat';
 import _SK from './Socket';
+import _DataModeler from './DataModeler/behaviors';
+import _UseCase from './UseCase/behaviors';
+import _ProjectAccess from './ProjectAccess/behaviors';
+import _Workspace from './Workspace/behaviors';
 import { NextFunction, Request, Response } from 'express';
 import { IServiceProvider } from '@Damba/v2/service/IServiceDamba';
 
@@ -24,4 +28,8 @@ export const _SPS_INDEX_: IServiceProvider<Request, Response, NextFunction> = {
   ..._Helper,
   ..._AI,
   ..._SK,
+  ..._DataModeler,
+  ..._UseCase,
+  ..._ProjectAccess,
+  ..._Workspace,
 };

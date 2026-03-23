@@ -18,6 +18,10 @@ import { Project } from "../entities/Project";
 import { Role } from "../entities/Role";
 import { User } from "../entities/User";
 import { AgentMarketplaceEntities } from "../entities/agents";
+import { DataModelerEntities } from "../entities/datamodeler";
+import { UseCaseEntities } from "../entities/usecase";
+import { ProjectAccess } from "../entities/ProjectAccess";
+import { ModuleAccessOverride } from "../entities/ModuleAccessOverride";
 
 
 
@@ -42,5 +46,9 @@ export const DBEntities = [
   Entities,
   Invitation,
   DambaCoreCode,
-  ...AgentMarketplaceEntities
+  ...AgentMarketplaceEntities,
+  ...DataModelerEntities,
+  ...UseCaseEntities,
+  ProjectAccess,
+  ModuleAccessOverride,
 ];
