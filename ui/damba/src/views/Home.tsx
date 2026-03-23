@@ -32,7 +32,7 @@ const sidebarsConfig = {
               case HomeSidebarMenuKey.Home:
                         return <div className="p-4 h-full overflow-y-auto"><ProjectList /></div>
               case HomeSidebarMenuKey.Workspace:
-                        return <WorkspaceView />
+                        return <div className="h-full overflow-y-auto"><WorkspaceView /></div>
               case HomeSidebarMenuKey.DataModeler:
                         return <DataModelerView />
               case HomeSidebarMenuKey.UseCases:

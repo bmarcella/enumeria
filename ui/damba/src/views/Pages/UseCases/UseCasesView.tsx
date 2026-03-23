@@ -1,19 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useMemo, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
   Node,
-  Edge,
   useNodesState,
   useEdgesState,
   addEdge,
   Connection,
   NodeTypes,
   MarkerType,
+  BackgroundVariant,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { HiOutlinePlus, HiOutlineUser, HiOutlineClipboardList } from 'react-icons/hi';
+import { HiOutlineUser, HiOutlineClipboardList } from 'react-icons/hi';
 import ActorNode, { ActorNodeData } from './components/ActorNode';
 import UseCaseNode, { UseCaseNodeData } from './components/UseCaseNode';
 import UseCaseInspector from './components/UseCaseInspector';
@@ -28,6 +29,9 @@ const UseCasesView = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const actorCount = useMemo(() => nodes.filter(n => n.type === 'actor').length, [nodes]);
+  const ucCount = useMemo(() => nodes.filter(n => n.type === 'usecase').length, [nodes]);
 
   const selectedItem = useMemo(() => {
     if (!selectedId) return null;
@@ -52,7 +56,7 @@ const UseCasesView = () => {
     const id = uuidv4();
     const newNode: Node<ActorNodeData> = {
       id, type: 'actor',
-      position: { x: 50, y: Math.random() * 300 + 50 },
+      position: { x: 50, y: Math.random() * 300 + 100 },
       data: { label: 'Nouvel Acteur', actorType: 'human' },
     };
     setNodes((nds) => [...nds, newNode]);
@@ -63,7 +67,7 @@ const UseCasesView = () => {
     const id = uuidv4();
     const newNode: Node<UseCaseNodeData> = {
       id, type: 'usecase',
-      position: { x: 300 + Math.random() * 200, y: Math.random() * 300 + 50 },
+      position: { x: 350 + Math.random() * 200, y: Math.random() * 300 + 100 },
       data: { label: 'Nouveau Cas', priority: 'medium', scenarioCount: 0 },
     };
     setNodes((nds) => [...nds, newNode]);
@@ -111,50 +115,76 @@ const UseCasesView = () => {
   const onConnect = useCallback((connection: Connection) => {
     setEdges((eds) => addEdge({
       ...connection, type: 'smoothstep', animated: false,
-      markerEnd: { type: MarkerType.ArrowClosed },
-      style: { stroke: '#8b5cf6' },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' },
+      style: { stroke: '#8b5cf6', strokeWidth: 2 },
     }, eds));
   }, [setEdges]);
 
   return (
-    <div className="flex h-full w-full">
-      <div className="flex-1 relative">
-        <div className="absolute top-4 left-4 z-10 flex gap-2">
+    <div className="flex flex-col h-full w-full bg-gray-950">
+      {/* Toolbar */}
+      <div className="h-12 border-b border-gray-800 flex items-center justify-between px-4 bg-gray-900/90 backdrop-blur-md shrink-0 z-40">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-black uppercase tracking-wider text-gray-400">Cas d&apos;utilisation</span>
+          <span className="w-px h-5 bg-gray-800" />
+          <span className="text-xs text-gray-500">{actorCount} acteur(s)</span>
+          <span className="text-xs text-gray-600">|</span>
+          <span className="text-xs text-gray-500">{ucCount} cas</span>
+        </div>
+        <div className="flex items-center gap-2">
           <button onClick={handleAddActor}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors shadow-lg text-sm">
-            <HiOutlineUser /> Acteur
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all">
+            <HiOutlineUser className="text-sm" /> Acteur
           </button>
           <button onClick={handleAddUseCase}
-            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-lg text-sm">
-            <HiOutlineClipboardList /> Cas d'utilisation
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 transition-all">
+            <HiOutlineClipboardList className="text-sm" /> Cas
           </button>
         </div>
-        <ReactFlow
-          nodes={nodes} edges={edges}
-          onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeClick={(_, node) => setSelectedId(node.id)}
-          onPaneClick={() => setSelectedId(null)}
-          nodeTypes={nodeTypes}
-          fitView className="bg-gray-50 dark:bg-gray-900"
-        >
-          <Background gap={16} size={1} />
-          <Controls />
-          <MiniMap />
-        </ReactFlow>
       </div>
-      <div className="w-80 border-l dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto">
-        <div className="p-3 border-b dark:border-gray-700">
-          <h3 className="text-sm font-bold dark:text-gray-200">Inspecteur</h3>
+
+      {/* Canvas + Inspector */}
+      <div className="flex flex-1 min-h-0">
+        <div className="flex-1 relative">
+          <ReactFlow
+            nodes={nodes} edges={edges}
+            onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onNodeClick={(_, node) => setSelectedId(node.id)}
+            onPaneClick={() => setSelectedId(null)}
+            nodeTypes={nodeTypes}
+            fitView
+            className="!bg-[#0b0f1a]"
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={40} size={1.5} color="#8b5cf6" style={{ opacity: 0.1 }} />
+            <Controls className="!bg-gray-800 !border-gray-700 !shadow-2xl [&>button]:!bg-gray-800 [&>button]:!border-gray-700 [&>button]:!text-gray-400 [&>button:hover]:!bg-gray-700" />
+            <MiniMap nodeStrokeWidth={3} nodeColor="#8b5cf6" maskColor="rgba(11, 15, 26, 0.85)" className="!bg-gray-900 !border-gray-800" />
+          </ReactFlow>
         </div>
-        <UseCaseInspector
-          selected={selectedItem}
-          onUpdateActor={updateNodeData}
-          onUpdateUseCase={updateNodeData}
-          onAddScenario={handleAddScenario}
-          onUpdateScenario={handleUpdateScenario}
-          onDeleteScenario={handleDeleteScenario}
-        />
+
+        <aside
+          className={`border-l border-gray-800 bg-[#0b0f1a] flex flex-col shadow-2xl shrink-0 transition-all duration-300 ${
+            selectedId ? 'w-80' : 'w-0'
+          } overflow-hidden`}
+        >
+          <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/40 shrink-0">
+            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">Inspecteur</h3>
+            {selectedId && (
+              <button onClick={() => setSelectedId(null)} className="text-gray-500 hover:text-white text-xs">✕</button>
+            )}
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <UseCaseInspector
+              selected={selectedItem}
+              onUpdateActor={updateNodeData}
+              onUpdateUseCase={updateNodeData}
+              onAddScenario={handleAddScenario}
+              onUpdateScenario={handleUpdateScenario}
+              onDeleteScenario={handleDeleteScenario}
+            />
+          </div>
+        </aside>
       </div>
     </div>
   );

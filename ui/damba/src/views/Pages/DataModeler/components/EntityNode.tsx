@@ -17,25 +17,41 @@ export type EntityNodeData = {
 
 const EntityNode = memo(({ data, selected }: NodeProps<EntityNodeData>) => {
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 min-w-[220px] ${selected ? 'border-blue-500' : 'border-gray-200 dark:border-gray-700'}`}>
-      <div className={`px-3 py-2 rounded-t-md font-bold text-sm text-white ${data.color || 'bg-blue-600'}`}>
-        {data.label}
+    <div
+      className={`rounded-xl flex flex-col min-w-[260px] ${
+        selected
+          ? 'border-2 border-white shadow-[0_0_0_6px_rgba(255,255,255,0.1)]'
+          : 'border border-gray-700'
+      }`}
+      style={{ backgroundColor: '#111827', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+    >
+      <div
+        className="px-4 py-2.5 rounded-t-xl flex items-center gap-2 border-b border-gray-700/50"
+        style={{ backgroundColor: data.color || '#4f46e5' }}
+      >
+        <span className="text-xs font-black uppercase tracking-wider text-white truncate">{data.label}</span>
       </div>
-      <div className="divide-y divide-gray-100 dark:divide-gray-700">
-        {data.columns?.map((col, i) => (
-          <div key={col.id || i} className="flex items-center gap-2 px-3 py-1.5 text-xs">
-            {col.isPrimaryKey && <HiOutlineKey className="text-yellow-500 flex-shrink-0" />}
-            {col.isForeignKey && <HiOutlineLink className="text-green-500 flex-shrink-0" />}
-            <span className={`font-medium dark:text-gray-200 ${col.isNotNull ? '' : 'text-gray-500'}`}>{col.name}</span>
-            <span className="ml-auto text-gray-400 dark:text-gray-500">{col.dataType}</span>
+
+      <div className="divide-y divide-gray-800/50">
+        {data.columns?.map((col) => (
+          <div key={col.id} className="flex items-center gap-2 px-3 py-1.5 text-[11px] hover:bg-gray-800/40 transition-colors">
+            <span className="w-4 flex-shrink-0 text-center">
+              {col.isPrimaryKey && <HiOutlineKey className="text-amber-400 text-xs" />}
+              {col.isForeignKey && !col.isPrimaryKey && <HiOutlineLink className="text-emerald-400 text-xs" />}
+            </span>
+            <span className={`font-semibold ${col.isNotNull ? 'text-slate-200' : 'text-slate-400'}`}>
+              {col.name}
+            </span>
+            <span className="ml-auto text-slate-500 font-mono text-[10px]">{col.dataType}</span>
           </div>
         ))}
         {(!data.columns || data.columns.length === 0) && (
-          <div className="px-3 py-2 text-xs text-gray-400 italic">No columns</div>
+          <div className="px-3 py-3 text-[11px] text-slate-500 italic text-center">Aucune colonne</div>
         )}
       </div>
-      <Handle type="target" position={Position.Left} className="!bg-blue-500 !w-3 !h-3" />
-      <Handle type="source" position={Position.Right} className="!bg-green-500 !w-3 !h-3" />
+
+      <Handle type="target" position={Position.Left} className="!bg-indigo-500 !w-2.5 !h-2.5 !border-2 !border-gray-900" />
+      <Handle type="source" position={Position.Right} className="!bg-emerald-500 !w-2.5 !h-2.5 !border-2 !border-gray-900" />
     </div>
   );
 });

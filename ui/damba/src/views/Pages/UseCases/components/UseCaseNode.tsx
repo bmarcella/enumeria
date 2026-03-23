@@ -9,27 +9,37 @@ export type UseCaseNodeData = {
   priority?: string;
   color?: string;
   scenarioCount?: number;
+  scenarios?: any[];
 };
 
-const priorityColors: Record<string, string> = {
-  critical: 'border-red-500',
-  high: 'border-orange-500',
-  medium: 'border-blue-500',
-  low: 'border-gray-400',
+const priorityBorders: Record<string, string> = {
+  critical: '#ef4444',
+  high: '#f97316',
+  medium: '#6366f1',
+  low: '#64748b',
 };
 
 const UseCaseNode = memo(({ data, selected }: NodeProps<UseCaseNodeData>) => {
-  const border = selected ? 'border-blue-600 shadow-blue-200' : (priorityColors[data.priority || 'medium'] || 'border-blue-500');
+  const borderColor = selected ? '#ffffff' : (priorityBorders[data.priority || 'medium'] || '#6366f1');
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-full border-2 ${border} shadow-md px-6 py-4 min-w-[160px] text-center`}>
-      <div className="text-sm font-semibold dark:text-gray-200">{data.label}</div>
-      {data.role && <div className="text-[10px] text-gray-400 mt-1">En tant que {data.role}</div>}
+    <div
+      className={`rounded-[2rem] px-6 py-4 min-w-[180px] text-center ${
+        selected ? 'shadow-[0_0_0_6px_rgba(255,255,255,0.1)]' : ''
+      }`}
+      style={{
+        backgroundColor: '#111827',
+        border: `2px solid ${borderColor}`,
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+      }}
+    >
+      <div className="text-sm font-bold text-slate-200">{data.label}</div>
+      {data.role && <div className="text-[10px] text-slate-500 mt-1">En tant que {data.role}</div>}
       {data.scenarioCount !== undefined && data.scenarioCount > 0 && (
-        <div className="text-[10px] text-blue-400 mt-0.5">{data.scenarioCount} scenario(s)</div>
+        <div className="text-[10px] text-indigo-400 mt-0.5 font-semibold">{data.scenarioCount} scenario(s)</div>
       )}
-      <Handle type="target" position={Position.Left} className="!bg-green-500 !w-2.5 !h-2.5" />
-      <Handle type="source" position={Position.Right} className="!bg-blue-500 !w-2.5 !h-2.5" />
+      <Handle type="target" position={Position.Left} className="!bg-emerald-500 !w-2.5 !h-2.5 !border-2 !border-gray-900" />
+      <Handle type="source" position={Position.Right} className="!bg-indigo-500 !w-2.5 !h-2.5 !border-2 !border-gray-900" />
     </div>
   );
 });

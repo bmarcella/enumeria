@@ -10,15 +10,21 @@ export type ActorNodeData = {
 
 const ActorNode = memo(({ data, selected }: NodeProps<ActorNodeData>) => {
   const Icon = data.actorType === 'system' ? HiOutlineDesktopComputer : HiOutlineUser;
-  const borderColor = selected ? 'border-blue-500' : 'border-gray-300 dark:border-gray-600';
 
   return (
-    <div className={`flex flex-col items-center gap-1 p-3 bg-white dark:bg-gray-800 rounded-lg border-2 ${borderColor} shadow-md min-w-[100px]`}>
-      <Icon className={`text-3xl ${data.color || 'text-gray-600 dark:text-gray-300'}`} />
-      <span className="text-xs font-medium text-center dark:text-gray-200">{data.label}</span>
-      <span className="text-[10px] text-gray-400">{data.actorType}</span>
-      <Handle type="source" position={Position.Right} className="!bg-blue-500 !w-2.5 !h-2.5" />
-      <Handle type="target" position={Position.Left} className="!bg-green-500 !w-2.5 !h-2.5" />
+    <div
+      className={`flex flex-col items-center gap-2 px-5 py-4 rounded-xl min-w-[110px] ${
+        selected
+          ? 'border-2 border-white shadow-[0_0_0_6px_rgba(255,255,255,0.1)]'
+          : 'border border-slate-700'
+      }`}
+      style={{ backgroundColor: '#111827', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+    >
+      <Icon className="text-3xl text-indigo-400" />
+      <span className="text-xs font-bold text-slate-200 text-center">{data.label}</span>
+      <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">{data.actorType}</span>
+      <Handle type="source" position={Position.Right} className="!bg-indigo-500 !w-2.5 !h-2.5 !border-2 !border-gray-900" />
+      <Handle type="target" position={Position.Left} className="!bg-emerald-500 !w-2.5 !h-2.5 !border-2 !border-gray-900" />
     </div>
   );
 });
