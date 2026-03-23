@@ -26,8 +26,8 @@ const MainDamba = ({ sidebar, content }: Props) => {
                 )}
 
                 {/* Content */}
-                <section className="min-w-0 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                    <div className="w-full p-4">{content}</div>
+                <section className="min-w-0 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 h-[calc(100vh-2rem)] overflow-hidden">
+                    <div className="w-full h-full">{content}</div>
                 </section>
             </div>
         </main>

@@ -30,7 +30,7 @@ const sidebarsConfig = {
  const renderView = (activeKey: SidebarMenuKey | string) => {
         switch (activeKey) {
               case HomeSidebarMenuKey.Home:
-                        return <ProjectList />
+                        return <div className="p-4 h-full overflow-y-auto"><ProjectList /></div>
               case HomeSidebarMenuKey.Workspace:
                         return <WorkspaceView />
               case HomeSidebarMenuKey.DataModeler:
@@ -38,11 +38,11 @@ const sidebarsConfig = {
               case HomeSidebarMenuKey.UseCases:
                         return <UseCasesView />
               case HomeSidebarMenuKey.BD:
-                        return <DatabaseView />
+                        return <div className="p-4 h-full overflow-y-auto"><DatabaseView /></div>
               case HomeSidebarMenuKey.Developer:
-                        return <DeveloperView />
+                        return <div className="p-4 h-full overflow-y-auto"><DeveloperView /></div>
                     default:
-                        return <div className="p-4">View not implemented yet for {activeKey}</div>
+                        return <div className="p-4 h-full overflow-y-auto">View not implemented yet for {activeKey}</div>
         }
     }
 

@@ -117,7 +117,7 @@ const UseCasesView = () => {
   }, [setEdges]);
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full">
       <div className="flex-1 relative">
         <div className="absolute top-4 left-4 z-10 flex gap-2">
           <button onClick={handleAddActor}
