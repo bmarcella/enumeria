@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { AppBaseEntity } from './BaseEntity';
 import { Modules } from './Modules';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
+import { Extra } from './Extra';
 
 /** Project: child records of an Organization */
 @Entity('app_services')
@@ -34,7 +36,19 @@ export class AppServices extends AppBaseEntity {
   @Column({ type: 'varchar', nullable: false })
   orgId?: string;
 
+  @Column({
+    type: 'enum',
+    enum: DambaEnvironmentType,
+    nullable: true,
+  })
+  environment?: DambaEnvironmentType;
+
   @ManyToOne(() => Modules, (o) => o.services, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'moduleId' })
   module?: Modules;
+
+  @OneToMany(() => Extra, (o) => o.appService, { cascade: true })
+  @JoinColumn({ name: 'serviceId' })
+  extras?: Extra[];
+
 }

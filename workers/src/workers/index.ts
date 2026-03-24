@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import "reflect-metadata";
-import { Worker, type Processor } from "bullmq";
+import { Worker, type Processor, type ConnectionOptions } from "bullmq";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { DataSource } from "typeorm";
@@ -17,12 +17,10 @@ export enum DLLM {
   ANTHROPIC = "ANTHROPIC",
 }
 
-export const DefaultlLLM = DLLM.ANTHROPIC;
+export const DefaultLLM = DLLM.ANTHROPIC;
 
 export type OpenAiLlm = ChatOpenAI;
-
 export type OllamaLlm = any;
-
 export type AnthropicLlm = ChatAnthropic;
 
 export type LlmProviderMap = {
@@ -54,18 +52,20 @@ export const getLLM = <P extends DLLM>(
         model: "gpt-4o-mini",
         temperature: 1,
       }) as LlmProviderMap[P];
+
     case DLLM.OLLAMA:
       throw new Error(`LLM provider not implemented: ${provider}`);
+
     case DLLM.ANTHROPIC:
-      const llm = new ChatAnthropic({
+      return new ChatAnthropic({
         model: "claude-sonnet-4-5",
         anthropicApiKey: apiKey,
         temperature: 0,
-      });
-      return llm as LlmProviderMap[P];
+      }) as LlmProviderMap[P];
+
     default: {
-      const _exhaustive: never = provider;
-      throw new Error(`Unknown LLM provider: ${_exhaustive}`);
+      const exhaustiveCheck: never = provider;
+      throw new Error(`Unknown LLM provider: ${exhaustiveCheck}`);
     }
   }
 };
@@ -76,6 +76,17 @@ export type WorkerPoolOptions = {
   shardEnd?: number;
   concurrency?: number;
 };
+
+/**
+ * Prefer passing BullMQ Redis connection options here, not a live ioredis singleton.
+ * If ../config/redis currently exports an ioredis instance, consider changing it to:
+ *   export default {
+ *     host: process.env.REDIS_HOST ?? "127.0.0.1",
+ *     port: Number(process.env.REDIS_PORT ?? 6379),
+ *     maxRetriesPerRequest: null,
+ *   } satisfies ConnectionOptions;
+ */
+const redisConnection = connection as ConnectionOptions;
 
 export const startWorkers = async <
   D,
@@ -91,51 +102,103 @@ export const startWorkers = async <
 ): Promise<Array<Worker<D, R, X>>> => {
   const aiApiKey = mustEnv(`${provider}_API_KEY`);
   const llm = getLLM(provider, aiApiKey);
+
   const shards = opts.shards ?? Number(process.env.QUEUE_SHARDS ?? 3);
   const shardStart = opts.shardStart ?? Number(process.env.SHARD_START ?? 0);
   const shardEnd = opts.shardEnd ?? Number(process.env.SHARD_END ?? shards - 1);
   const concurrency =
     opts.concurrency ?? Number(process.env.WORKER_CONCURRENCY ?? 5);
 
-  if (shardStart < 0 || shardEnd >= shards || shardStart > shardEnd) {
+  if (
+    !Number.isInteger(shards) ||
+    !Number.isInteger(shardStart) ||
+    !Number.isInteger(shardEnd) ||
+    shards <= 0 ||
+    shardStart < 0 ||
+    shardEnd >= shards ||
+    shardStart > shardEnd
+  ) {
     throw new Error(
       `Invalid shard range: ${shardStart}..${shardEnd} (shards=${shards})`
     );
   }
 
+  // Initialize DB once for the whole pool, not once per worker
+  const database = await initOrm<DataSource>(process.env as Record<string, string>);
+  const repo = DambaRepository.init(database.dataSource);
+
   const workers: Array<Worker<D, R, X>> = [];
 
   for (let i = shardStart; i <= shardEnd; i++) {
     const queueName = `${baseQueueName}_${i}`;
-
-    const database = await initOrm<DataSource>(process.env as any);
-
-    const repo = DambaRepository.init(database.dataSource);
     const processor = makeProcessor(AppConfig, llm, repo);
+
     const worker = new Worker<D, R, X>(queueName, processor, {
-      connection,
+      connection: redisConnection,
       concurrency,
+      autorun: true,
     });
+
     worker.on("ready", () => {
       console.log(
         `[worker] ready queue=${queueName} concurrency=${concurrency}`
       );
     });
 
+    worker.on("active", (job) => {
+      console.log(`[worker] active queue=${queueName} jobId=${job.id}`);
+    });
+
+    worker.on("completed", (job) => {
+      console.log(`[worker] completed queue=${queueName} jobId=${job.id}`);
+    });
+
+    worker.on("failed", (job, err) => {
+      console.error(
+        `[worker] failed queue=${queueName} jobId=${job?.id ?? "unknown"}`,
+        err
+      );
+    });
+
     worker.on("error", (err) => {
       console.error(`[worker] error queue=${queueName}`, err);
     });
+
+    worker.on("closing", () => {
+      console.log(`[worker] closing queue=${queueName}`);
+    });
+
+    worker.on("closed", () => {
+      console.log(`[worker] closed queue=${queueName}`);
+    });
+
     workers.push(worker);
   }
 
-  const shutdown = async () => {
-    console.log("[worker] shutting down...");
+  let shuttingDown = false;
+
+  const shutdown = async (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+
+    console.log(`[worker] shutting down... signal=${signal}`);
+
     await Promise.allSettled(workers.map((worker) => worker.close()));
-    process.exit(0);
+
+    if (database?.dataSource?.isInitialized) {
+      await database.dataSource.destroy();
+    }
+
+    console.log("[worker] shutdown complete");
   };
 
-  process.once("SIGINT", shutdown);
-  process.once("SIGTERM", shutdown);
+  process.once("SIGINT", () => {
+    void shutdown("SIGINT").finally(() => process.exit(0));
+  });
+
+  process.once("SIGTERM", () => {
+    void shutdown("SIGTERM").finally(() => process.exit(0));
+  });
 
   console.log(
     `[worker] started pool base=${baseQueueName} shards=${shards} range=${shardStart}..${shardEnd}`

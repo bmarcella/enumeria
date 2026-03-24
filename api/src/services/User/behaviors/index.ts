@@ -12,7 +12,11 @@ api.DGet(
   async (e: DEvent) => {
     return e.out.json({});
   },
-  {},
+  {
+    getUserById: async (e: DEvent, id) => {
+      return await e.in.DRepository.DGet(User, { where: { id } });
+    }
+  },
 );
 
 api.DPost(

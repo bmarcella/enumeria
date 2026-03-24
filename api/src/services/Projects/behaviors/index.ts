@@ -10,10 +10,19 @@ import { Modules } from "@Database/entities/Modules";
 import { AppServices } from "@Database/entities/AppServices";
 import { Project } from "@Database/entities/Project";
 
-export const getProjectByIdOrgAndIdUser: Behavior = (api?: DambaApi) => {
+
+export const getMyProjects: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
-    const { userId, orgId } = e.in.data;
-    const projects = await e.in.extras.projects.getProjectByIdOrgAndIdUser(userId, orgId, e);
+    const { userId } = e.in.data;
+    const projects = await e.in.extras.projects.getMyProjects(userId, e);
+    return e.out.json(projects);
+  }
+}
+
+export const getMyOrgProjects: Behavior = (api?: DambaApi) => {
+  return async (e: DEvent) => {
+    const { orgId } = e.in.data;
+    const projects = await e.in.extras.projects.getMyOrgProjects(orgId, e);
     return e.out.json(projects);
   }
 }

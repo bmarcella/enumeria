@@ -1,6 +1,7 @@
+import { Validators } from "src/entities/Validator";
 import { AppServices } from "../entities/AppServices";
 import { Application } from "../entities/Application";
-import { Behavior, CodeFile } from "../entities/Behaviors";
+import { Behavior, BehaviorConfigValidator, CodeFile } from "../entities/Behaviors";
 import { Entities } from "../entities/CanvasBox";
 import { ChatAi } from "../entities/ChatAi";
 import { Contributor } from "../entities/Contributor";
@@ -42,5 +43,7 @@ export const DBEntities = [
   Entities,
   Invitation,
   DambaCoreCode,
+  Validators,
+  BehaviorConfigValidator,
   ...AgentMarketplaceEntities
 ];

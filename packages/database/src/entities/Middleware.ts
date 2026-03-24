@@ -1,8 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
-import { Behavior } from './Behaviors';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, JoinColumn, ManyToOne } from 'typeorm';
 import { Policy } from './Policy';
 import { DambaFullMeta } from './BaseEntity';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
+import { Application } from './Application';
 
+/**
+ * Relationship summary:
+ *   Policy  >-<  Middleware  (Policy owns join table)
+ *   Application >-< Middleware  (Application owns join table)
+ *
+ * Middleware does NOT directly own any join table — it only holds inverse refs.
+ */
 @Entity('middleware')
 export class Middleware extends DambaFullMeta {
   @PrimaryGeneratedColumn('uuid')
@@ -14,14 +22,19 @@ export class Middleware extends DambaFullMeta {
   @Column({ type: 'varchar', nullable: true })
   description?: string;
 
-  @ManyToMany(() => Behavior, (p) => p.midlewares)
-  behaviors?: Behavior[];
-
-  @ManyToMany(() => Policy, (o) => o.middlewares)
-  @JoinTable({
-    name: 'policies_midlewares', // optional custom join table name
-    joinColumn: { name: 'midleware_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'policy_id', referencedColumnName: 'id' },
+  @Column({
+    type: 'enum',
+    enum: DambaEnvironmentType,
+    nullable: true,
   })
+  environment?: DambaEnvironmentType;
+
+  // ── Policy ↔ Middleware (inverse — Policy owns the join table) ───────────
+  @ManyToMany(() => Policy, (p) => p.middlewares)
   policies?: Policy[];
+
+  // ── Application ↔ Middleware (inverse — Application owns the join table) ─
+  @ManyToOne(() => Application, (a) => a.middlewares)
+  @JoinColumn({ name: 'applicationId' })
+  application?: Application;  
 }

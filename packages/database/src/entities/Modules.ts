@@ -3,6 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { Application } from './Application';
 import { AppServices } from './AppServices';
 import { AppBaseEntity } from './BaseEntity';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 
 /** Project: child records of an Organization */
 @Entity('modules')
@@ -21,6 +22,13 @@ export class Modules extends AppBaseEntity {
 
   @Column({ type: 'varchar', nullable: true })
   OrgId?: string;
+
+  @Column({
+    type: 'enum',
+    enum: DambaEnvironmentType,
+    nullable: true,
+  })
+  environment?: DambaEnvironmentType;
 
   @Column({ type: 'text', nullable: true })
   description?: string | null;

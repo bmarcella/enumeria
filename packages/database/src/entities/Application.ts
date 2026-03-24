@@ -8,13 +8,18 @@ import {
   JoinColumn,
   BeforeInsert,
   OneToMany,
+  JoinTable,
+  ManyToMany,
 } from 'typeorm';
 import { AppBaseEntity } from './BaseEntity';
 import { Project } from './Project';
 import { randomBytes } from 'crypto';
 import { Modules } from './Modules';
-type TypeApp = 'web' | 'mobile' | 'api' | 'cli' | 'library';
-
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
+import { Policy } from "./Policy";
+import { Middleware } from "./Middleware";
+import { Validators } from "./Validator";
+type TypeApp = 'ui' | 'web' | 'mobile' | 'api' | 'cli' | 'library' | 'daemon' | 'worker' | 'microservice' ;
 
 @Entity('applications')
 export class Application extends AppBaseEntity {
@@ -90,9 +95,31 @@ export class Application extends AppBaseEntity {
   @Column({ type: 'varchar', nullable: true })
   orgId?: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  projId?: string;
+
+  @Column({
+    type: 'enum',
+    enum: DambaEnvironmentType,
+    nullable: true,
+  })
+  environment?: DambaEnvironmentType;
+
+  @OneToMany(() => Policy, (o) => o.application, { cascade: true })
+  policies?: Policy[];
+
+  @OneToMany(() => Middleware, (o) => o.application)
+  middlewares?: Middleware[];
+
+  @OneToMany(() => Modules, (m) => m.application, { cascade: true, nullable: true })
+  modules!: Modules[];
+
   @ManyToOne(() => Project, (o) => o.applications, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'appId' })
   project?: Project;
+
+  @OneToMany(() => Validators, (o) => o.application)
+  validators?: Validators[];
 
   @BeforeInsert()
   setDefaults() {
@@ -108,6 +135,5 @@ export class Application extends AppBaseEntity {
     }
   }
 
-  @OneToMany(() => Modules, (m) => m.application, { cascade: true, nullable: true })
-  modules!: Modules[];
+
 }

@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AgentRunJobPayload, AgentExecutionPlan } from "@Damba/core/AgentDefType";
-import { MakeAiAgentProcessor, LlmProviderMap, DefaultlLLM } from "..";
+import { MakeAiAgentProcessor, LlmProviderMap, DefaultLLM } from "..";
 import { runPipelineEntry } from "../runtime/runPipelineEntry";
 import { runSubAgentWithOpenAI } from "./runSubAgentWithOpenAI";
+import { UnrecoverableError } from "bullmq";
+import { ChatOpenAI } from "@langchain/openai";
 
 
 // ------------------------------------------------------
@@ -209,7 +211,7 @@ export const agentRunProcessor: MakeAiAgentProcessor<
   AgentRunJobPayload,
   AgentRunJobResult,
   string,
-  LlmProviderMap[typeof DefaultlLLM]
+  LlmProviderMap[typeof DefaultLLM]
 > = (_config, llm) => {
   return async (job) => {
     try {
@@ -232,7 +234,7 @@ export const agentRunProcessor: MakeAiAgentProcessor<
         allowedRoutes: string[];
       }) => {
         const route = await callModelWithOpenAI({
-          llm: llm as ChatOpenAI,
+          llm: llm as any,
           systemPrompt: args.systemPrompt,
           input: args.input,
           allowedRoutes: args.allowedRoutes,
@@ -243,7 +245,7 @@ export const agentRunProcessor: MakeAiAgentProcessor<
 
       const runSubAgent = async (subAgentId: string, input: any) => {
         return runSubAgentWithOpenAI({
-          llm: llm as ChatOpenAI,
+          llm: llm as any,
           executionPlan: data.executionPlan,
           subAgentId,
           input,
@@ -287,7 +289,7 @@ export const agentRunProcessor: MakeAiAgentProcessor<
       // --------------------------------------------------
       else if (entry.kind === "router") {
         output = await runRouterEntry({
-          llm: llm as ChatOpenAI,
+          llm: llm as any,
           executionPlan: data.executionPlan,
           input: data.input,
           agentCtx,
@@ -299,7 +301,7 @@ export const agentRunProcessor: MakeAiAgentProcessor<
       // --------------------------------------------------
       else {
         output = await runSimpleEntry({
-          llm: llm as ChatOpenAI,
+          llm: llm as any,
           executionPlan: data.executionPlan,
           input: data.input,
         });

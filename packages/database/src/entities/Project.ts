@@ -45,8 +45,6 @@ export class Project extends AppBaseEntity {
   @OneToMany(() => ChatAi, (chatAi) => chatAi.project, { cascade: true, nullable: true })
   chatAis!: ChatAi[];
 
- 
-
   @Column({ type: 'int', nullable: false, default: 1 })
   version: number | undefined;
 
@@ -69,9 +67,5 @@ export class Project extends AppBaseEntity {
 
   @Column({ type: 'varchar', nullable: true })
   currentPlan?: string;
-
-
-
-
   
 }

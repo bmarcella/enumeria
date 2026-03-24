@@ -21,9 +21,8 @@ const behaviors: BehaviorsChainLooper = {
   '/react-agent/:query': {
     method: Http.GET,
     behavior: reactAgentSimpleSearchBehavior,
-    extras: reactAgentSimpleSearchBehaviorExtras,
     config: {
-      description: ""
+      description: "",
     }
   },
   '/loadDFiles': {
@@ -52,4 +51,4 @@ const behaviors: BehaviorsChainLooper = {
   },
 };
 
-export default createDambaService({ service, behaviors });
+export default createDambaService({ service, behaviors, extras: reactAgentSimpleSearchBehaviorExtras });

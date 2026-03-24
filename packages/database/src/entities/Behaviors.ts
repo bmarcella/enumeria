@@ -5,14 +5,17 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Middleware } from './Middleware';
 import { DambaFullMeta } from './BaseEntity';
 import { Http } from '@Damba/v1/service/IServiceDamba';
 import { Extra } from './Extra';
-import { DStereotype } from '@Damba/v2/model/DStereotype';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
+import { Policy } from './Policy';
+import { DStereotype } from "@Damba/v2/model/DStereotype";
+import { Validators } from './Validator';
 
 @Entity('codeFile')
 export class CodeFile extends DambaFullMeta {
@@ -23,7 +26,22 @@ export class CodeFile extends DambaFullMeta {
   stereotype?: DStereotype;
 
   @Column({ type: 'varchar', nullable: false })
-  objId?: string;
+  applicationId?: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  projectId?: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  orgId?: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  moduleId?: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  serviceId?: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  behaviorId?: string;
 
   @Column({ type: 'varchar', nullable: false })
   fileExtension?: string;
@@ -37,13 +55,16 @@ export class CodeFile extends DambaFullMeta {
 
   @Column({ type: 'jsonb', nullable: false })
   data!: any;
+
 }
+
+
 
 @Entity('behavior')
 export class Behavior extends DambaFullMeta {
   @PrimaryGeneratedColumn('uuid')
   id?: string;
-
+  
   // REQUIRED FIELD
   @Column({ type: 'varchar', nullable: false })
   name!: string;
@@ -57,15 +78,45 @@ export class Behavior extends DambaFullMeta {
   @Column({ type: 'varchar', nullable: false })
   path!: string;
 
-  @ManyToMany(() => Middleware, (o) => o.behaviors)
-  @JoinTable({
-    name: 'behaviors_midlewares', // optional custom join table name
-    joinColumn: { name: 'behavior_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'midleware_id', referencedColumnName: 'id' },
+  @Column({
+    type: 'enum',
+    enum: DambaEnvironmentType,
+    nullable: true,
   })
-  midlewares?: Middleware[];
+  environment?: DambaEnvironmentType;
 
-  @OneToMany(() => Extra, (o) => o.behavior, { cascade: true })
-  @JoinColumn({ name: 'behaviorId' })
-  extras?: Extra[];
+  @ManyToMany(() => Policy, (o) => o.behaviors)
+  @JoinTable({
+    name: 'behaviors_policies', // optional custom join table name
+    joinColumn: { name: 'behavior_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'policy_id', referencedColumnName: 'id' },
+  })
+  policies?: Policy[];
+  
+}
+
+
+@Entity('behavior_config_validator')
+export class BehaviorConfigValidator extends DambaFullMeta {
+  @PrimaryGeneratedColumn('uuid')
+  id?: string;
+
+  @ManyToOne(() => Validators, { nullable: true })
+  @JoinColumn({ name: 'bodyId' })
+  body!: Validators;
+
+  @ManyToOne(() => Validators, { nullable: true })  
+  @JoinColumn({ name: 'queryId' })
+  query!: Validators;
+
+
+  @ManyToOne(() => Validators, { nullable: true })  
+  @JoinColumn({ name: 'paramsId' })
+  params!: Validators;
+
+  @ManyToOne(() => Validators, { nullable: true })  
+  @JoinColumn({ name: 'responseId' })
+  response!: Validators;
+  
+
 }

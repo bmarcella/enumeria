@@ -32,3 +32,17 @@ A Damba service is mounted under a path like `"/projects"` or `"/auth"`.
 
 ```ts
 const api = createService("/test", ProjectEntity);
+
+## Environment
+
+- DEV: May include extra debug/introspection services, looser CRUD config (all ops enabled)
+- QA: May include a reset/seed service for test data preparation
+- STAGING: Mirror PROD services; mark unstable services with restricted crudConfig
+- PROD: Restrict unnecessary ops (e.g., disable delete on critical entities)
+
+## Processor Flow 
+Project
+ └─ Application (PROD) ──> LLM modules (PROD rules) ──> services (PROD rules) ──> behaviors (PROD rules)
+ └─ Application (STAGING) ──> LLM modules (STAGING rules) ──> ...
+ └─ Application (DEV) ──> LLM modules (DEV rules) ──> ...
+ └─ Application (QA) ──> LLM modules (QA rules) ──> ...
