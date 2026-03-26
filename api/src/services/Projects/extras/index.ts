@@ -19,7 +19,23 @@ export const ProjectsExtras: Extras = (api?: DambaApi): DExtrasHandler => {
             true,
         );
         },
+        getMyProjects: async (userId, e: DEvent) => {
+        return await e.in.DRepository.DGet(Project, {
+            where: {
+            created_by: userId,
+            },
+        }, true);
+        },
 
+        getMyOrgProjects: async (orgId, e: DEvent) => {
+        return await e.in.DRepository.DGet(Project, {
+            where: {
+            organization: {
+                id: orgId,
+            },
+            },
+        }, true);
+        },
         countProjectByIdOrgAndIdUser: async (userId, orgId, e: DEvent) => {
         return await e.in.DRepository.DCount(Project, {
             where: {

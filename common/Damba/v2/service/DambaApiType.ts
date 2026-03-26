@@ -1,5 +1,6 @@
 import { DambaRepository } from "../dao";
 import { DEvent } from "./DEvent";
+import { DambaApi, Extras } from "./DambaService";
 import {
   EventHandler,
   ServiceFn,
@@ -86,5 +87,5 @@ export type DambaApiType<
 
   extras: any;
 
-  done: () => IServiceProvider<REQ, RES, NEXT>;
+  done: (rootExtras?: Extras<DambaApi<T, REQ, RES, NEXT>> | undefined) => IServiceProvider<REQ, RES, NEXT>;
 };

@@ -29,16 +29,18 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
     // eslint-disable-next-line no-console
     if (AppConfig?.logRoute) console.debug("Mount service:", serviceMount);
 
-    const { service, middleware, events } = serviceComplete as IServiceComplete<
+    const { service, middleware, events, rootExtras } = serviceComplete as IServiceComplete<
       REQ,
       RES,
       NEXT
     >;
+    const name = serviceMount.replace("/", "").toLowerCase();
+
+    if (rootExtras) {
+       extras = makeExtrasMiddleware(extras, name, rootExtras);
+    }
 
     all_events = { ...all_events, ...events };
-
-    console.log(all_events)
-    
 
     for (const [key, value] of Object.entries(service)) {
       if (!value) continue;
@@ -56,7 +58,7 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
         continue;
       }
       const routePath = normalizePath(rawPath); // ensure leading slash
-      const name = serviceMount.replace("/", "").toLowerCase();
+     
 
       extras = makeExtrasMiddleware(extras, name, value.extras);
       const config = (value as any)?.config as IDActionConfig;
@@ -87,6 +89,16 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
       const handlers = Array.isArray(value.behavior)
         ? value.behavior
         : [value.behavior];
+
+      // const handlers_test = handlers.map((handler) => {
+      //    return  async (req: any, res: any, next: any) => {
+      //     const result = await asyncWrap(handler);
+      //     if (result) {
+      //       res.send(result);
+      //     }
+      //    }
+      // });
+
       switch (method) {
         case Http.GET:
           sub.get(routePath, ...mws, ...handlers);

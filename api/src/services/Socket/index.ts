@@ -14,6 +14,7 @@ import {
 import { Queue, QueueEvents } from 'bullmq';
 import { emitToRequest, emitAll } from '@Damba/v2/IO/RegistrySocket';
 import { create_project_event } from './Messages';
+import { auth } from '@App/damba.import';
 
 const service = {
   name: '/socket',
@@ -28,7 +29,8 @@ const service = {
 
 const events: EBChain = {
   [SocketAction.create(EntityType.PROJECT)]: {
-    message: create_project_event
+    message: create_project_event,
+    middleware: [ auth?.socketCheck(['user']) ]
   },
 };
 
@@ -64,14 +66,14 @@ const queues: QueueBehavior = {
         if (requestId) emitToRequest(requestId, eventName, payload);
       },
       failed: (api: DambaApi, ctx?: any) => {
-        const payload = ctx?.returnvalue ?? {};
+        const payload = ctx ?? {};
         console.log('Job failed with result:', ctx);
         const eventName = `create:job:create-project:${ctx.jobId}`; 
         const requestId = String(payload.newRequestId ?? '').trim();
         if (requestId) emitToRequest(requestId, eventName, payload);
       },
       progress: (api: DambaApi, ctx?: any) => {
-        const payload = ctx?.returnvalue ?? {};
+        const payload = ctx ?? {};
         console.log('Job progress with result:', payload);
         const eventName = `progress:job:create-project:${ctx.jobId}`; 
         const requestId = String(payload.requestId ?? '').trim();

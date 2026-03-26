@@ -1,7 +1,8 @@
 // stores/useOrganizationStore.ts
 import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
-import { Organization } from '../../../../common/Entity/project'
+import { Organization } from '../../../../common/Damba/v2/Entity/project'
+
 
 type OrgState = {
   userId?: string | null | undefined

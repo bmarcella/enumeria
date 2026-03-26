@@ -1,11 +1,12 @@
+import { Validators } from "../entities/Validator";
 import { AppServices } from "../entities/AppServices";
 import { Application } from "../entities/Application";
-import { Behavior, CodeFile } from "../entities/Behaviors";
+import { Behavior } from "../entities/Behaviors";
 import { Entities } from "../entities/CanvasBox";
 import { ChatAi } from "../entities/ChatAi";
 import { Contributor } from "../entities/Contributor";
 import DambaCoreCode from "../entities/DambaCoreCode";
-import { Extra } from "../entities/Extra";
+import { Extra, Extra_Hook } from "../entities/Extra";
 import { Invitation } from "../entities/Invitation";
 import { MessageAi } from "../entities/MessageAi";
 import { Middleware } from "../entities/Middleware";
@@ -24,8 +25,12 @@ import { ProjectAccess } from "../entities/ProjectAccess";
 import { ModuleAccessOverride } from "../entities/ModuleAccessOverride";
 
 
+import { AppFile } from "../entities/AppFile";
+import { BehaviorConfigValidator } from "../entities/Behaviors/BehaviorValidatorConfig";
+import { CodeFile } from "../entities/Behaviors/CodeFile";
 
 export const DBEntities = [
+  Behavior,
   User,
   Role,
   ChatAi,
@@ -38,10 +43,12 @@ export const DBEntities = [
   Application,
   Modules,
   AppServices,
-  Behavior,
+  Validators,
+  BehaviorConfigValidator,
   Middleware,
   Policy,
   Extra,
+  Extra_Hook,
   CodeFile,
   Entities,
   Invitation,
@@ -51,4 +58,5 @@ export const DBEntities = [
   ...UseCaseEntities,
   ProjectAccess,
   ModuleAccessOverride,
+  AppFile,
 ];

@@ -12,10 +12,9 @@ Rules:
 - The description must be 1 or 2 sentences maximum
 - Do not invent advanced features not mentioned by the user
 - Use simple and clean wording
-
-JSON format:
-{{
-  "name": "string",
-  "description": "string"
-}}
+  JSON format:
+  {{
+    "name": "string",
+    "description": "string"
+  }}
 `;

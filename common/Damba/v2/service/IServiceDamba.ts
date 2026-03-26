@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RouteKey } from "./DambaHelper";
+import { DambaApi, DExtrasHandler, Extras } from "./DambaService";
 import { DEvent } from "./DEvent";
 export type TimeoutType = {
   in?: number;
@@ -9,9 +10,10 @@ export interface IDActionConfig {
   timeout?: TimeoutType;
   description?: string;
   validators?: {
-    params?: any;
-    query?: any;
-    body?: any;
+    params?: unknown;
+    query?: unknown;
+    body?: unknown;
+    response?: { statusCode: number, schema: unknown};
   };
 }
 
@@ -68,6 +70,15 @@ export interface IServiceComplete<REQ, RES, NEXT> {
   middleware?: ((req: REQ, res: RES, next: NEXT) => any)[] | [];
   dbEntity?: new (...args: any[]) => any | any;
   events?: SocketEventHandlerChain<any, any>;
+  rootExtras?: DExtrasHandler;
 }
 
 export type AnyFn = (...args: any[]) => any;
+/**
+ * @param socket - The socket instance.
+ * @param payload - The payload of the event.
+ * @param callback - The callback function.
+ * @param io - The IO instance.
+ * @returns The socket instance or undefined if the socket should be disconnected.
+*/
+export  type SocketMiddleware<S = any, IO = any> = (socket: S, payload?: any, callback?: any, io?: IO) => Promise<S | undefined> | S | undefined;

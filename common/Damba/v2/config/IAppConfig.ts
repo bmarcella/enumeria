@@ -66,7 +66,6 @@ export type SocketConfig<S= any, IO = any> =
 
 export type QueueConfig = any;
 
-// --- Définition de l'interface principale --- //
 export interface IAppConfig<DS = any,  S = any, IO= any >  {
   appName: string;
   description?: string;
@@ -107,7 +106,7 @@ export interface IAppConfig<DS = any,  S = any, IO= any >  {
   authorization?: {
     strategy: string;
     check: (roles: string[]) => any;
-    socketCheck: ( socket: any , roles?: string[]) => any;
+    socketCheck: (roles?: string[]) => any;
   };
   processes?: (...args: any[]) => IProcessHandler[];
   databaseConfig?: DatabaseConfig<DS>;

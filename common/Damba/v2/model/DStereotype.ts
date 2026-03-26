@@ -11,4 +11,5 @@ export enum DStereotype {
   DAMBA = "damba",
   CONFIG = "config",
   EXTRA = "extra",
+  EXTRA_HOOK = "extra_hook",
 }

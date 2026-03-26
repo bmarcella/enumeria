@@ -57,14 +57,18 @@ const DambaApiDocNested = <REQ, RES, NEXT>(
   };
 
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
-    const { service, middleware } = serviceComplete as IServiceComplete<
+    const { service, middleware , rootExtras} = serviceComplete as IServiceComplete<
       REQ,
       RES,
       NEXT
     >;
-    const serviceMws = toArray(middleware);
 
+    const serviceMws = toArray(middleware);
     const name = serviceMount.replace("/", "").toLowerCase();
+
+    if (rootExtras) {
+        extras = makeExtrasMiddleware(extras, name, rootExtras);
+    }
 
     if (!doc[serviceMount]) doc[serviceMount] = {};
 
