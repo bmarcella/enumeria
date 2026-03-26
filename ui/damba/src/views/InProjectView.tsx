@@ -72,17 +72,17 @@ export const InProjectViewBase = () => {
     const renderView = (key: SidebarMenuKey | string) => {
         switch (key) {
             case appName:
-                return <AppView />
+                return <div className="p-4 h-full overflow-y-auto"><AppView /></div>
             case SidebarMenuKey.Editor:
                 return <DambaEditorView />
             case SidebarMenuKey.Organition:
-                return <OrgView />
+                return <div className="p-4 h-full overflow-y-auto"><OrgView /></div>
             case SidebarMenuKey.Project:
-                return <ProjectView />
+                return <div className="p-4 h-full overflow-y-auto"><ProjectView /></div>
             case SidebarMenuKey.Setting:
-                return <SettingView />
+                return <div className="p-4 h-full overflow-y-auto"><SettingView /></div>
             default:
-                return null // or a <NotFound /> / placeholder
+                return null
         }
     }
 
