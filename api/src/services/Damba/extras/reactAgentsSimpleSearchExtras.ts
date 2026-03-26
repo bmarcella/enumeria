@@ -6,4 +6,4 @@ export const reactAgentSimpleSearchBehaviorExtras: Extras = (api?: DambaApi): DE
       return api?.params().query;
       },
     };
-  };
+};

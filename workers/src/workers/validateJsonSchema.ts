@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Ajv from "ajv";
-import addFormats from "ajv-formats";
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 const ajv = new Ajv({
   allErrors: true,
@@ -22,16 +22,13 @@ export function validateWithJsonSchema(opts: {
 
   const validate = ajv.compile(schema);
   const valid = validate(data);
-
   if (!valid) {
     const details =
       validate.errors?.map((e) => {
-        const path = e.instancePath || "/";
-        return `${path} ${e.message ?? "invalid"}`;
+        const path = e.instancePath || '/';
+        return `${path} ${e.message ?? 'invalid'}`;
       }) ?? [];
 
-    throw new Error(
-      `${label} schema validation failed: ${details.join("; ")}`
-    );
+    throw new Error(`${label} schema validation failed: ${details.join('; ')}`);
   }
 }

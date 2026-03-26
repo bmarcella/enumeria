@@ -1,20 +1,20 @@
 import { BehaviorsChainLooper, DambaService, createDambaService } from "@Damba/v2/service/DambaService";
-import { getApplicationsByProjectId, getProjectByIdOrgAndIdUser, getStatsByProjectId, saveProject } from "./behaviors";
+import { getApplicationsByProjectId, getMyOrgProjects, getMyProjects, getStatsByProjectId, saveProject } from "./behaviors";
 import { ProjectsExtras } from "./extras";
 import { Http } from "@Damba/v2/service/IServiceDamba";
-import { CheckIfOrgAndUserExist, GetCurrentOrg } from "./middlewares";
+import { CheckIfOrgAndUserExist, CheckIfOrgExist, CheckIfUserExist, GetCurrentOrg } from "./middlewares";
 
 const service = {
   name: '/projects'
 } as DambaService;
 
 const behaviors: BehaviorsChainLooper = {
-  '/:id_org/organization/:id_user/user' : [ 
+  '/:id_org/organization' : [ 
     {
     method: Http.GET,
-    behavior: getProjectByIdOrgAndIdUser,
+    behavior: getMyOrgProjects,
     extras: ProjectsExtras,
-    middlewares: [CheckIfOrgAndUserExist],
+    middlewares: [CheckIfOrgExist],
     config: {
       description: "Get project by id org and id user"
     }
@@ -28,6 +28,15 @@ const behaviors: BehaviorsChainLooper = {
     }
   } 
 ],
+"/:id_user/user": {
+    method: Http.GET,
+    behavior: getMyProjects,
+    extras: ProjectsExtras,
+    middlewares: [CheckIfUserExist],
+    config: {
+      description: "Get project by id org and id user"
+    }
+},  
 "/:id/applications": {
     method: Http.GET,
     behavior: getApplicationsByProjectId,

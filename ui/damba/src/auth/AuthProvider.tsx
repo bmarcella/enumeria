@@ -51,21 +51,31 @@ function AuthProvider({ children }: AuthProviderProps) {
 
     const navigatorRef = useRef<IsolatedNavigatorRef>(null)
 
-    const redirect = (setthing?: CurrentSetting) => {
-        const projectId = setthing?.projId;
-        let redirectUrl = undefined;
+    const redirectIfProject = (setthing?: CurrentSetting) => {
+        const projectId = setthing?.projId
+        let redirectUrl = undefined
         if (projectId) {
             const search = window.location.search
             const params = new URLSearchParams(search)
-            redirectUrl = params.get(REDIRECT_URL_KEY);
+            redirectUrl = params.get(REDIRECT_URL_KEY)
             navigatorRef.current?.navigate(
-            redirectUrl ? redirectUrl : appConfig.authenticatedProjectPath,
-        )
+                redirectUrl ? redirectUrl : appConfig.authenticatedProjectPath,
+            )
         } else {
             navigatorRef.current?.navigate(
-            redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath,
-          )
+                redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath,
+            )
         }
+    }
+
+    const redirect = () => {
+        const search = window.location.search
+        const params = new URLSearchParams(search)
+        let redirectUrl = undefined
+        redirectUrl = params.get(REDIRECT_URL_KEY)
+        navigatorRef.current?.navigate(
+            redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath,
+        )
     }
 
     const handleSignIn = (tokens: Token, user?: User) => {

@@ -1,52 +1,71 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { UnrecoverableError } from "bullmq";
-import { MakeAiAgentProcessor, LlmProviderMap, DefaultlLLM } from "@App/workers";
+import { MakeAiAgentProcessor, LlmProviderMap, DefaultLLM } from "@App/workers";
 import { JobData, JobResult } from "../dtos";
-import { DataSource } from "typeorm";
-import { DambaRepository } from "@Damba/v2/dao";
-
-import { callLLMForProject } from "@App/workers/LmmUtils";
-import { BuildStatus, Project } from "@Database/entities/Project";
-import { getOrganisationById } from "@App/workers/organisation";
+import { DataSource } from "typeorm"
+import { buildHierarchyForApi } from "./buildHierarchy";
+import { saveApplications, saveProject, updateProjectBuildStatus } from "./saver";
 import { DambaEnvironmentType } from "@Damba/v2/Entity/env";
+import { BuildStatus } from "@Database/entities/Project";
 
-const saveProject = async (llm : any, project: string, dao: DambaRepository<DataSource>) => {
- const response = await callLLMForProject(llm, project);
-  const organisation = await getOrganisationById(response.organizationId, dao);
-  const data = {
-    name: response.name,
-    description: response.description,
-    initialPrompt: response.initialPrompt,
-    buildStatus: BuildStatus.INITIALIZING,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    organisation: organisation,
-    version: 1,
-    isForSale: false,
-    price: 0,
-    environments: [DambaEnvironmentType.PROD, DambaEnvironmentType.STAGING, DambaEnvironmentType.DEV, DambaEnvironmentType.QA],
-    currentPlan: 'free',
-  } as unknown as Project;
- return await dao.DSave(Project, data);
-
-}
-
+// ─── Exported processor ───────────────────────────────────────────────────────
 export const createNewProject: MakeAiAgentProcessor<
   JobData,
   JobResult,
   string,
-  LlmProviderMap[typeof DefaultlLLM],
+  LlmProviderMap[typeof DefaultLLM],
   DataSource
 > = (_config, llm, dao) => {
   return async (job) => {
+    const data = job.data;
+    const requestId = data.newRequestId ?? data.requestId;
+    let projectId: string | undefined;
+
     try {
-      const data = job.data;
-      const project = await saveProject(llm, data.prompt, dao!);
-      await job.updateProgress({ requestId: data.requestId, step: 'Project created', pct: 100, message: 'Project created' });
+      // Step 1: Create the project
+      const project = await saveProject(llm, data.prompt, dao!, data);
+      projectId = project.id;
+      await updateProjectBuildStatus(projectId, BuildStatus.IN_PROGRESS, dao!);
+      await job.updateProgress({
+        requestId,
+        data: { project },
+        step: "Project created",
+        pct: 10,
+        message: "Project created",
+      });
+
+      // Applications — one per environment
+      const applications = await saveApplications(project, dao!);
+      await job.updateProgress({
+        requestId,
+        data: { applications: applications },
+        step: "Applications generated",
+        pct: 15,
+        message: `Generated ${applications.length} application(s)`,
+      });
+
+      const devApp = applications.find((app) => app.environment === DambaEnvironmentType.DEV && app.type_app === 'api');
+
+      if (devApp) {
+        // Steps 2–5: Build full hierarchy with LLM
+        await buildHierarchyForApi(llm, project, devApp, dao!, job, requestId);
+      }
+
+      // Done
+      await updateProjectBuildStatus(projectId, BuildStatus.COMPLETED, dao!);
+      await job.updateProgress({
+        requestId,
+        data: { project },
+        step: "Done",
+        pct: 100,
+        message: "Project hierarchy fully generated",
+      });
       return project;
     } catch (err) {
-      throw new UnrecoverableError((err as any)?.message ?? 'Unrecoverable error');
+      if (projectId) {
+        await updateProjectBuildStatus(projectId, BuildStatus.FAILED, dao!).catch(() => {});
+      }
+      throw new UnrecoverableError((err as any)?.message ?? "Unrecoverable error");
     }
   };
 };

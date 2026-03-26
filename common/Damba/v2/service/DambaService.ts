@@ -8,11 +8,11 @@ import {
   IDActionConfig,
   IServiceProvider,
   ServiceFn,
-  SocketEventHandler,
   SocketEventHandlerChain,
+  SocketMiddleware,
 } from "./IServiceDamba";
 import { DambaContext } from "./DambaContext";
-import { createSimpleName, isArrayOfObjects } from "./DambaHelper";
+import { createSimpleName } from "./DambaHelper";
 import { DEvent } from "./DEvent";
 import {
   ServiceConfig,
@@ -42,7 +42,7 @@ export type DambaApi<
   RES = any,
   NEXT = any,
   ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any
-> = DambaApiType;
+> = DambaApiType<T, REQ, RES, NEXT, ENTITY>;
 
 export type DExtrasHandler = Record<string, AnyFn>;
 
@@ -104,16 +104,16 @@ type EventBehaviorChainLooperContent<API = DambaApi, SK = any> = (
 
 export type EventBehavior = EventBehaviorChainLooperContent;
 
-export type EventBehaviorContent<API = any, SK = any, IO = any> = {
+export type EventBehaviorContent< SK = any, IO = any> = {
   message: EventBehavior;
-  middleware?: any[];
+  middleware?: SocketMiddleware<SK, IO>[];
 };
 
 export type EventBehaviorChainLooper<
-  API = DambaApi,
   SK = any,
   IO = any
-> = Record<string, EventBehaviorContent<API, SK, IO>>;
+> = Record<string, EventBehaviorContent< SK, IO>>;
+
 export type EBChain = EventBehaviorChainLooper;
 
 // Queues
@@ -131,16 +131,17 @@ export const createDambaService = <
 >(
   params: ServiceBuilderParams
 ): IServiceProvider<REQ, RES, NEXT> => {
+  
   const api = createBehaviors<T, REQ, RES, NEXT>(
     params.service.name,
     params.service.entity as any,
     params.service.config,
     params.service.middlewares,
-    params.service.redis
+    params.service.redis,
   );
 
   if (params.service.Queue) api.setQueue(params.service.Queue);
-
+  
   return DambaMakeApi<
     REQ,
     RES,
@@ -156,7 +157,8 @@ export const createDambaService = <
     params.service.Queue,
     params.service.QueueEvents,
     params.service.queuePrefix ?? false,
-    params.service.redisConnectionFactory
+    params.service.redisConnectionFactory,
+    params.extras
   );
 };
 
@@ -175,7 +177,8 @@ export const DambaMakeApi = <
   QueueCtor?: QCtor<Q>,
   QueueEventsCtor?: QCtor<EQ>,
   isQueuePrefix = false,
-  redisConnectionFactory?: RedisConnectionFactory
+  redisConnectionFactory?: RedisConnectionFactory,
+  rootExtras?: Extras<DambaApi<any, REQ, RES, NEXT>>
 ): IServiceProvider<REQ, RES, NEXT> => {
   if (behaviors) {
     for (const [path, chains] of Object.entries(behaviors)) {
@@ -269,8 +272,8 @@ export const DambaMakeApi = <
       }
     }
   }
-
-  return api.done();
+  
+  return api.done(rootExtras);
 };
 
 export type ServiceBuilderParams<T = any, REQ = any, RES = any, NEXT = any> = {
@@ -278,6 +281,7 @@ export type ServiceBuilderParams<T = any, REQ = any, RES = any, NEXT = any> = {
   behaviors?: BehaviorsChainLooper;
   events?: EventBehaviorChainLooper;
   queues?: QueueBehavior<any, any>;
+  extras?: Extras<DambaApi<T, REQ, RES, NEXT>>;
 };
 
 export type DambaService<
@@ -330,11 +334,19 @@ export const createBehaviors = <
   
   const events: SocketEventHandlerChain = {};
 
+  let rootExtras: DExtrasHandler;
+
+
+  const setRootExtras = (extras: DExtrasHandler) => {
+       rootExtras = extras;
+  };
+
   let Queue: QCtor<any>;
   const redisConnection = redis;
   name = name.trim();
   let service_name: string = name;
   let DExtras: any = {};
+
   if (!config) {
     config = {
       id_name: "id",
@@ -342,6 +354,7 @@ export const createBehaviors = <
       crud: DefaultDCrudValues,
     };
   }
+
   const simple_service_name = createSimpleName(service_name);
   const DAction = (
     path: string,
@@ -1020,13 +1033,21 @@ export const createBehaviors = <
     query,
     extras: DExtras,
     on,
-    done: (): IServiceProvider<REQ, RES, NEXT> => {
+    done: (extras?: Extras<DambaApi<T, REQ, RES, NEXT>>): IServiceProvider<REQ, RES, NEXT> => {
+    
+
       if (entity) {
         runCrud();
       }
       const middleware = getMiddlewares(_fmiddleware);
       const isMiddlewaye = middleware && middleware.length > 0;
       ServiceRegistry._init().populate(service_name);
+
+       if (extras) {
+          const rootExtras = extras(this);
+          setRootExtras(rootExtras);
+       }
+      
       const IProvider = isMiddlewaye
         ? {
             [service_name]: {
@@ -1034,6 +1055,7 @@ export const createBehaviors = <
               middleware,
               dbEntity: entity,
               events,
+              rootExtras
             },
           }
         : {
@@ -1041,6 +1063,7 @@ export const createBehaviors = <
               service: routes,
               dbEntity: entity,
               events,
+              rootExtras
             },
           };
       return IProvider as IServiceProvider<REQ, RES, NEXT>;

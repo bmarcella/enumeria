@@ -13,7 +13,7 @@ const OrganizationContext = createContext<OrgCtx | undefined>(undefined)
 
 type Props = {
     children: React.ReactNode
-    fetchOrganizations: (id: string) => Promise<Organization[]>
+    fetchOrganizations: (id: string) => Promise<Organization[] | Organization>
     autoSelectSingle?: boolean
 }
 
@@ -36,16 +36,22 @@ export function OrganizationProvider({
             if (!user || !user.id) return
             setUser(user.id)
             if (cancelled) return
-            const orgs = await fetchOrganizations(user?.id)
+            const org = await fetchOrganizations(user.id);
+            if (!org) {
+                setInitialized(true);
+                setOrganizations([]);
+                return;
+            };
+            const orgs = Array.isArray(org) ? org : [org];
             setOrganizations(orgs)
             // Optional: auto-select the only org available
             if (autoSelectSingle && orgs.length === 1 && !organizationId) {
                 const o = orgs[0]
                 setOrganization(o.id || o.slug || o.name)
             }
-            setInitialized(true)
+            setInitialized(true);
         }
-        if (authenticated) init()
+        if (authenticated) init();
         return () => {
             cancelled = true
         }

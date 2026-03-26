@@ -43,9 +43,6 @@ export function safeJsonParse(text: string): unknown {
   }
 }
 
-const escapeBraces = (str: string) =>
-  str.replace(/{/g, "{{").replace(/}/g, "}}");
-
 export const callLLM =  async <T>  (llm : any, prompt: any, input: any, runnableLambda: RunnableLambda<unknown, T>) => {
     const chain = prompt.pipe(llm).pipe(runnableLambda);
     const response = await chain.invoke(input);
