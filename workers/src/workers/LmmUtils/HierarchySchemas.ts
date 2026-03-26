@@ -16,6 +16,7 @@ export type ApplicationsResponse = z.infer<typeof ApplicationsResponseSchema>;
 export const ModuleItemSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
+  codeFileContent: z.string().optional(),
 });
 export const ModulesResponseSchema = z.object({
   modules: z.array(ModuleItemSchema).min(1),
@@ -75,8 +76,18 @@ export const ExtrasResponseSchema = z.object({
 });
 export type ExtrasResponse = z.infer<typeof ExtrasResponseSchema>;
 
-// ── Validators (per behavior) ─────────────────────────────────────────────────
+// ── Validators (per application) ─────────────────────────────────────────────
 export const JsonSchemaSchema = z.record(z.unknown()).default({});
+export const ValidatorItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  schema: JsonSchemaSchema,
+});
+export const ValidatorsResponseSchema = z.object({
+  validators: z.array(ValidatorItemSchema).min(1),
+});
+export type ValidatorsResponse = z.infer<typeof ValidatorsResponseSchema>;
+export type ValidatorItem = z.infer<typeof ValidatorItemSchema>;
 
 // ── Middlewares ───────────────────────────────────────────────────────────────
 export const MiddlewareItemSchema = z.object({
@@ -105,8 +116,12 @@ export const BehaviorItemSchema = z.object({
   path: z.string().startsWith('/'),
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE']),
   description: z.string().min(1),
-  inputValidator: JsonSchemaSchema,
-  outputValidator: JsonSchemaSchema,
+  config: z.object({
+    body: JsonSchemaSchema.optional(),
+    query: JsonSchemaSchema.optional(),
+    params: JsonSchemaSchema.optional(),
+    response: JsonSchemaSchema.optional(),
+  }).default({}),
   policies: z.array(PolicyItemSchema).default([]),
 });
 export const BehaviorsResponseSchema = z.object({
@@ -120,3 +135,16 @@ export type MiddlewareItem = z.infer<typeof MiddlewareItemSchema>;
 export type EntityItem = z.infer<typeof EntityItemSchema>;
 export type ExtraItem = z.infer<typeof ExtraItemSchema>;
 export type ExtraHook = z.infer<typeof ExtraHookSchema>;
+
+// ── App Files ─────────────────────────────────────────────────────────────────
+export const AppFileItemSchema = z.object({
+  name: z.string().min(1),        // e.g. "index.ts", "tsconfig.json"
+  path: z.string().default('/'),  // directory inside project root
+  content: z.string().min(1),
+  fileType: z.enum(['source', 'config', 'manifest', 'env', 'docker', 'doc', 'other']),
+});
+export const AppFilesResponseSchema = z.object({
+  files: z.array(AppFileItemSchema).min(1),
+});
+export type AppFilesResponse = z.infer<typeof AppFilesResponseSchema>;
+export type AppFileItem = z.infer<typeof AppFileItemSchema>;

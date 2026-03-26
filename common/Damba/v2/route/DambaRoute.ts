@@ -89,6 +89,16 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
       const handlers = Array.isArray(value.behavior)
         ? value.behavior
         : [value.behavior];
+
+      // const handlers_test = handlers.map((handler) => {
+      //    return  async (req: any, res: any, next: any) => {
+      //     const result = await asyncWrap(handler);
+      //     if (result) {
+      //       res.send(result);
+      //     }
+      //    }
+      // });
+
       switch (method) {
         case Http.GET:
           sub.get(routePath, ...mws, ...handlers);

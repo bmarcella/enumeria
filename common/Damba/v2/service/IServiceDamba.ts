@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RouteKey } from "./DambaHelper";
-import {  DExtrasHandler } from "./DambaService";
+import { DambaApi, DExtrasHandler, Extras } from "./DambaService";
 import { DEvent } from "./DEvent";
 export type TimeoutType = {
   in?: number;
@@ -13,7 +13,7 @@ export interface IDActionConfig {
     params?: unknown;
     query?: unknown;
     body?: unknown;
-    response?: unknown;
+    response?: { statusCode: number, schema: unknown};
   };
 }
 

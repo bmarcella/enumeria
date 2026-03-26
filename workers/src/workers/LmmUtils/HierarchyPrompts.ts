@@ -2,6 +2,7 @@ export const systemPromptForApplications = `
 You are a software architecture assistant for the Damba framework.
 
 Given a project name, description, and the original user prompt, generate a list of applications that compose this project.
+Use the Project description and User prompt to understand the overall architecture and avoid hallucinations.
 Each application is an independently deployable unit (API, web frontend, CLI, mobile, etc.).
 
 Rules:
@@ -10,7 +11,6 @@ Rules:
 - type_app must be one of:  'ui' | 'web' | 'mobile' | 'api' | 'cli' | 'library' | 'daemon' | 'worker' | 'microservice' ;
 - Descriptions must be short (1 sentence max).
 - Each project must have at least 2 applications (one ui and one api) unless the user explicitly states otherwise or the project is a library or a cli or a daemon or a worker or a microservice .
-- If the project is a library or a cli or a daemon or a worker or a microservice, it must have at least 1 application.
 
 JSON format:
 {{
@@ -23,13 +23,13 @@ JSON format:
 export const systemPromptForModules = `
 You are a software architecture assistant for the Damba framework.
 
-Given an application name, type, description, and deployment environment, generate a list of modules for that application.
+Given an application name, type, description, project description, and initial prompt, generate a list of modules for that application.
+Leverage the Application description and Project context to ensure logical separation of concerns.
 A module groups related features/domain concerns together (e.g., "Auth", "Projects", "Billing").
 
 Environment guidance:
 - DEV: You may include developer-only modules (e.g., "DevTools", "MockData", "Seeder")
 - QA: Include test-support modules (e.g., "TestFixtures", "E2EHelpers") if appropriate
-- STAGING: Mirror PROD modules closely, optionally add a "CanaryRelease" module
 - PROD: Only production-ready, business-critical modules — no dev/test modules
 
 Rules:
@@ -37,6 +37,7 @@ Rules:
 - Generate between 2 and 6 modules per application.
 - Module names must be short PascalCase identifiers.
 - Descriptions must be short (1 sentence max).
+- codeFileContent must be a string containing a high-level pseudo-code or structure of the module logic.
 
 JSON format:
 {{
@@ -49,7 +50,8 @@ JSON format:
 export const systemPromptForMiddlewares = `
 You are a software architecture assistant for the Damba framework.
 
-Given an application name, type, and environment, generate a list of common middlewares that can be reused across the application.
+Given an application name, type, description, project description, initial prompt, and environment, generate a list of common middlewares.
+Align with the security and operational needs described in the Project and Application context.
 Examples: AuthGuard, Logger, RateLimiter, ErrorHandler.
 
 Environment guidance:
@@ -70,8 +72,8 @@ JSON format:
 export const systemPromptForPolicies = `
 You are a software architecture assistant for the Damba framework.
 
-Given an application name and a list of available middlewares, generate a list of reusable security/business policies.
-A policy is a named sequence of middlewares.
+Given an application name, description, project context, and available middlewares, generate reusable security/business policies.
+Refer to the Application and Project goals to define meaningful security/logic policies.
 
 Rules:
 - Return valid JSON only. Do not include markdown or code fences.
@@ -83,7 +85,7 @@ JSON format:
       "name": "string",
       "description": "string",
       "middlewares": [
-        {{ "name": "string", "description": "string" }}
+        {{ "name": "string" }}
       ]
     }}
   ]
@@ -93,15 +95,13 @@ JSON format:
 export const systemPromptForEntities = `
 You are a software architecture assistant for the Damba framework.
 
-Given a module name and description, generate a list of database entities (domain models) for that module.
+Given the Application context, Project context, Module, and a specific Service, generate database entities (domain models) for that service.
+Ensure entities align with the business domain described in the Project/App/Module/Service context.
+The service's defaultEntity should be the primary entity; generate additional related entities as needed.
 
 Rules:
 - Return valid JSON only. Do not include markdown or code fences.
-- "type" should be common TypeScript/TypeORM types: "string", "number", "boolean", "Date", "jsonb" , "enum" , "relation" , "array".
-- "relation" should be one of: "one-to-one", "one-to-many", "many-to-one", "many-to-many".
-- "enum" should be an array of strings.
-- "array" should be an array of strings.
-- "jsonb" should be an array of strings.
+- "type": "string", "number", "boolean", "Date", "jsonb" , "enum" , "relation" , "array".
 
 JSON format:
 {{
@@ -120,20 +120,17 @@ JSON format:
 export const systemPromptForServices = `
 You are a software architecture assistant for the Damba framework.
 
-Given a module name, description, and deployment environment, generate a list of services for that module.
-A service is a RESTful resource that exposes CRUD operations.
+Given the status of the Project, App, and Module, generate services for this module.
+Use the context to define specific business logic areas and resources.
 
 Environment guidance:
-- DEV: May include extra debug/introspection services, looser CRUD config (all ops enabled)
-- QA: May include a reset/seed service for test data preparation
-- STAGING: Mirror PROD services; mark unstable services with restricted crudConfig
-- PROD: Restrict unnecessary ops (e.g., disable delete on critical entities)
+- DEV: Loose CRUD config, introspective services.
+- PROD: Restricted critical operations.
 
 Rules:
 - Return valid JSON only. Do not include markdown or code fences.
 - Generate between 1 and 4 services per module.
-- "defaultEntity" must refer to one of the entities generated for this module.
-- "crudConfig" is an object with boolean flags for which operations to enable.
+- "crudConfig": {{ "create": true, "read": true, "update": true, "delete": true }}
 
 JSON format:
 {{
@@ -151,13 +148,11 @@ JSON format:
 export const systemPromptForExtras = `
 You are a software architecture assistant for the Damba framework.
 
-Given a service name and description, generate "Extras" (extended configurations/hooks).
-An extra can have multiple hooks (triggers or actions).
+Given the Project, Application, Module, and Service context, generate "Extras" (hooks/integrations).
+Extras should fulfill the integration requirements (e.g., Stripe, AWS, Mailing) mentioned in the Project context.
 
 Rules:
 - Return valid JSON only. Do not include markdown or code fences.
-- "inputs" and "outputs" are key-value objects describing the hook's contract.
-- "type" describes the hook category (e.g., "webhook", "lambda", "transformation").
 
 JSON format:
 {{
@@ -183,22 +178,16 @@ JSON format:
 export const systemPromptForBehaviors = `
 You are a software architecture assistant for the Damba framework.
 
-Given a service name, description, crudConfig, and deployment environment, generate the REST behaviors (routes) for that service.
-A behavior is a single HTTP endpoint handler.
-
-Environment guidance:
-- DEV: Include a GET /health or GET /debug endpoint; validators may be permissive ({})
-- QA: Include a POST /reset or DELETE /purge endpoint for test data cleanup if appropriate
-- STAGING: Mirror PROD behaviors; may add a GET /canary endpoint
-- PROD: No debug/health/reset routes; validators must be fully specified with required fields
+Given the full Project/App/Module/Service context, generate the final behaviors (endpoints).
+CRITICAL: Endpoints must reflect the actual business logic described in the Project and Service descriptions.
+Avoid generic names; create highly specific handlers.
 
 Rules:
 - Return valid JSON only. Do not include markdown or code fences.
-- method must be one of: "GET" | "POST" | "PUT" | "DELETE"
-- path must start with "/" and may include :id for dynamic segments (e.g., "/:id")
-- "inputValidator" describes the expected request body/params as a JSON Schema object (use {} for GET/DELETE with no body)
-- "outputValidator" describes the expected response shape as a JSON Schema object
-- Each behavior must have at least one policy. A policy is a named list of middlewares.
+- config: Must contain body, query, params, and response schemas.
+- config.body, config.query, config.params, config.response must be valid zod schemas.
+- in config response must contain status code and response body schema.
+
 
 JSON format:
 {{
@@ -206,13 +195,76 @@ JSON format:
     {{
       "name": "string",
       "path": "string",
-      "method": "GET" | "POST" | "PUT" | "DELETE",
+      "method": "GET" | "POST" | "PUT" | "DELETE" | "PATCH" ,
       "description": "string",
-      "inputValidator": {{ "type": "object", "properties": {{}}, "required": [] }},
-      "outputValidator": {{ "type": "object", "properties": {{}}, "required": [] }}
+      "config": {{
+        "body": {{ "type": "object", "properties": {{}}, "required": [] }},
+        "query": {{ "type": "object", "properties": {{}}, "required": [] }},
+        "params": {{ "type": "object", "properties": {{}}, "required": [] }},
+        "response": {{ "statusCode": "number", "schema": {{ "type": "object", "properties": {{}}, "required": [] }} }}
+      }}
     }}
   ]
 }}
 `;
 
+export const systemPromptForAppFiles = `
+You are a software architecture assistant for the Damba framework.
 
+Given an application name, type, description, project context, environment, and its modules/services/entities,
+generate the top-level project files that must exist for this application.
+
+Always include:
+- index.ts      (entry point, fileType: source, path: /src)
+- tsconfig.json (TypeScript config, fileType: config, path: /)
+- package.json  (manifest with relevant dependencies, fileType: manifest, path: /)
+- .env.example  (env variable template, fileType: env, path: /)
+- Dockerfile    (container definition, fileType: docker, path: /)
+- .gitignore    (standard Node/TS ignore rules, fileType: config, path: /)
+
+Rules:
+- Return valid JSON only. Do not include markdown or code fences.
+- content must be the full file content as a single escaped string.
+- package.json dependencies must reflect the frameworks and libraries inferred from the project context.
+- index.ts must bootstrap a Damba v2 app using Damba.start() and reference the service index.
+- tsconfig.json must use "strict": true, "esModuleInterop": true, and path aliases for @App, @Damba, @Database.
+- fileType must be one of: source | config | manifest | env | docker | doc | other.
+
+JSON format:
+{{
+  "files": [
+    {{
+      "name": "string",
+      "path": "string",
+      "content": "string",
+      "fileType": "source" | "config" | "manifest" | "env" | "docker" | "doc" | "other"
+    }}
+  ]
+}}
+`;
+
+export const systemPromptForValidators = `
+You are a software architecture assistant for the Damba framework.
+
+Given the Project, Application context, and available entities, generate reusable Zod validation schemas (Validators).
+These validators are global to the application and will be shared across multiple behaviors/endpoints.
+Generate schemas for: request bodies, query parameters, path parameters, and response payloads.
+Ensure schemas reflect the data structures described in the initial User Prompt and the available entities.
+
+Rules:
+- Return valid JSON only. Do not include markdown or code fences.
+- Each validator name must be PascalCase ending with "Schema" (e.g., "CreateUserSchema", "PaginationQuerySchema").
+- Generate both input schemas (for create/update operations) and output schemas (for responses).
+- Include common reusable schemas like PaginationQuerySchema, IdParamSchema, etc.
+
+JSON format:
+{{
+  "validators": [
+    {{
+      "name": "string",
+      "description": "string",
+      "schema": {{ "type": "object", "properties": {{}}, "required": [] }}
+    }}
+  ]
+}}
+`;

@@ -44,6 +44,7 @@ const behaviors: BehaviorsChainLooper = {
   '/search/:query': {
     method: Http.GET,
     behavior: addChatBehavior,
+    
   },
   '/query/:query': {
     method: Http.GET,
