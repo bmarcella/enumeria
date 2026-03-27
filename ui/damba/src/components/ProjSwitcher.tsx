@@ -13,6 +13,7 @@ import useTranslation from '@/utils/hooks/useTranslation'
 import { HiRefresh } from 'react-icons/hi'
 import Button from '@/components/ui/Button'
 import { useNavigate } from 'react-router-dom'
+import { DambaEnvironmentType } from '../../../../common/Damba/v2/Entity/env'
 
 type Props = { initialized: boolean }
 export type Option = { value: string; label: string }
@@ -68,7 +69,7 @@ export const ProjSwitcher = ({ initialized }: Props) => {
         navigate(id_project ? '/projects' : '/home')
     }
 
-    const changeEnv = (env: string) => {
+    const changeEnv = (env: DambaEnvironmentType) => {
         if (!env || !user) return
         setUser({
             ...user,
@@ -76,7 +77,7 @@ export const ProjSwitcher = ({ initialized }: Props) => {
         })
     }
 
-    const prev = useRef<{ env?: string; projId?: string }>({})
+    const prev = useRef<{ env?: DambaEnvironmentType; projId?: string }>({})
 
     useEffect(() => {
         const env = user?.currentSetting?.env

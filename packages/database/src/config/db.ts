@@ -1,4 +1,4 @@
-import { Validators } from "../entities/Validator";
+import { Validators } from "../entities/Validators";
 import { AppServices } from "../entities/AppServices";
 import { Application } from "../entities/Application";
 import { Behavior } from "../entities/Behaviors";
@@ -6,7 +6,7 @@ import { Entities } from "../entities/CanvasBox";
 import { ChatAi } from "../entities/ChatAi";
 import { Contributor } from "../entities/Contributor";
 import DambaCoreCode from "../entities/DambaCoreCode";
-import { Extra, Extra_Hook } from "../entities/Extra";
+import { Extra } from "../entities/Extra";
 import { Invitation } from "../entities/Invitation";
 import { MessageAi } from "../entities/MessageAi";
 import { Middleware } from "../entities/Middleware";
@@ -19,18 +19,12 @@ import { Project } from "../entities/Project";
 import { Role } from "../entities/Role";
 import { User } from "../entities/User";
 import { AgentMarketplaceEntities } from "../entities/agents";
-import { DataModelerEntities } from "../entities/datamodeler";
-import { UseCaseEntities } from "../entities/usecase";
-import { ProjectAccess } from "../entities/ProjectAccess";
-import { ModuleAccessOverride } from "../entities/ModuleAccessOverride";
-
-
-import { AppFile } from "../entities/AppFile";
 import { BehaviorConfigValidator } from "../entities/Behaviors/BehaviorValidatorConfig";
 import { CodeFile } from "../entities/Behaviors/CodeFile";
+import { Extra_Hook } from "../entities/Extra/ExtraHook";
+import { AppFile } from "../entities/AppFile";
 
 export const DBEntities = [
-  Behavior,
   User,
   Role,
   ChatAi,
@@ -43,20 +37,17 @@ export const DBEntities = [
   Application,
   Modules,
   AppServices,
-  Validators,
   BehaviorConfigValidator,
+  Behavior,
   Middleware,
   Policy,
-  Extra,
   Extra_Hook,
+  Extra,
   CodeFile,
   Entities,
   Invitation,
   DambaCoreCode,
-  ...AgentMarketplaceEntities,
-  ...DataModelerEntities,
-  ...UseCaseEntities,
-  ProjectAccess,
-  ModuleAccessOverride,
+  Validators,
   AppFile,
+  ...AgentMarketplaceEntities,
 ];

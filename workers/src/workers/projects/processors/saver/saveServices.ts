@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { callLLMForServices } from '@App/workers/LmmUtils';
 import { DambaRepository } from '@Damba/v2/dao';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { DStereotype } from '@Damba/v2/model/DStereotype';
 import { AppServices } from '@Database/entities/AppServices';
 import { Application } from '@Database/entities/Application';
@@ -37,7 +38,7 @@ export const saveServiceCodeFile = async (
     stereotype: DStereotype.SERVICE,
     moduleId: mod.id,
     serviceId: svc.id,
-    ...baseMeta(app, project),
+    ...baseMeta(app, project, mod.environment),
   });
 };
 
@@ -48,7 +49,7 @@ export const saveServicesForModule = async (
   project: Project,
   dao: DambaRepository<DataSource>,
 ): Promise<AppServices[]> => {
-  const env = app.environment;
+  const env = mod.environment;
   const { services } = await callLLMForServices(
     llm,
     app.name!,
@@ -57,7 +58,7 @@ export const saveServicesForModule = async (
     project.initialPrompt ?? '',
     mod.name!,
     mod.description ?? '',
-    env ?? 'PROD',
+    env ?? DambaEnvironmentType.PROD,
   );
   return Promise.all(
     services.map(async (svc) => {
@@ -67,7 +68,7 @@ export const saveServicesForModule = async (
         defaultEntity: svc.defaultEntity,
         crudConfig: svc.crudConfig,
         module: mod,
-        applicationId: app.id,
+        appId: app.id,
         projId: project.id,
         orgId: (project as any).organization?.id,
         environment: env,

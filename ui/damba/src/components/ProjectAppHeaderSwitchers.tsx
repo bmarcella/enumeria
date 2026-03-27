@@ -17,6 +17,7 @@ import useTranslation from '@/utils/hooks/useTranslation'
 
 import { useApplicationStore } from '@/stores/useApplicationStore'
 import { useApplicationActions } from '@/utils/hooks/useApplication'
+import { DambaEnvironmentType } from '../../../../common/Damba/v2/Entity/env'
 
 type Props = { initialized: boolean }
 type Option = { value: string; label: string }
@@ -85,7 +86,7 @@ export const ProjectAppHeaderSwitchers = ({ initialized }: Props) => {
         setUser(nextUser as any)
     }
 
-    const changeEnv = (env: string) => {
+    const changeEnv = (env: DambaEnvironmentType) => {
         if (!env) return
         const nextUser = {
             ...user,

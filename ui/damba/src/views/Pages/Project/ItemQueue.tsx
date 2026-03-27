@@ -2,7 +2,8 @@
 import { useSocket } from '@/providers/SocketProvider'
 
 import { JobAckPayload } from '@/services/socket.io/JobAckPlayload'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import SubJobQueue from './SubJobQueue'
 
 interface ItemQueueProps {
     job: JobAckPayload
@@ -11,21 +12,22 @@ interface ItemQueueProps {
 
 function ItemQueue({ job, index }: ItemQueueProps) {
     const { socket, isConnected } = useSocket()
-    const [item, setItem] = useState<any>(job)
+    const [subJobs, setsubJobs] = useState<any[]>()
+    const item = useMemo(() => job, [job])
 
     useEffect(() => {
         if (!isConnected) return
-        const eventName = `update:job:create-project:${job.id}` // example (must match server emit)
+        const eventName = `progress:job:create-project:${job.id}`
         const handler = (payload: any) => {
             console.log('Got server event:', eventName, payload)
-            setItem((prev:any) => ({ ...prev, ...payload }))
+            // setsubJobs((prev: any) => [...prev, ...payload])
         }
-
         socket.on(eventName, handler)
         return () => {
             socket.off(eventName, handler)
         }
     }, [socket, isConnected])
+
     return (
         <div>
             {' '}
@@ -36,6 +38,9 @@ function ItemQueue({ job, index }: ItemQueueProps) {
                     Correlation ID: {item.correlationId}
                 </p>
                 <p className="text-sm text-gray-600">Status: {item.status}</p>
+                {subJobs && subJobs?.length > 0 && (
+                    <SubJobQueue jobs={subJobs}></SubJobQueue>
+                )}
             </li>
         </div>
     )

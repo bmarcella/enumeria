@@ -1,3 +1,5 @@
+import { DambaEnvironmentType } from "./env";
+
 export type LoginStrategy = 'google' | 'damba' | 'github';
 
 export interface CurrentSetting {
@@ -6,7 +8,7 @@ export interface CurrentSetting {
   appId? : string,
   moduleId? : string,
   servId?: string,
-  env?: string
+  env?: DambaEnvironmentType
 }
 
 interface BaseUser {

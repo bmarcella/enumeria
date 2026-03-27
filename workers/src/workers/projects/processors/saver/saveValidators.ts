@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { callLLMForValidators } from '@App/workers/LmmUtils';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { DambaRepository } from '@Damba/v2/dao';
 import { DStereotype } from '@Damba/v2/model/DStereotype';
 import { Application } from '@Database/entities/Application';
 import { CodeFile } from '@Database/entities/Behaviors/CodeFile';
 import { Project } from '@Database/entities/Project';
-import { Validators } from '@Database/entities/Validator';
 import { DataSource } from 'typeorm';
 import { saveCodeFile, baseMeta } from './helpers';
+import { Validators } from '@Database/entities/Validators';
 
 export const generateValidatorFileContent = (val: {
   name: string;
@@ -17,9 +18,7 @@ export const generateValidatorFileContent = (val: {
   return `// ${val.name}
 // ${val.description}
 import { z } from 'zod';
-
 export const ${val.name} = z.object(${JSON.stringify(val.schema?.properties ?? {}, null, 2)});
-
 export type ${val.name.replace(/Schema$/, '')} = z.infer<typeof ${val.name}>;
 `;
 };
@@ -27,7 +26,7 @@ export type ${val.name.replace(/Schema$/, '')} = z.infer<typeof ${val.name}>;
 export const saveValidatorCodeFile = async (
   val: Validators,
   valData: { name: string; description: string; schema: any },
-  app: Application,
+  targetApp: Application,
   project: Project,
   dao: DambaRepository<DataSource>,
 ): Promise<CodeFile> => {
@@ -37,25 +36,26 @@ export const saveValidatorCodeFile = async (
     path: `/src/validators`,
     fileExtension: 'ts',
     data: { content },
-    stereotype: DStereotype.CONFIG,
-    ...baseMeta(app, project),
+    stereotype: DStereotype.VALIDATOR,
+    ...baseMeta(targetApp, project),
   });
 };
 
 export const saveGlobalValidatorsForApp = async (
   llm: any,
-  app: Application,
+  contextApp: Application,
+  targetApp: Application,
   project: Project,
   dao: DambaRepository<DataSource>,
   entityNames: string[],
 ): Promise<Validators[]> => {
   const { validators } = await callLLMForValidators(
     llm,
-    app.name!,
-    app.description ?? '',
+    contextApp.name!,
+    contextApp.description ?? '',
     project.description ?? '',
     project.initialPrompt ?? '',
-    app.environment!,
+    ((project as any).environments?.[0] ?? DambaEnvironmentType.DEV),
     entityNames,
   );
   return Promise.all(
@@ -64,14 +64,14 @@ export const saveGlobalValidatorsForApp = async (
         name: val.name,
         description: val.description,
         schema: val.schema,
-        application: app,
+        application: targetApp,
         projId: project.id,
         orgId: (project as any).organization?.id,
-        environment: app.environment,
+        environment: undefined,
         created_by: project.created_by,
       } as Partial<Validators>) as Promise<Validators>);
 
-      await saveValidatorCodeFile(saved, val, app, project, dao);
+      await saveValidatorCodeFile(saved, val, targetApp, project, dao);
       return saved;
     }),
   );

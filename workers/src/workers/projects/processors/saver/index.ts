@@ -9,3 +9,4 @@ export { saveBehaviorsForService } from './saveBehaviors';
 export { saveGlobalMiddlewaresForApp, saveGlobalPoliciesForApp } from './saveMiddlewares';
 export { saveGlobalValidatorsForApp } from './saveValidators';
 export { saveFilesForApp } from './saveAppFiles';
+export { saveDambaCommonFiles } from './saveDambaCommon';

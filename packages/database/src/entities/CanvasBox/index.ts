@@ -10,6 +10,8 @@ import {
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { DambaFullMeta } from '../BaseEntity';
 
+// Note: `environment` is inherited from DambaFullMeta → DambaMeta
+
 @Entity('entities')
 export class Entities extends DambaFullMeta {
   @PrimaryGeneratedColumn('uuid')
@@ -20,9 +22,6 @@ export class Entities extends DambaFullMeta {
 
   @Column({ type: 'enum', enum: EntityStereotype, nullable: false, default: EntityStereotype.ENTITY })
   stereotype!: EntityStereotype;
-
-  @Column({ type: 'varchar', nullable: false })
-  env?: string;
 
   @Column({ type: 'enum', enum: CanvasBoxClassification, nullable: false, default: CanvasBoxClassification.PUBLIC })
   classification?: CanvasBoxClassification;

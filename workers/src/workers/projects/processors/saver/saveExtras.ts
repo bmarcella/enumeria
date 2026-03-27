@@ -5,11 +5,12 @@ import { DStereotype } from '@Damba/v2/model/DStereotype';
 import { AppServices } from '@Database/entities/AppServices';
 import { Application } from '@Database/entities/Application';
 import { CodeFile } from '@Database/entities/Behaviors/CodeFile';
-import { Extra, Extra_Hook } from '@Database/entities/Extra';
+import { Extra } from '@Database/entities/Extra';
 import { Modules } from '@Database/entities/Modules';
 import { Project } from '@Database/entities/Project';
 import { DataSource } from 'typeorm';
 import { saveCodeFile, baseMeta } from './helpers';
+import { Extra_Hook } from '@Database/entities/Extra/ExtraHook';
 
 export const generateExtraFileContent = (ext: {
   name: string;
@@ -22,7 +23,6 @@ export const generateExtraFileContent = (ext: {
 
   return `// ${ext.name} extra
 // ${ext.description}
-
 ${hookExports}
 `;
 };
@@ -45,7 +45,7 @@ export const saveExtraCodeFile = async (
     stereotype: DStereotype.EXTRA,
     moduleId: mod.id,
     serviceId: svc.id,
-    ...baseMeta(app, project),
+    ...baseMeta(app, project, mod.environment),
   });
 };
 
@@ -78,7 +78,7 @@ export const saveExtrasForService = async (
         appService: svc,
         projId: project.id,
         orgId: (project as any).organization?.id,
-        environment: app.environment,
+        environment: mod.environment,
         created_by: project.created_by,
       } as Partial<Extra>) as Promise<Extra>);
 
@@ -94,7 +94,7 @@ export const saveExtrasForService = async (
               extra: savedExtra,
               projId: project.id,
               orgId: (project as any).organization?.id,
-              environment: app.environment,
+              environment: mod.environment,
               created_by: project.created_by,
             } as Partial<Extra_Hook>),
           ),

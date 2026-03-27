@@ -168,7 +168,14 @@ export const callLLMForValidators = async (
     llm,
     systemPromptForValidators,
     'Application: {appName}\nDescription: {appDescription}\n\nProject Description: {projectDescription}\nInitial Prompt: {initialPrompt}\nEnvironment: {environment}\n\nAvailable Entities: {entityNames}',
-    { appName, appDescription, projectDescription, initialPrompt, environment, entityNames: entityNames.join(', ') },
+    {
+      appName,
+      appDescription,
+      projectDescription,
+      initialPrompt,
+      environment,
+      entityNames: entityNames.join(', '),
+    },
     parseValidatorsRunnable,
   );
 };
@@ -188,7 +195,16 @@ export const callLLMForEntities = async (
     llm,
     systemPromptForEntities,
     'Application: {appName}\nDescription: {appDescription}\n\nProject Description: {projectDescription}\nInitial Prompt: {initialPrompt}\n\nModule: {moduleName}\nDescription: {moduleDescription}\n\nService: {serviceName}\nDescription: {serviceDescription}',
-    { appName, appDescription, projectDescription, initialPrompt, moduleName, moduleDescription, serviceName, serviceDescription },
+    {
+      appName,
+      appDescription,
+      projectDescription,
+      initialPrompt,
+      moduleName,
+      moduleDescription,
+      serviceName,
+      serviceDescription,
+    },
     parseEntitiesRunnable,
   );
 };

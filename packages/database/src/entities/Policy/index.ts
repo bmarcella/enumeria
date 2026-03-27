@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
 import { Middleware } from '../Middleware';
 import { DambaFullMeta } from '../BaseEntity';
-import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { Behavior } from '../Behaviors';
 import { Application } from '../Application';
 
@@ -15,9 +14,6 @@ export class Policy extends DambaFullMeta {
 
   @Column({ type: 'varchar', nullable: true })
   description?: string;
-
-  @Column({ type: 'enum', enum: DambaEnvironmentType, nullable: true })
-  environment?: DambaEnvironmentType;
 
   @ManyToMany(() => Behavior, (b) => b.policies)
   behaviors?: Behavior[];

@@ -10,6 +10,7 @@ import { Application } from '@Database/entities/Application';
 import { Modules } from '@Database/entities/Modules';
 import { AppServices } from '@Database/entities/AppServices';
 import { Project } from '@Database/entities/Project';
+import { DQueues } from '@Common/Damba/core/Queues';
 
 export const getMyProjects: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
@@ -102,6 +103,27 @@ export const getApplicationsByProjectId: Behavior = (api?: DambaApi) => {
       true,
     )) as any;
     return e.out.json(apps);
+  };
+};
+
+export const deleteProjectById: Behavior = (api?: DambaApi) => {
+  return async (e: DEvent) => {
+    try {
+      const projectId = api?.params()?.id;
+      if (!projectId) return e.out.status(400).json({ error: 'Missing project id' });
+
+      const project = await e.in.DRepository.DGet1(Project, { where: { id: projectId } });
+      if (!project) return e.out.status(404).json({ error: 'Project not found' });
+
+      const { id: jobId } = await api!.enqueue(DQueues.DELETE_PROJECT, {
+        projectId,
+        requestId: e.in.requestId,
+        userId: e.in.data?.userId,
+      });
+      return e.out.json({ queued: true, jobId, projectId });
+    } catch (error) {
+      return e.out.status(500).json({ error: 'Failed to queue project deletion', detail: error });
+    }
   };
 };
 

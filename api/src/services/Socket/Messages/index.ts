@@ -6,12 +6,10 @@ import { EventHandler } from '@Damba/v2/service/IServiceDamba';
 import { User } from '@Database/entities/User';
 import { Socket } from 'socket.io';
 
-
 export const create_project_event: EventBehavior = (api?: DambaApi): EventHandler => {
   return async (socket: Socket, data: any, _callback) => {
     const user = socket.data.user as User;
-    console.log(user);
-    const payload  = {
+    const payload = {
       userId: user.id,
       prompt: data.payload.prompt,
       newRequestId: data.newRequestId,

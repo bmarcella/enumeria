@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { callLLMForMiddlewares, callLLMForPolicies } from '@App/workers/LmmUtils';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { DambaRepository } from '@Damba/v2/dao';
 import { Application } from '@Database/entities/Application';
 import { Middleware } from '@Database/entities/Middleware';
@@ -21,14 +22,14 @@ export const saveGlobalMiddlewaresForApp = async (
     app.description ?? '',
     project.description ?? '',
     project.initialPrompt ?? '',
-    app.environment!,
+    DambaEnvironmentType.DEV,
   );
   return Promise.all(
     middlewares.map((mw) =>
       saveMiddleware(mw, dao, app, {
         orgId: (project as any).organization?.id,
         projId: project.id,
-        environment: app.environment,
+        environment: undefined,
         created_by: project.created_by,
       }),
     ),
@@ -59,7 +60,7 @@ export const saveGlobalPoliciesForApp = async (
       return savePolicy(pol, matchedMws, dao, app, {
         orgId: (project as any).organization?.id,
         projId: project.id,
-        environment: app.environment,
+        environment: undefined,
         created_by: project.created_by,
       });
     }),

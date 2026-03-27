@@ -101,7 +101,13 @@ The service's defaultEntity should be the primary entity; generate additional re
 
 Rules:
 - Return valid JSON only. Do not include markdown or code fences.
-- "type": "string", "number", "boolean", "Date", "jsonb" , "enum" , "relation" , "array".
+- Every entity must include an "id" attribute: type "uuid", isId: true, isGenerateAuto: true, required: false, nullable: true.
+- "type" must be a valid PostgreSQL/TypeORM type: varchar, text, int, bigint, float, boolean, timestamp, date, uuid, jsonb, enum.
+- Use type "enum" when the attribute has a fixed set of values; populate "enumValues" array.
+- Use the "relation" object for relationships between entities.
+- "stereotype" must be one of: "<<entity>>", "<<model>>", "<<dto>>", "<<schema>>".
+- "visibility" must be one of: "public", "private", "protected".
+- Omit optional fields that are not relevant.
 
 JSON format:
 {{
@@ -109,8 +115,27 @@ JSON format:
     {{
       "name": "string",
       "description": "string",
-      "fields": [
-        {{ "name": "string", "type": "string", "required": true }}
+      "stereotype": "<<entity>>",
+      "attributes": [
+        {{
+          "name": "id",
+          "type": "uuid",
+          "required": false,
+          "nullable": true,
+          "visibility": "public",
+          "isId": true,
+          "isGenerateAuto": true
+        }},
+        {{
+          "name": "string",
+          "type": "varchar",
+          "required": true,
+          "nullable": false,
+          "visibility": "public",
+          "isId": false,
+          "isGenerateAuto": false,
+          "unique": false
+        }}
       ]
     }}
   ]
@@ -214,19 +239,34 @@ You are a software architecture assistant for the Damba framework.
 Given an application name, type, description, project context, environment, and its modules/services/entities,
 generate the top-level project files that must exist for this application.
 
-Always include:
-- index.ts      (entry point, fileType: source, path: /src)
-- tsconfig.json (TypeScript config, fileType: config, path: /)
-- package.json  (manifest with relevant dependencies, fileType: manifest, path: /)
-- .env.example  (env variable template, fileType: env, path: /)
-- Dockerfile    (container definition, fileType: docker, path: /)
-- .gitignore    (standard Node/TS ignore rules, fileType: config, path: /)
+The project is a monorepo with this structure:
+  MonProjet/
+  ├── api/              (type: api — backend, deployable)
+  ├── ui/               (type: ui — frontend, deployable)
+  └── packages/
+      ├── database/     (type: packages — shared entity & DTO files)
+      └── validators/   (type: packages — shared Zod validation schemas)
+
+If type_app is "api":
+- index.ts must bootstrap a Damba v2 app using Damba.start() and reference the service index.
+- Include: index.ts, tsconfig.json, package.json, .env.example, Dockerfile, .gitignore
+
+If type_app is "ui":
+- index.ts should be the frontend entry point (React/Vite).
+- Include: index.ts (or main.tsx), tsconfig.json, package.json, vite.config.ts, .gitignore
+- Do NOT generate Dockerfile or .env.example unless explicitly needed.
+
+If type_app is "packages":
+- This is a shared library package, NOT a deployable app.
+- index.ts must be a barrel export file (re-exports from subdirectories).
+- Include: index.ts, tsconfig.json, package.json, .gitignore
+- Do NOT generate Dockerfile, .env.example, or Damba.start() bootstrap.
+- package.json should have "main": "src/index.ts" and no start script.
 
 Rules:
 - Return valid JSON only. Do not include markdown or code fences.
 - content must be the full file content as a single escaped string.
 - package.json dependencies must reflect the frameworks and libraries inferred from the project context.
-- index.ts must bootstrap a Damba v2 app using Damba.start() and reference the service index.
 - tsconfig.json must use "strict": true, "esModuleInterop": true, and path aliases for @App, @Damba, @Database.
 - fileType must be one of: source | config | manifest | env | docker | doc | other.
 

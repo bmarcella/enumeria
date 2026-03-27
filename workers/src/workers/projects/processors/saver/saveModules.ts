@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { callLLMForModules } from '@App/workers/LmmUtils';
-import { DambaRepository } from '@Damba/v2/dao';
+import { DambaRepository } from '@Damba/v2/dao';import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { DStereotype } from '@Damba/v2/model/DStereotype';
 import { AppServices } from '@Database/entities/AppServices';
 import { Application } from '@Database/entities/Application';
@@ -16,6 +16,8 @@ export const saveModulesForApp = async (
   project: Project,
   dao: DambaRepository<DataSource>,
 ): Promise<Modules[]> => {
+  const environments: DambaEnvironmentType[] = (project as any).environments ?? [DambaEnvironmentType.DEV];
+
   const { modules } = await callLLMForModules(
     llm,
     app.name!,
@@ -26,18 +28,20 @@ export const saveModulesForApp = async (
   );
 
   return Promise.all(
-    modules.map(
-      (mod) =>
-        dao.DSave(Modules, {
-          name: mod.name,
-          description: mod.description,
-          codeFileContent: mod.codeFileContent,
-          application: app,
-          projId: project.id,
-          OrgId: (project as any).organization?.id,
-          environment: app.environment,
-          created_by: project.created_by,
-        } as Partial<Modules>) as Promise<Modules>,
+    environments.flatMap((env) =>
+      modules.map(
+        (mod) =>
+          dao.DSave(Modules, {
+            name: mod.name,
+            description: mod.description,
+            codeFileContent: mod.codeFileContent,
+            application: app,
+            projId: project.id,
+            orgId: (project as any).organization?.id,
+            environment: env,
+            created_by: project.created_by,
+          } as Partial<Modules>) as Promise<Modules>,
+      ),
     ),
   );
 };
@@ -82,7 +86,7 @@ export const saveModuleIndexFile = async (
     moduleId: mod.id,
     orgId: (project as any).organization?.id,
     projId: project.id,
-    environment: app.environment,
+    environment: mod.environment,
     created_by: project.created_by,
   });
 };

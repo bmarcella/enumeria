@@ -12,4 +12,5 @@ export enum DStereotype {
   CONFIG = "config",
   EXTRA = "extra",
   EXTRA_HOOK = "extra_hook",
+  VALIDATOR = "validator",
 }

@@ -9,8 +9,6 @@ import { ModuleAccessOverride } from '@Database/entities/ModuleAccessOverride';
 
 const auth = AppConfig?.authorization;
 const api = createService('/project-access', ProjectAccess, undefined, [auth?.check(['user'])]);
-
-// POST / - grant access
 api.DPost(
   '/',
   async (e: DEvent) => {

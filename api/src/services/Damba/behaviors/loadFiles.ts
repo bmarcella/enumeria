@@ -2,10 +2,11 @@
 
 import { DEvent } from '@App/damba.import';
 import DambaCoreCode from '@Database/entities/DambaCoreCode';
-import { IDambaFile, LoadFiles } from '@Damba/v2/helper/readFile';
+
 import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
 import { resolve } from 'path';
 
+import { IDambaFile, LoadFiles } from '@Damba/v2/helper/readFile';
 export const loadFilesBehavior: Behavior = () => {
   return async (e: DEvent) => {
     const files = await LoadFiles(resolve(process.cwd(), '../common/Damba/v2'));

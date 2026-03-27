@@ -2,6 +2,7 @@
 import { callLLMForBehaviors } from '@App/workers/LmmUtils';
 import { MiddlewareItem, PolicyItem, BehaviorItem } from '@App/workers/LmmUtils/HierarchySchemas';
 import { DambaRepository } from '@Damba/v2/dao';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { DStereotype } from '@Damba/v2/model/DStereotype';
 import { Http } from '@Damba/v2/service/IServiceDamba';
 import { AppServices } from '@Database/entities/AppServices';
@@ -12,9 +13,9 @@ import { CodeFile } from '@Database/entities/Behaviors/CodeFile';
 import { Middleware } from '@Database/entities/Middleware';
 import { Modules } from '@Database/entities/Modules';
 import { Project } from '@Database/entities/Project';
-import { Validators } from '@Database/entities/Validator';
 import { DataSource } from 'typeorm';
 import { saveCodeFile, baseMeta, saveMiddleware, savePolicy } from './helpers';
+import { Validators } from '@Database/entities/Validators';
 
 export const generateBehaviorFileContent = (beh: {
   name: string;
@@ -55,7 +56,7 @@ export const saveBehaviorCodeFile = async (
     moduleId: mod.id,
     serviceId: svc.id,
     behaviorId: beh.id,
-    ...baseMeta(app, project),
+    ...baseMeta(app, project, mod.environment),
   });
 };
 
@@ -69,7 +70,7 @@ export const saveBehaviorsForService = async (
   globalMiddlewares: Middleware[] = [],
   globalValidators: Validators[] = [],
 ): Promise<Behavior[]> => {
-  const env = app.environment;
+  const env = mod.environment;
   const { behaviors } = await callLLMForBehaviors(
     llm,
     app.name!,
@@ -81,7 +82,7 @@ export const saveBehaviorsForService = async (
     svc.name!,
     svc.description ?? '',
     (svc.crudConfig as Record<string, boolean>) ?? {},
-    env ?? 'PROD',
+    env ?? DambaEnvironmentType.PROD,
   );
 
   const meta = {
@@ -122,10 +123,22 @@ export const saveBehaviorsForService = async (
       );
 
       // 2. Config validators (reuse global where possible)
-      const body = await resolveValidator((beh.config?.body?.name as string) ?? 'body', beh.config?.body);
-      const query = await resolveValidator((beh.config?.query?.name as string) ?? 'query', beh.config?.query);
-      const params = await resolveValidator((beh.config?.params?.name as string) ?? 'params', beh.config?.params);
-      const response = await resolveValidator((beh.config?.response?.name as string) ?? 'response', beh.config?.response);
+      const body = await resolveValidator(
+        (beh.config?.body?.name as string) ?? 'body',
+        beh.config?.body,
+      );
+      const query = await resolveValidator(
+        (beh.config?.query?.name as string) ?? 'query',
+        beh.config?.query,
+      );
+      const params = await resolveValidator(
+        (beh.config?.params?.name as string) ?? 'params',
+        beh.config?.params,
+      );
+      const response = await resolveValidator(
+        (beh.config?.response?.name as string) ?? 'response',
+        beh.config?.response,
+      );
 
       const savedConfig = (await dao.DSave(BehaviorConfigValidator, {
         body,

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { callLLMForAppFiles } from '@App/workers/LmmUtils';
 import { DambaRepository } from '@Damba/v2/dao';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { DStereotype } from '@Damba/v2/model/DStereotype';
 import { Application } from '@Database/entities/Application';
 import { CodeFile } from '@Database/entities/Behaviors/CodeFile';
@@ -22,7 +23,7 @@ export const saveFilesForApp = async (
     app.description ?? '',
     project.description ?? '',
     project.initialPrompt ?? '',
-    app.environment ?? 'DEV',
+    DambaEnvironmentType.DEV,
     modules.map((m) => m.name ?? '').filter(Boolean),
   );
 
@@ -39,7 +40,7 @@ export const saveFilesForApp = async (
         projectId: project.id,
         orgId: (project as any).organization?.id,
         projId: project.id,
-        environment: app.environment,
+        environment: undefined,
         created_by: project.created_by,
       });
     }),

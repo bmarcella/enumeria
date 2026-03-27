@@ -7,7 +7,7 @@ import {
 } from "typeorm";
 import { Behavior } from ".";
 import { DambaFullMeta } from "../BaseEntity";
-import { Validators } from "../Validator";
+import { Validators } from "../Validators";
 
 @Entity("behavior_config_validator")
 export class BehaviorConfigValidator extends DambaFullMeta {

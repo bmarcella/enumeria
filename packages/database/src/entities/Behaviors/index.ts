@@ -11,7 +11,6 @@ import {
 } from "typeorm";
 import { DambaFullMeta } from "../BaseEntity";
 import { Http } from "@Damba/v2/service/IServiceDamba";
-import { DambaEnvironmentType } from "@Damba/v2/Entity/env";
 import { Policy } from "../Policy";
 import { DStereotype } from "@Damba/v2/model/DStereotype";
 import { BehaviorConfigValidator } from "./BehaviorValidatorConfig";
@@ -34,9 +33,6 @@ export class Behavior extends DambaFullMeta {
 
   @Column({ type: "varchar", nullable: false })
   path!: string;
-
-  @Column({ type: "enum", enum: DambaEnvironmentType, nullable: true })
-  environment?: DambaEnvironmentType;
 
   @ManyToMany(() => Policy, (o) => o.behaviors)
   @JoinTable({

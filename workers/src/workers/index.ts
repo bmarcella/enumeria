@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import "reflect-metadata";
-import { Worker, type Processor, type ConnectionOptions } from "bullmq";
-import { ChatOpenAI } from "@langchain/openai";
-import { ChatAnthropic } from "@langchain/anthropic";
-import { DataSource } from "typeorm";
+import 'reflect-metadata';
+import { Worker, type Processor, type ConnectionOptions } from 'bullmq';
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { DataSource } from 'typeorm';
 
-import { AppConfig } from "../config/app.config";
-import connection from "../config/redis";
-import { initOrm } from "@Database/DataSource";
-import { DambaRepository } from "@Damba/v2/dao";
-import { mustEnv } from "@Damba/v2/config/ConfigHelper";
+import { AppConfig } from '../config/app.config';
+import connection from '../config/redis';
+import { initOrm } from '@Database/DataSource';
+import { DambaRepository } from '@Damba/v2/dao';
+import { mustEnv } from '@Damba/v2/config/ConfigHelper';
 
 export enum DLLM {
-  OPENAI = "OPENAI",
-  OLLAMA = "OLLAMA",
-  ANTHROPIC = "ANTHROPIC",
+  OPENAI = 'OPENAI',
+  OLLAMA = 'OLLAMA',
+  ANTHROPIC = 'ANTHROPIC',
 }
 
 export const DefaultLLM = DLLM.ANTHROPIC;
@@ -29,27 +29,18 @@ export type LlmProviderMap = {
   [DLLM.ANTHROPIC]: AnthropicLlm;
 };
 
-export type MakeAiAgentProcessor<
-  D,
-  R,
-  X extends string = string,
-  L = unknown,
-  DAO = unknown
-> = (
+export type MakeAiAgentProcessor<D, R, X extends string = string, L = unknown, DAO = unknown> = (
   app: typeof AppConfig,
   llm: L,
-  dao?: DambaRepository<DAO>
+  dao?: DambaRepository<DAO>,
 ) => Processor<D, R, X>;
 
-export const getLLM = <P extends DLLM>(
-  provider: P,
-  apiKey: string
-): LlmProviderMap[P] => {
+export const getLLM = <P extends DLLM>(provider: P, apiKey: string): LlmProviderMap[P] => {
   switch (provider) {
     case DLLM.OPENAI:
       return new ChatOpenAI({
         apiKey,
-        model: "gpt-4o-mini",
+        model: 'gpt-4o-mini',
         temperature: 1,
       }) as LlmProviderMap[P];
 
@@ -58,9 +49,11 @@ export const getLLM = <P extends DLLM>(
 
     case DLLM.ANTHROPIC:
       return new ChatAnthropic({
-        model: "claude-sonnet-4-5",
+        model: 'claude-sonnet-4-5',
         anthropicApiKey: apiKey,
         temperature: 0,
+        // Retry up to 6 times with exponential backoff on 429 / 529
+        maxRetries: 6,
       }) as LlmProviderMap[P];
 
     default: {
@@ -93,12 +86,12 @@ export const startWorkers = async <
   R,
   X extends string = string,
   P extends DLLM = DLLM,
-  DAO = unknown
+  DAO = unknown,
 >(
   baseQueueName: string,
   provider: P,
   makeProcessor: MakeAiAgentProcessor<D, R, X, LlmProviderMap[P], DAO>,
-  opts: WorkerPoolOptions = {}
+  opts: WorkerPoolOptions = {},
 ): Promise<Array<Worker<D, R, X>>> => {
   const aiApiKey = mustEnv(`${provider}_API_KEY`);
   const llm = getLLM(provider, aiApiKey);
@@ -106,8 +99,7 @@ export const startWorkers = async <
   const shards = opts.shards ?? Number(process.env.QUEUE_SHARDS ?? 3);
   const shardStart = opts.shardStart ?? Number(process.env.SHARD_START ?? 0);
   const shardEnd = opts.shardEnd ?? Number(process.env.SHARD_END ?? shards - 1);
-  const concurrency =
-    opts.concurrency ?? Number(process.env.WORKER_CONCURRENCY ?? 5);
+  const concurrency = opts.concurrency ?? Number(process.env.WORKER_CONCURRENCY ?? 5);
 
   if (
     !Number.isInteger(shards) ||
@@ -118,9 +110,7 @@ export const startWorkers = async <
     shardEnd >= shards ||
     shardStart > shardEnd
   ) {
-    throw new Error(
-      `Invalid shard range: ${shardStart}..${shardEnd} (shards=${shards})`
-    );
+    throw new Error(`Invalid shard range: ${shardStart}..${shardEnd} (shards=${shards})`);
   }
 
   // Initialize DB once for the whole pool, not once per worker
@@ -137,38 +127,37 @@ export const startWorkers = async <
       connection: redisConnection,
       concurrency,
       autorun: true,
+      // Allow jobs to run for up to 30 minutes before being considered stalled.
+      // LLM pipelines with retries on rate-limit can legitimately take a long time.
+      stalledInterval: 60_000,   // check for stalled jobs every 60 s (default: 30 s)
+      maxStalledCount: 30,       // allow 30 missed heartbeats (~30 min) before marking stalled
     });
 
-    worker.on("ready", () => {
-      console.log(
-        `[worker] ready queue=${queueName} concurrency=${concurrency}`
-      );
+    worker.on('ready', () => {
+      console.log(`[worker] ready queue=${queueName} concurrency=${concurrency}`);
     });
 
-    worker.on("active", (job) => {
+    worker.on('active', (job) => {
       console.log(`[worker] active queue=${queueName} jobId=${job.id}`);
     });
 
-    worker.on("completed", (job) => {
+    worker.on('completed', (job) => {
       console.log(`[worker] completed queue=${queueName} jobId=${job.id}`);
     });
 
-    worker.on("failed", (job, err) => {
-      console.error(
-        `[worker] failed queue=${queueName} jobId=${job?.id ?? "unknown"}`,
-        err
-      );
+    worker.on('failed', (job, err) => {
+      console.error(`[worker] failed queue=${queueName} jobId=${job?.id ?? 'unknown'}`, err);
     });
 
-    worker.on("error", (err) => {
+    worker.on('error', (err) => {
       console.error(`[worker] error queue=${queueName}`, err);
     });
 
-    worker.on("closing", () => {
+    worker.on('closing', () => {
       console.log(`[worker] closing queue=${queueName}`);
     });
 
-    worker.on("closed", () => {
+    worker.on('closed', () => {
       console.log(`[worker] closed queue=${queueName}`);
     });
 
@@ -189,19 +178,19 @@ export const startWorkers = async <
       await database.dataSource.destroy();
     }
 
-    console.log("[worker] shutdown complete");
+    console.log('[worker] shutdown complete');
   };
 
-  process.once("SIGINT", () => {
-    void shutdown("SIGINT").finally(() => process.exit(0));
+  process.once('SIGINT', () => {
+    void shutdown('SIGINT').finally(() => process.exit(0));
   });
 
-  process.once("SIGTERM", () => {
-    void shutdown("SIGTERM").finally(() => process.exit(0));
+  process.once('SIGTERM', () => {
+    void shutdown('SIGTERM').finally(() => process.exit(0));
   });
 
   console.log(
-    `[worker] started pool base=${baseQueueName} shards=${shards} range=${shardStart}..${shardEnd}`
+    `[worker] started pool base=${baseQueueName} shards=${shards} range=${shardStart}..${shardEnd}`,
   );
 
   return workers;

@@ -24,15 +24,35 @@ export const ModulesResponseSchema = z.object({
 export type ModulesResponse = z.infer<typeof ModulesResponseSchema>;
 
 // ── Entities (Domain Models) ──────────────────────────────────────────────────
-export const EntityFieldSchema = z.object({
+export const EntityAttributeSchema = z.object({
   name: z.string().min(1),
-  type: z.string().min(1), // e.g., string, number, boolean, Date
+  type: z.string().min(1), // TypeORM PostgreSQL type: varchar, text, int, bigint, float, boolean, timestamp, date, uuid, jsonb, enum
   required: z.boolean().default(true),
+  nullable: z.boolean().default(false),
+  visibility: z.enum(['public', 'private', 'protected']).default('public'),
+  isId: z.boolean().default(false),
+  isGenerateAuto: z.boolean().default(false),
+  unique: z.boolean().optional(),
+  default: z.union([z.string(), z.number(), z.boolean()]).optional().nullable(),
+  enumValues: z.array(z.string()).optional(),
+  isArray: z.boolean().optional(),
+  relation: z
+    .object({
+      type: z.enum(['@OneToOne', '@ManyToOne', '@OneToMany', '@ManyToMany']),
+      targetEntity: z.string().min(1),
+      targetEntityAttribute: z.string().optional(),
+      eager: z.boolean().optional(),
+      cascade: z.boolean().optional(),
+      onDelete: z.enum(['RESTRICT', 'CASCADE', 'SET NULL']).optional(),
+    })
+    .optional()
+    .nullable(),
 });
 export const EntityItemSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
-  fields: z.array(EntityFieldSchema).min(1),
+  stereotype: z.enum(['<<entity>>', '<<model>>', '<<dto>>', '<<schema>>']).default('<<entity>>'),
+  attributes: z.array(EntityAttributeSchema).min(1),
 });
 export const EntitiesResponseSchema = z.object({
   entities: z.array(EntityItemSchema).min(1),
@@ -133,6 +153,7 @@ export type BehaviorItem = z.infer<typeof BehaviorItemSchema>;
 export type PolicyItem = z.infer<typeof PolicyItemSchema>;
 export type MiddlewareItem = z.infer<typeof MiddlewareItemSchema>;
 export type EntityItem = z.infer<typeof EntityItemSchema>;
+export type EntityAttributeItem = z.infer<typeof EntityAttributeSchema>;
 export type ExtraItem = z.infer<typeof ExtraItemSchema>;
 export type ExtraHook = z.infer<typeof ExtraHookSchema>;
 

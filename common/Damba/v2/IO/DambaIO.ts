@@ -7,22 +7,16 @@ import { RegistryContext } from "../Registry/RegistryContext";
 import { runWithQueueContext } from "../service/QueuesBull";
 import { SocketRegistry } from "./RegistrySocket";
 import { SocketEventHandlerChain } from "../service/IServiceDamba";
-
-const GREEN  = "\x1b[32m";
-const YELLOW = "\x1b[33m";
-const RED    = "\x1b[31m";
-const RESET  = "\x1b[0m";
-const logOk  = (msg: string) => console.info(`${GREEN}${msg}${RESET}`);
-const logWarn = (msg: string) => console.warn(`${YELLOW}${msg}${RESET}`);
-const logErr  = (msg: string, err?: unknown) => console.error(`${RED}${msg}${RESET}`, err ?? "");
+import { logOk, logErr, logWarn } from "@Damba/core/Logutils";
 
 export class DambaIOApp<IO = any> {
   sockets: any[] = [];
 
-  constructor(private io: IO | any, private socketConfig: SocketConfig, private oauth2Google: any) {
-
-  }
-
+  constructor(
+    private io: IO | any,
+    private socketConfig: SocketConfig,
+    private oauth2Google: any
+  ) {}
 
   private createRequestId(correlationId?: string) {
     const c = encodeURIComponent(correlationId ?? "no-correlation");
@@ -43,7 +37,8 @@ export class DambaIOApp<IO = any> {
           disconnect: () => void;
         }
       ) => {
-        const { tenantId, correlationId, userId , token} = socket.handshake.auth || {};
+        const { tenantId, correlationId, userId, token } =
+          socket.handshake.auth || {};
 
         // Store base identity on socket (userId is kept separately)
         socket.data.tenantId = tenantId ?? "default";
@@ -54,7 +49,7 @@ export class DambaIOApp<IO = any> {
         SocketRegistry.addSocket(socket);
         // Bind user if provided (optional but useful for emitToUser)
         if (socket.data.userId) {
-            SocketRegistry.bindUser(socket, socket.data.userId);
+          SocketRegistry.bindUser(socket, socket.data.userId);
         }
         // Create initial requestId (correlation-based, unique)
         const initialRequestId = this.createRequestId(
@@ -80,8 +75,8 @@ export class DambaIOApp<IO = any> {
           this.socketConfig.onError?.(socket, err);
         });
         if (events) {
-          for (const [event, sehc ] of Object.entries(events)) {
-            // TODO: add  color to log message 
+          for (const [event, sehc] of Object.entries(events)) {
+            // TODO: add  color to log message
             logOk(`Socket -> ${socket.id} : Listening for -> ${event} ✓`);
             socket.on(event, async (payload: any, _callback: any) => {
               const handler = sehc.handler;
@@ -91,28 +86,34 @@ export class DambaIOApp<IO = any> {
                 let payload_data = payload;
                 let callback_data = _callback;
                 if (!payload_data) {
-                    payload_data = {};
+                  payload_data = {};
                 }
                 if (!_callback) {
-                    callback_data = () => {};
+                  callback_data = () => {};
                 }
                 if (!payload_data.token && !socket_data.data.token) {
-                     throw new Error("No token provided");
-                } else { 
+                  throw new Error("No token provided");
+                } else {
                   logOk(`Socket -> ${socket.id} : Token provided ✓`);
                 }
                 if (payload_data.token && !socket_data.data.token) {
-                   socket_data.data.token = payload_data.token;
-                } 
-                else if (!payload_data.token && socket_data.data.token) {
+                  socket_data.data.token = payload_data.token;
+                } else if (!payload_data.token && socket_data.data.token) {
                   payload_data.token = socket_data.data.token;
                 }
 
                 for (const mw of middleware) {
                   logWarn(`Socket -> ${socket.id} : Applying middleware...`);
-                  const new_socket = await mw(socket_data, payload_data, callback_data, this.io);
+                  const new_socket = await mw(
+                    socket_data,
+                    payload_data,
+                    callback_data,
+                    this.io
+                  );
                   if (new_socket === undefined) {
-                    logErr(`Socket -> ${socket.id} : Middleware rejected — disconnecting`);
+                    logErr(
+                      `Socket -> ${socket.id} : Middleware rejected — disconnecting`
+                    );
                     socket.disconnect();
                     return;
                   }
@@ -133,10 +134,10 @@ export class DambaIOApp<IO = any> {
               const prevRequestId = socket.data.requestId;
               const newRequestId = this.createRequestId(correlationIdResolved);
               socket.data.requestId = newRequestId;
-              payload = { payload , newRequestId, prevRequestId };
+              payload = { payload, newRequestId, prevRequestId };
               // Update request bindings
               if (prevRequestId && prevRequestId !== newRequestId) {
-                  SocketRegistry.unbindRequest(socket, prevRequestId);
+                SocketRegistry.unbindRequest(socket, prevRequestId);
               }
               SocketRegistry.bindRequest(socket, newRequestId);
               try {
@@ -145,24 +146,24 @@ export class DambaIOApp<IO = any> {
                   async () => {
                     // Keep RegistryContext only if you store per-event scoped registries
                     return await RegistryContext.run({}, async () => {
-                      let data : any[] | any ;
-                      if ( !Array.isArray(handler)) {
-                         data = await handler(
-                            socket,
-                            payload,
-                            _callback,
-                            this.io
-                          );
-                       } else {
+                      let data: any[] | any;
+                      if (!Array.isArray(handler)) {
+                        data = await handler(
+                          socket,
+                          payload,
+                          _callback,
+                          this.io
+                        );
+                      } else {
                         for (const h of handler) {
-                         const  inline_data = await h(
+                          const inline_data = await h(
                             socket,
                             payload,
                             _callback,
                             this.io
                           );
-                          if(!data) data = [];
-                          data.push(inline_data); 
+                          if (!data) data = [];
+                          data.push(inline_data);
                         }
                       }
                       if (_callback && data !== undefined) {
@@ -181,8 +182,11 @@ export class DambaIOApp<IO = any> {
                     });
                   }
                 );
-               } catch (e: any) {
-                logErr(`Socket -> ${socket.id} : Handler error on [${event}]`, e);
+              } catch (e: any) {
+                logErr(
+                  `Socket -> ${socket.id} : Handler error on [${event}]`,
+                  e
+                );
                 _callback?.({
                   ok: false,
                   tenant_id: tenant,

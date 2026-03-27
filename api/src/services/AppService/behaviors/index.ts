@@ -34,8 +34,8 @@ api.DPost(
         name: form.name,
         description: form.description,
         module: m,
-        applicationId: app.id,
-        projectId: s.projId,
+        appId: app.id,
+        projId: s.projId,
         orgId: s.orgId,
         created_by: id,
       };
@@ -55,9 +55,9 @@ api.DPost(
       try {
         const serv: AppServices = {
           name: name ? name : 'Services_' + mod?.id?.substring(0, 4),
-          orgId: mod.OrgId,
-          projectId: mod.projectId,
-          applicationId: mod.application?.id,
+          orgId: mod.orgId,
+          projId: mod.projId,
+          appId: mod.application?.id,
           module: mod,
           created_by: mod.created_by,
         };

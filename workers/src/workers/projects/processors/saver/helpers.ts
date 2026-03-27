@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
+
 import { DambaRepository } from '@Damba/v2/dao';
 import { DStereotype } from '@Damba/v2/model/DStereotype';
 import { Application } from '@Database/entities/Application';
@@ -40,12 +41,12 @@ export const saveCodeFile = async (
   return dao.DSave(CodeFile, data as Partial<CodeFile>) as Promise<CodeFile>;
 };
 
-export const baseMeta = (app: Application, project: Project) => ({
+export const baseMeta = (app: Application, project: Project, environment?: DambaEnvironmentType) => ({
   applicationId: app.id,
   projectId: project.id,
   orgId: (project as any).organization?.id,
   projId: project.id,
-  environment: app.environment,
+  environment,
   created_by: project.created_by,
 });
 

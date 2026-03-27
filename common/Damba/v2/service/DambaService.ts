@@ -104,15 +104,15 @@ type EventBehaviorChainLooperContent<API = DambaApi, SK = any> = (
 
 export type EventBehavior = EventBehaviorChainLooperContent;
 
-export type EventBehaviorContent< SK = any, IO = any> = {
+export type EventBehaviorContent<SK = any, IO = any> = {
   message: EventBehavior;
   middleware?: SocketMiddleware<SK, IO>[];
 };
 
-export type EventBehaviorChainLooper<
-  SK = any,
-  IO = any
-> = Record<string, EventBehaviorContent< SK, IO>>;
+export type EventBehaviorChainLooper<SK = any, IO = any> = Record<
+  string,
+  EventBehaviorContent<SK, IO>
+>;
 
 export type EBChain = EventBehaviorChainLooper;
 
@@ -131,17 +131,16 @@ export const createDambaService = <
 >(
   params: ServiceBuilderParams
 ): IServiceProvider<REQ, RES, NEXT> => {
-  
   const api = createBehaviors<T, REQ, RES, NEXT>(
     params.service.name,
     params.service.entity as any,
     params.service.config,
     params.service.middlewares,
-    params.service.redis,
+    params.service.redis
   );
 
   if (params.service.Queue) api.setQueue(params.service.Queue);
-  
+
   return DambaMakeApi<
     REQ,
     RES,
@@ -219,8 +218,10 @@ export const DambaMakeApi = <
   if (events) {
     for (const [name, on] of Object.entries(events)) {
       const messageName = `${api.simple_service_name}:${name}`;
-       const handler = Array.isArray(on.message) ? on.message.map((m) => m(api)) : on.message(api);
-       api.on<SK, any>(messageName, handler, on.middleware ?? []);
+      const handler = Array.isArray(on.message)
+        ? on.message.map((m) => m(api))
+        : on.message(api);
+      api.on<SK, any>(messageName, handler, on.middleware ?? []);
     }
   }
 
@@ -236,8 +237,8 @@ export const DambaMakeApi = <
     if (!redisConnectionFactory) {
       console.warn(
         "[DambaService] No redisConnectionFactory provided. " +
-        "QueueEvents will attempt to duplicate the shared connection. " +
-        "Provide service.redisConnectionFactory to avoid ECONNABORTED errors."
+          "QueueEvents will attempt to duplicate the shared connection. " +
+          "Provide service.redisConnectionFactory to avoid ECONNABORTED errors."
       );
     }
 
@@ -248,7 +249,6 @@ export const DambaMakeApi = <
 
       for (let i = 0; i < SHARDS; i++) {
         const shardName = `${baseName}_${i}`;
-
         // Pre-warm the Queue (non-blocking, safe to share a connection)
         getQueue(QueueCtor, shardName, redisConnection, {
           prefixEnabled: false,
@@ -272,7 +272,6 @@ export const DambaMakeApi = <
       }
     }
   }
-  
   return api.done(rootExtras);
 };
 
@@ -331,14 +330,13 @@ export const createBehaviors = <
   Entity: ENTITY | undefined;
 } => {
   const routes: Record<string, any> = {};
-  
+
   const events: SocketEventHandlerChain = {};
 
   let rootExtras: DExtrasHandler;
 
-
   const setRootExtras = (extras: DExtrasHandler) => {
-       rootExtras = extras;
+    rootExtras = extras;
   };
 
   let Queue: QCtor<any>;
@@ -481,8 +479,12 @@ export const createBehaviors = <
   const DPatch = makeRoute("PATCH");
   const DPut = makeRoute("PUT");
 
-  const on = (name: string, handler: EventHandler<any, any> | EventHandler<any, any> [], middleware?: any[]) => {
-       events[name] = { handler, middleware };
+  const on = (
+    name: string,
+    handler: EventHandler<any, any> | EventHandler<any, any>[],
+    middleware?: any[]
+  ) => {
+    events[name] = { handler, middleware };
   };
 
   const getContextOrThrow = () => {
@@ -953,7 +955,7 @@ export const createBehaviors = <
           return res.send(after);
         },
         {},
-        config?.crud?.put?.middlewares 
+        config?.crud?.put?.middlewares
       );
 
     // ---------------------------
@@ -1033,9 +1035,9 @@ export const createBehaviors = <
     query,
     extras: DExtras,
     on,
-    done: (extras?: Extras<DambaApi<T, REQ, RES, NEXT>>): IServiceProvider<REQ, RES, NEXT> => {
-    
-
+    done: (
+      extras?: Extras<DambaApi<T, REQ, RES, NEXT>>
+    ): IServiceProvider<REQ, RES, NEXT> => {
       if (entity) {
         runCrud();
       }
@@ -1043,11 +1045,11 @@ export const createBehaviors = <
       const isMiddlewaye = middleware && middleware.length > 0;
       ServiceRegistry._init().populate(service_name);
 
-       if (extras) {
-          const rootExtras = extras(this);
-          setRootExtras(rootExtras);
-       }
-      
+      if (extras) {
+        const rootExtras = extras(this);
+        setRootExtras(rootExtras);
+      }
+
       const IProvider = isMiddlewaye
         ? {
             [service_name]: {
@@ -1055,7 +1057,7 @@ export const createBehaviors = <
               middleware,
               dbEntity: entity,
               events,
-              rootExtras
+              rootExtras,
             },
           }
         : {
@@ -1063,7 +1065,7 @@ export const createBehaviors = <
               service: routes,
               dbEntity: entity,
               events,
-              rootExtras
+              rootExtras,
             },
           };
       return IProvider as IServiceProvider<REQ, RES, NEXT>;

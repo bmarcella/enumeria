@@ -27,6 +27,7 @@ export const saveProject = async (
     version: 1,
     isForSale: false,
     price: 0,
+    dambaVersion: 'v2',
     environments: [
       DambaEnvironmentType.DEV,
       DambaEnvironmentType.QA,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { QdrantVectorStore } from '@langchain/qdrant';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { Document } from '@langchain/core/documents';
@@ -21,7 +22,6 @@ export async function buildQdrantRetriever() {
     url: process.env.QDRANT_URL || 'http://localhost:6333',
     collectionName: 'damba_codebase',
   });
-
   return vectorStore.asRetriever({ k: 5 });
 }
 
@@ -38,9 +38,9 @@ export const agentRagQdrantBehavior: Behavior = (api?: DambaApi) => {
 
     // Build retriever once (lazy init)
     if (!retrieverPromise) {
-        retrieverPromise = buildQdrantRetriever();
+      retrieverPromise = buildQdrantRetriever();
     }
-    
+
     const retriever = await retrieverPromise;
 
     // Wrap retriever as a tool
