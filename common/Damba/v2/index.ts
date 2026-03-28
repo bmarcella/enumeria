@@ -13,7 +13,7 @@ import {
   NotFoundError,
   DambaErrorHandlerOptions,
 } from "./errors";
-import createWelcomeHandler from "./Ui";
+import createWelcomeHandler, { createApiDocUi, createExtrasDocUi } from "./Ui";
 
 export interface IDambaParams<DS = any> {
   modules: IModule<any, any, any>[];
@@ -139,6 +139,24 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
       );
     }
 
+    if (
+      AppConfig.call?.extrasDocUi &&
+      AppConfig.call.extrasDocUi?.call &&
+      extras
+    ) {
+      this.app.use(
+        AppConfig.call?.extrasDocUi.path ?? "/extras/docs",
+        AppConfig.call.extrasDocUi?.call(AppConfig, extras),
+      );
+    }
+
+    if (AppConfig.call?.apiDocUi && AppConfig.call.apiDocUi?.call && doc) {
+      this.app.use(
+        AppConfig.call?.apiDocUi.path ?? "/api/docs",
+        AppConfig.call.apiDocUi?.call(AppConfig, doc),
+      );
+    }
+
     if (AppConfig.path?.docs?.api && AppConfig.call?.apiDoc && doc) {
       this.app.use(AppConfig.path.docs.api, AppConfig.call.apiDoc(doc));
     }
@@ -244,13 +262,32 @@ export default class Damba {
         params.AppConfig.call.welcome = createWelcomeHandler;
       }
 
-      // if (!params.AppConfig.call?.apiDocUi) {
-      //   params.AppConfig.call.apiDocUi = createApiDocUiHandler;
-      // }
-
-      // if (!params.AppConfig.call?.extrasDocUi) {
-      //   params.AppConfig.call.extrasDocUi = createExtrasDocUiHandler;
-      // }
+      if (!params.AppConfig.call?.apiDocUi) {
+        params.AppConfig.call.apiDocUi = {
+          isSecure: false,
+          call: createApiDocUi,
+          path: "/api/docs",
+        };
+      } else {
+        params.AppConfig.call.apiDocUi = {
+          isSecure: params.AppConfig.call.apiDocUi.isSecure,
+          call: params.AppConfig.call.apiDocUi?.call || createApiDocUi,
+          path: params.AppConfig.call.apiDocUi.path ?? "/api/docs",
+        };
+      }
+      if (!params.AppConfig.call?.extrasDocUi) {
+        params.AppConfig.call.extrasDocUi = {
+          isSecure: false,
+          call: createExtrasDocUi,
+          path: "/extras/docs",
+        };
+      } else {
+        params.AppConfig.call.extrasDocUi = {
+          isSecure: params.AppConfig.call.extrasDocUi.isSecure,
+          call: params.AppConfig.call.extrasDocUi?.call || createExtrasDocUi,
+          path: params.AppConfig.call.extrasDocUi.path ?? "/extras/docs",
+        };
+      }
 
       if (params.AppConfig.databaseConfig) {
         database = await params.AppConfig.databaseConfig.initOrm();
