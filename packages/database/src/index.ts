@@ -24,7 +24,15 @@ export * from "./entities/agents/contracts/Agents";
 export * from "./entities/agents/contracts/ToolArtifactAndRunnableLambda";
 export * from "./entities/agents/contracts/AuditEvent";
 
-// Export all enum 
+// Data Modeler
+export * from "./entities/datamodeler";
+// Use Cases
+export * from "./entities/usecase";
+// Project Access
+export * from "./entities/ProjectAccess";
+export * from "./entities/ModuleAccessOverride";
+
+// Export all enum
 export { RoleName } from "./entities/Role";
 export { OrgMemberRole } from "./entities/OrgMember";
 export { OrgVisibility, OrgStatus, OrgPlan, DataClassification, SsoProvider, ProjectNamingConvention } from "./entities/Organization";

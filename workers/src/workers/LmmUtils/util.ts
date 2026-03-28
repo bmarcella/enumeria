@@ -1,5 +1,7 @@
+import { LoadFiles } from "@Damba/v2/helper/readFile";
 import { AIMessage } from "@langchain/core/messages";
 import { RunnableLambda } from "@langchain/core/runnables";
+import { resolve } from "path";
 
 export function extractText(input: unknown): string {
   if (typeof input === 'string') return input;
@@ -43,11 +45,13 @@ export function safeJsonParse(text: string): unknown {
   }
 }
 
-const escapeBraces = (str: string) =>
-  str.replace(/{/g, "{{").replace(/}/g, "}}");
-
 export const callLLM =  async <T>  (llm : any, prompt: any, input: any, runnableLambda: RunnableLambda<unknown, T>) => {
     const chain = prompt.pipe(llm).pipe(runnableLambda);
     const response = await chain.invoke(input);
     return response;
+}
+
+export const getDambaCode = async (version: string = 'v2') => {
+    const files = await LoadFiles(resolve(process.cwd(), `../../common/Damba/${version}`));
+    return files;
 }

@@ -1,6 +1,7 @@
 
 import { BaseEntity } from "./project";
 import { TypeAttbutesTypeOrm } from './TypeAttributesTypeOrm';
+import { DambaEnvironmentType } from "./env";
 
 
 export interface ICanvasBoxStyle {
@@ -182,7 +183,7 @@ export interface CanvasBox extends Object {
   parentId?: string;
 
   // ignore these fields
-  env?: string;
+  environment?: DambaEnvironmentType;
   orgId?: string;
   projId?: string;
   appId?: string;

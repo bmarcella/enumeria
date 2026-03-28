@@ -8,15 +8,17 @@ type ProjCtx = { initProject: boolean }
 const ProjectContext = createContext<ProjCtx | undefined>(undefined)
 type Props = {
   children: React.ReactNode;
-  /** Must return ONLY the projects for this user in this org */
-  fetchProjectsByUserAndOrg: (idProj: string, idOrg: string) => Promise<Project[]>;
+
+   fetchMyProjects: (idProj: string) => Promise<Project[]>;
+   fetchMyOrgProjects: (idOrg: string) => Promise<Project[]>;
   /** Auto-select the single project (DX nice-to-have) */
   autoSelectSingle?: boolean;
 };
 
 export function ProjectProvider({
   children,
-  fetchProjectsByUserAndOrg,
+  fetchMyProjects,
+  fetchMyOrgProjects, 
   autoSelectSingle = true
 }: Props) {
   const user = useSessionUser((s) => s.user);
@@ -33,13 +35,15 @@ export function ProjectProvider({
     async function init() {
       const userId = user?.id || "";
       const orgId = org?.id || "";
-      setScope(userId, orgId);
-
+      setScope(userId, orgId)
       if ((!userId || !orgId)) {
-        setProjects([]); // no org or user -> empty list
-        return;
+           setProjects([]); // no org or user -> empty list
+           setInitialized(true);
+           console.log("no user or org");
+           return;
       }
-      const projects = await fetchProjectsByUserAndOrg(userId, orgId);
+     //  const org_projects = await fetchMyOrgProjects(orgId);
+      const projects = await fetchMyProjects(userId);
       if (cancelled) return;
 
       setProjects(projects);
@@ -55,7 +59,7 @@ export function ProjectProvider({
     return () => {
       cancelled = true;
     };
-  }, [user.id, org?.id, setScope, setProjects, fetchProjectsByUserAndOrg, autoSelectSingle]);
+  }, [user.id, org?.id, setScope, setProjects, fetchMyProjects, fetchMyOrgProjects, autoSelectSingle]);
 
   return (<ProjectContext.Provider value={{ initProject }}>
     { children }

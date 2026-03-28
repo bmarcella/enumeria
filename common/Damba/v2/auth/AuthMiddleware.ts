@@ -4,7 +4,7 @@ import { JwtPayload } from "./IAuth";
 
 export const secretKeyCommon = "08V5J1vven";
 
-const CheckTokenForDamba = (jwt: any, token: string, key: string): any => {
+export const CheckTokenForDamba = (jwt: any, token: string, key: string): any => {
   try {
     const payload = getPayload(jwt, token, key);
     return { payload, valid: true };
@@ -13,7 +13,7 @@ const CheckTokenForDamba = (jwt: any, token: string, key: string): any => {
   }
 };
 
-const CheckTokenForGoogle = async (req: any, token: string): Promise<any> => {
+export const CheckTokenForGoogle = async (req: any, token: string): Promise<any> => {
   try {
     const payload = await req.oauth2Google.getTokenInfo(token);
     return { payload, valid: true };
@@ -22,7 +22,7 @@ const CheckTokenForGoogle = async (req: any, token: string): Promise<any> => {
   }
 };
 
-const getTokenFromHeader = (req: any): string | null => {
+export const getTokenFromHeader = (req: any): string | null => {
   try {
     // NOTE: Node lowercases headers, so "authorization" is the main one
     const h = req?.headers?.authorization ?? req?.headers?.Authorization;
@@ -36,7 +36,7 @@ const getTokenFromHeader = (req: any): string | null => {
   }
 };
 
-const getTokenInfo = (token: string): string[] => {
+export const getTokenInfo = (token: string): string[] => {
   try {
     return token.split("|");
   } catch {

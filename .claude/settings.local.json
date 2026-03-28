@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head -10 grep -n \"@JoinTable\\\\|@ManyToMany\\\\|tableName\\\\|joinTable\" C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/packages/database/src/entities/Policy/index.ts)",
+      "Bash(/dev/null grep:*)"
+    ]
+  }
+}

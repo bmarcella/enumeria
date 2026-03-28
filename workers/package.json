@@ -15,7 +15,8 @@
     "worker:update-entity": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/entities/update.worker.ts",
     "worker:run-agent": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/agents/startAgentRunWorkers.ts",
     "worker:create-project": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/projects/create.worker.ts",
-    "workers": "concurrently -k \"npm run worker:create-entity\" \"npm run worker:update-entity\" \"npm run worker:create-project\" \"npm run worker:run-agent\" "
+    "worker:delete-project": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/projects/delete.worker.ts",
+    "workers": "concurrently -k \"npm run worker:create-entity\" \"npm run worker:update-entity\" \"npm run worker:create-project\" \"npm run worker:delete-project\" \"npm run worker:run-agent\" "
   },
   "lint-staged": {
     "**/*.{js,cjs,mjs,ts,tsx,json,md,yml,yaml,css,scss,html}": "prettier --write"

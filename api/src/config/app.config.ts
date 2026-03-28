@@ -20,7 +20,7 @@ import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
 import { DataSource } from 'typeorm';
 
 import { DEvent } from '@App/damba.import';
-import { authorize, authorizeSocket } from '@Damba/v1/auth/AuthMiddleware';
+import { authorize } from '@Damba/v1/auth/AuthMiddleware';
 import jwt from 'jsonwebtoken';
 import { ChatOllama } from '@langchain/ollama';
 import createWelcomeHandler from '@Damba/v2/welcome';
@@ -30,6 +30,7 @@ import { socketConfig } from './SocketConfig';
 import IORedis from "ioredis";
 import { QueueConfig } from './QueueConfig';
 import { oauth2Google } from './google.auth';
+import { authorizeSocket } from '@Damba/v2/auth/SocketAuthMiddleware';
 
 dotenv.config();
 
@@ -172,7 +173,7 @@ export const AppConfig: IAppConfig<DataSource> = {
         AppConfig?.authorization?.strategy,
       );
     },
-    socketCheck: (roles?: string[] ) => {
+    socketCheck: (roles?: string[]) => {
       return authorizeSocket(
         mustEnv('JWT_PUBLIC_KEY'),
         jwt,

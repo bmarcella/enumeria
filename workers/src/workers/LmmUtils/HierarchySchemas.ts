@@ -1,0 +1,171 @@
+// LmmUtils/HierarchySchemas.ts
+import { z } from 'zod';
+
+// ── Applications ──────────────────────────────────────────────────────────────
+export const ApplicationItemSchema = z.object({
+  name: z.string().min(1),
+  type_app: z.enum(['ui', 'web', 'mobile', 'api', 'cli', 'library', 'daemon', 'worker', 'microservice']),
+  description: z.string().min(1),
+});
+export const ApplicationsResponseSchema = z.object({
+  applications: z.array(ApplicationItemSchema).min(1),
+});
+export type ApplicationsResponse = z.infer<typeof ApplicationsResponseSchema>;
+
+// ── Modules ───────────────────────────────────────────────────────────────────
+export const ModuleItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  codeFileContent: z.string().optional(),
+});
+export const ModulesResponseSchema = z.object({
+  modules: z.array(ModuleItemSchema).min(1),
+});
+export type ModulesResponse = z.infer<typeof ModulesResponseSchema>;
+
+// ── Entities (Domain Models) ──────────────────────────────────────────────────
+export const EntityAttributeSchema = z.object({
+  name: z.string().min(1),
+  type: z.string().min(1), // TypeORM PostgreSQL type: varchar, text, int, bigint, float, boolean, timestamp, date, uuid, jsonb, enum
+  required: z.boolean().default(true),
+  nullable: z.boolean().default(false),
+  visibility: z.enum(['public', 'private', 'protected']).default('public'),
+  isId: z.boolean().default(false),
+  isGenerateAuto: z.boolean().default(false),
+  unique: z.boolean().optional(),
+  default: z.union([z.string(), z.number(), z.boolean()]).optional().nullable(),
+  enumValues: z.array(z.string()).optional(),
+  isArray: z.boolean().optional(),
+  relation: z
+    .object({
+      type: z.enum(['@OneToOne', '@ManyToOne', '@OneToMany', '@ManyToMany']),
+      targetEntity: z.string().min(1),
+      targetEntityAttribute: z.string().optional(),
+      eager: z.boolean().optional(),
+      cascade: z.boolean().optional(),
+      onDelete: z.enum(['RESTRICT', 'CASCADE', 'SET NULL']).optional(),
+    })
+    .optional()
+    .nullable(),
+});
+export const EntityItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  stereotype: z.enum(['<<entity>>', '<<model>>', '<<dto>>', '<<schema>>']).default('<<entity>>'),
+  attributes: z.array(EntityAttributeSchema).min(1),
+});
+export const EntitiesResponseSchema = z.object({
+  entities: z.array(EntityItemSchema).min(1),
+});
+export type EntitiesResponse = z.infer<typeof EntitiesResponseSchema>;
+
+// ── Services ──────────────────────────────────────────────────────────────────
+export const CrudConfigSchema = z.object({
+  create: z.boolean().default(true),
+  read: z.boolean().default(true),
+  update: z.boolean().default(true),
+  delete: z.boolean().default(true),
+});
+export const ServiceItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  defaultEntity: z.string().min(1),
+  crudConfig: CrudConfigSchema,
+});
+export const ServicesResponseSchema = z.object({
+  services: z.array(ServiceItemSchema).min(1),
+});
+export type ServicesResponse = z.infer<typeof ServicesResponseSchema>;
+
+// ── Extras & Hooks ────────────────────────────────────────────────────────────
+export const ExtraHookSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  inputs: z.record(z.unknown()).default({}),
+  outputs: z.record(z.unknown()).default({}),
+  type: z.string().min(1), // trigger, action, etc.
+});
+export const ExtraItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  isContextNeeded: z.boolean().default(true),
+  hooks: z.array(ExtraHookSchema).default([]),
+});
+export const ExtrasResponseSchema = z.object({
+  extras: z.array(ExtraItemSchema).min(1),
+});
+export type ExtrasResponse = z.infer<typeof ExtrasResponseSchema>;
+
+// ── Validators (per application) ─────────────────────────────────────────────
+export const JsonSchemaSchema = z.record(z.unknown()).default({});
+export const ValidatorItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  schema: JsonSchemaSchema,
+});
+export const ValidatorsResponseSchema = z.object({
+  validators: z.array(ValidatorItemSchema).min(1),
+});
+export type ValidatorsResponse = z.infer<typeof ValidatorsResponseSchema>;
+export type ValidatorItem = z.infer<typeof ValidatorItemSchema>;
+
+// ── Middlewares ───────────────────────────────────────────────────────────────
+export const MiddlewareItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+});
+export const MiddlewaresResponseSchema = z.object({
+  middlewares: z.array(MiddlewareItemSchema).min(1),
+});
+export type MiddlewaresResponse = z.infer<typeof MiddlewaresResponseSchema>;
+
+// ── Policies ──────────────────────────────────────────────────────────────────
+export const PolicyItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  middlewares: z.array(MiddlewareItemSchema).min(1),
+});
+export const PoliciesResponseSchema = z.object({
+  policies: z.array(PolicyItemSchema).min(1),
+});
+export type PoliciesResponse = z.infer<typeof PoliciesResponseSchema>;
+
+// ── Behaviors (includes policies & validators) ────────────────────────────────
+export const BehaviorItemSchema = z.object({
+  name: z.string().min(1),
+  path: z.string().startsWith('/'),
+  method: z.enum(['GET', 'POST', 'PUT', 'DELETE']),
+  description: z.string().min(1),
+  config: z.object({
+    body: JsonSchemaSchema.optional(),
+    query: JsonSchemaSchema.optional(),
+    params: JsonSchemaSchema.optional(),
+    response: JsonSchemaSchema.optional(),
+  }).default({}),
+  policies: z.array(PolicyItemSchema).default([]),
+});
+export const BehaviorsResponseSchema = z.object({
+  behaviors: z.array(BehaviorItemSchema).min(1),
+});
+export type BehaviorsResponse = z.infer<typeof BehaviorsResponseSchema>;
+
+export type BehaviorItem = z.infer<typeof BehaviorItemSchema>;
+export type PolicyItem = z.infer<typeof PolicyItemSchema>;
+export type MiddlewareItem = z.infer<typeof MiddlewareItemSchema>;
+export type EntityItem = z.infer<typeof EntityItemSchema>;
+export type EntityAttributeItem = z.infer<typeof EntityAttributeSchema>;
+export type ExtraItem = z.infer<typeof ExtraItemSchema>;
+export type ExtraHook = z.infer<typeof ExtraHookSchema>;
+
+// ── App Files ─────────────────────────────────────────────────────────────────
+export const AppFileItemSchema = z.object({
+  name: z.string().min(1),        // e.g. "index.ts", "tsconfig.json"
+  path: z.string().default('/'),  // directory inside project root
+  content: z.string().min(1),
+  fileType: z.enum(['source', 'config', 'manifest', 'env', 'docker', 'doc', 'other']),
+});
+export const AppFilesResponseSchema = z.object({
+  files: z.array(AppFileItemSchema).min(1),
+});
+export type AppFilesResponse = z.infer<typeof AppFilesResponseSchema>;
+export type AppFileItem = z.infer<typeof AppFileItemSchema>;

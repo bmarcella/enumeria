@@ -1,6 +1,7 @@
+import { Validators } from "../entities/Validators";
 import { AppServices } from "../entities/AppServices";
 import { Application } from "../entities/Application";
-import { Behavior, CodeFile } from "../entities/Behaviors";
+import { Behavior } from "../entities/Behaviors";
 import { Entities } from "../entities/CanvasBox";
 import { ChatAi } from "../entities/ChatAi";
 import { Contributor } from "../entities/Contributor";
@@ -18,8 +19,10 @@ import { Project } from "../entities/Project";
 import { Role } from "../entities/Role";
 import { User } from "../entities/User";
 import { AgentMarketplaceEntities } from "../entities/agents";
-
-
+import { BehaviorConfigValidator } from "../entities/Behaviors/BehaviorValidatorConfig";
+import { CodeFile } from "../entities/Behaviors/CodeFile";
+import { Extra_Hook } from "../entities/Extra/ExtraHook";
+import { AppFile } from "../entities/AppFile";
 
 export const DBEntities = [
   User,
@@ -34,13 +37,17 @@ export const DBEntities = [
   Application,
   Modules,
   AppServices,
+  BehaviorConfigValidator,
   Behavior,
   Middleware,
   Policy,
+  Extra_Hook,
   Extra,
   CodeFile,
   Entities,
   Invitation,
   DambaCoreCode,
-  ...AgentMarketplaceEntities
+  Validators,
+  AppFile,
+  ...AgentMarketplaceEntities,
 ];

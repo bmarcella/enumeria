@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DQueues } from '../../../../common/Damba/core/Queues';
-import { DefaultlLLM, LlmProviderMap, MakeAiAgentProcessor, startWorkers } from '..';
+import { DefaultLLM, LlmProviderMap, MakeAiAgentProcessor, startWorkers } from '..';
 
 /* ------------------------------ Example usage ----------------------------- */
 
@@ -11,7 +11,7 @@ const agent: MakeAiAgentProcessor<
   JobData,
   JobResult,
   string,
-  LlmProviderMap[typeof DefaultlLLM]
+  LlmProviderMap[typeof DefaultLLM]
 > = (config, llm) => {
   return async (job) => {
     const { conversationId, text } = job.data;
@@ -23,8 +23,8 @@ const agent: MakeAiAgentProcessor<
   };
 };
 
-startWorkers<JobData, JobResult, string, typeof DefaultlLLM>(
+startWorkers<JobData, JobResult, string, typeof DefaultLLM>(
   DQueues.UPDATE_ENTITIES,
-  DefaultlLLM,
+  DefaultLLM,
   agent,
 );

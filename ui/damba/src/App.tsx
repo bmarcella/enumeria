@@ -5,7 +5,7 @@ import { AuthProvider } from '@/auth'
 import Views from '@/views'
 import appConfig from './configs/app.config'
 import { OrganizationProvider } from './providers/OrganizationProvider'
-import { fetchApplicationsByProjectId, fetchOrganizations, fetchProject } from './services/Organization'
+import { fetchApplicationsByProjectId, fetchOrganizations, fetchMyProjects, fetchMyOrgProjects } from './services/Organization'
 import { ProjectProvider } from './providers/ProjectProvider'
 import { ApplicationProvider } from './providers/ApplicationProvider'
 import { ModuleProvider } from './providers/ModuleProvider'
@@ -24,7 +24,7 @@ function App() {
                 <AuthProvider>
                      <SocketProvider>
                         <OrganizationProvider fetchOrganizations={fetchOrganizations} autoSelectSingle={true}>
-                            <ProjectProvider fetchProjectsByUserAndOrg={fetchProject} autoSelectSingle={true} >
+                            <ProjectProvider fetchMyProjects={fetchMyProjects} fetchMyOrgProjects={fetchMyOrgProjects} autoSelectSingle={true} >
                                 <ApplicationProvider  fetchApplicationsByProjectId={fetchApplicationsByProjectId} autoSelectSingle={true} >
                                     <ModuleProvider fetchModulesByAppId={fetchModulesByAppId} autoSelectSingle={true} >
                                         <DialogProvider>

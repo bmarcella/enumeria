@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DQueues } from '../../../../common/Damba/core/Queues';
-import { DefaultlLLM, LlmProviderMap, MakeAiAgentProcessor, startWorkers } from '..';
+import { DefaultLLM, LlmProviderMap, MakeAiAgentProcessor, startWorkers } from '..';
 import { UnrecoverableError } from 'bullmq';
 import { JobData, JobResult } from './dtos';
 
@@ -31,7 +31,7 @@ const agent: MakeAiAgentProcessor<
   JobData,
   JobResult,
   string,
-  LlmProviderMap[typeof DefaultlLLM]
+  LlmProviderMap[typeof DefaultLLM]
 > = (config, llm) => {
   return async (job) => {
     try {
@@ -46,9 +46,9 @@ const agent: MakeAiAgentProcessor<
 };
 
 (async () => {
-  await startWorkers<JobData, JobResult, string, typeof DefaultlLLM>(
+  await startWorkers<JobData, JobResult, string, typeof DefaultLLM>(
     DQueues.CREATE_ENTITIES,
-    DefaultlLLM,
+    DefaultLLM,
     agent,
   );
 })();

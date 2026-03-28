@@ -22,14 +22,7 @@ const CheckTokenForGoogle = async (req: any, token: string): Promise<any> => {
   }
 };
 
-const CheckTokenForGoogleSocket = async (socket: any, token: string): Promise<any> => {
-  try {
-    const payload = await socket.data.oauth2Google.getTokenInfo(token);
-    return { payload, valid: true };
-  } catch {
-    return false;
-  }
-};
+
 
 const getTokenFromHeader = (req: any): string | null => {
   try {
@@ -145,69 +138,7 @@ const protect = <T extends DEvent>(
 };
 
 
-export const authorizeSocket = (
-  public_key: string,
-  jwt?: any,
-  roles?: string[],
-) => {
-  if (jwt) return protectSocket(public_key, jwt, roles );
-  throw new Error("Jwt is undefied");
-};
 
-const protectSocket = (
-  public_key: string,
-  jwt: any, 
-  roles?: string[],
-) => {
-
-  return async (socket?: any) => {
-    try {
-      const token = socket.data.token;
-      if (!token) {
-        return  undefined;
-      }
-
-      const info = getTokenInfo(token); 
-      if (info.length < 2) {
-         return undefined;
-      }
-
-      const strategie = info[0]
-
-      if (!strategie) {
-         return undefined;
-      }
-
-      // Local token check
-      const dambaCheck = CheckTokenForDamba(jwt, info[1], public_key);
-      const payload = dambaCheck?.payload;
-      if (!payload) {
-        return undefined;
-      }
-      
-      // Optional google token check
-      if (strategie === "google" && info[2]) {
-          const data = await CheckTokenForGoogleSocket(socket, info[2]);
-          const gpayload = data?.payload;
-        if (!gpayload) {
-          return undefined;
-        }
-      }
-      if (!roles || roles.length === 0) {
-          return true; 
-      }
-
-      const authority: string[] = Array.isArray(payload?.authority) ? payload.authority : [];
-      const allowed = roles.some((r) => authority.includes(r));
-      if (allowed) {
-          return true;
-      }
-      return false;
-    } catch (err: any) {
-       return  undefined;
-    }
-  };
-};
 
 
 export const getPayload = (jwt: any, token: string, PK: string): JwtPayload | any => {

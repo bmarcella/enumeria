@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import endpointConfig from "@/configs/endpoint.config";
-import { ApiPost } from "./ApiRequest";
+import { ApiPost, ApiDelete } from "./ApiRequest";
 import { CurrentSetting } from "../../../../common/Damba/v2/Entity/UserDto";
 import { Project } from "../../../../common/Damba/v2/Entity/project";
 
@@ -10,8 +10,11 @@ export const saveProject = (id_org: string, id_user: string, data: any): Promise
    return ApiPost<Project>(url, data)
 }
 
+export const deleteProject = (projectId: string): Promise<any> => {
+  return ApiDelete(`${endpointConfig.projects}/${projectId}`);
+};
+
 export const changeSettingApi = (data: CurrentSetting): Promise<any> => {
    const url = `${endpointConfig.auth}/meta`;
-   console.log(data);
    return ApiPost(url, data);
 }

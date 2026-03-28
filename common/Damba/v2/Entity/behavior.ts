@@ -1,4 +1,5 @@
 import { Http } from "../../v2/service/IServiceDamba";
+import { DambaEnvironmentType } from "./env";
 
 export type Behavior = {
   id?: string;
@@ -14,7 +15,7 @@ export type Behavior = {
   appId?: string;
   moduleId?: string;
   serviceId?: string;
-  env?: string;
+  environment?: DambaEnvironmentType;
 
   createdAt?: string;
   updatedAt?: string;
@@ -32,7 +33,7 @@ export interface Middleware {
   appId?: string;
   moduleId?: string;
   serviceId?: string;
-  env?: string;
+  environment?: DambaEnvironmentType;
 
   createdAt?: string;
   updatedAt?: string;

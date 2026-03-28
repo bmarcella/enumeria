@@ -3,6 +3,7 @@ import { ErrorMessage } from '../../../../../common/error/error';
 import { DambaEnvironmentType } from '../../../../../common/Damba/v2/Entity/env';
 import { Project } from '../../../../../packages/database/src/entities/Project';
 import { DEvent } from '@App/damba.import';
+import { User } from '@Database/entities/User';
 
 const isDambaEnvironmentType = (value: any): value is DambaEnvironmentType => {
   return Object.values(DambaEnvironmentType).includes(value);
@@ -30,6 +31,28 @@ export const CheckIfOrgAndUserExist = async (e: DEvent) => {
   };
   e.go();
 };
+
+export const CheckIfUserExist = async (e: DEvent) => {
+  const userId = e.in.params.id_user;
+  const user = await  e.in.DRepository.DGet(User, { where: { id: userId } });
+  if (!user) return e.out.status(402).json({ error: ErrorMessage });
+   e.in.data = {
+    userId,
+    user
+   };
+  e.go();
+};  
+
+export const CheckIfOrgExist = async (e: DEvent) => {
+  const orgId = e.in.params.id_org;
+  const org = await e.in.extras.organizations.getOrgById(e, orgId);
+  if (!org) return e.out.status(402).json({ error: ErrorMessage });
+  e.in.data = {
+    orgId,
+    org
+  };
+  e.go();
+};  
 
 export const GetCurrentOrg = async (e: DEvent) => {
   const orgId = e.in.data.orgId;

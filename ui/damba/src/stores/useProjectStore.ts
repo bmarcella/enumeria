@@ -16,6 +16,7 @@ type ProjectActions = {
   setProjects: (projects: Project[]) => void
   addProject: (project: Project) => void
   updateProject: (project: Project) => void
+  removeProject: (projectId: string) => void
 
   setProject: (projectId: string) => void
   reset: () => void
@@ -72,6 +73,12 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
           // keep selection if still valid
           const stillValid = !!findProject(nextProjects, projectId)
           set({ projects: nextProjects, projectId: stillValid ? projectId : '' })
+        },
+
+        removeProject: (projectId) => {
+          const { projects, projectId: currentProjectId } = get()
+          const nextProjects = projects.filter((p) => p.id !== projectId)
+          set({ projects: nextProjects, projectId: currentProjectId === projectId ? '' : currentProjectId })
         },
 
         setProject: (projectId) => {
