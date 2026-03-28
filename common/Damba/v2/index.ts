@@ -5,10 +5,7 @@ import { DambaIO, DambaIOApp } from "./IO/DambaIO";
 import { SocketRegistry } from "./IO/RegistrySocket";
 import { DambaRoute } from "./route/DambaRoute";
 import DambaApiDocNested from "./route/DambaRouteDoc";
-import {
-  IServiceProvider,
-  SocketEventHandlerChain,
-} from "./service/IServiceDamba";
+import { IModule, SocketEventHandlerChain } from "./service/IServiceDamba";
 import { runWithQueueContext } from "./service/QueuesBull";
 import { ServiceRegistry } from "./service/ServiceRegistry";
 import {
@@ -19,7 +16,7 @@ import {
 import createWelcomeHandler from "./Ui";
 
 export interface IDambaParams<DS = any> {
-  _SPS_: IServiceProvider<any, any, any>;
+  modules: IModule<any, any, any>[];
   AppConfig: IAppConfig<DS>;
   express: any;
   cors?: (options?: any) => any;
@@ -41,18 +38,14 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   public readonly app: any;
   public readonly server?: any;
   public dambaIo: DambaIOApp | undefined = undefined;
-
   constructor(params: IDambaParams<DS>, database?: Database<DS>) {
     this.assertValid(params);
-
     const { route, extras, doc, events } = this.DambaServices(
-      params._SPS_,
+      params.modules,
       params.AppConfig,
       params,
     );
-
     this.app = params.express();
-
     this.registerMiddleware(params, extras, database);
     this.registerDocs(params.AppConfig, extras, doc);
     this.registerRoutes(params.AppConfig, route);
@@ -62,7 +55,7 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   }
 
   DambaServices = (
-    _SPS_: IServiceProvider<REQ, RES, NEXT>,
+    modules: IModule<any, any, any>[],
     AppConfig: IAppConfig<DS>,
     params: IDambaParams<DS>,
   ) => {
@@ -73,10 +66,10 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
 
     const { route, extras, events } = DambaRoute<REQ, RES, NEXT, any>(
       { root, express },
-      _SPS_,
+      modules,
       AppConfig,
     );
-    const { doc } = DambaApiDocNested<REQ, RES, NEXT>(_SPS_, AppConfig);
+    const { doc } = DambaApiDocNested<REQ, RES, NEXT>(modules, AppConfig);
     return { route, extras, doc, events };
   };
 

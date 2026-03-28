@@ -3,6 +3,7 @@
 import { IAppConfig } from "@Damba/v2/config/IAppConfig";
 import {
   IDActionConfig,
+  IModule,
   IServiceComplete,
   IServiceProvider,
   TimeoutType,
@@ -39,12 +40,19 @@ export type NestedApiDoc = Record<
   >
 >;
 const DambaApiDocNested = <REQ, RES, NEXT>(
-  _SPS_: IServiceProvider<REQ, RES, NEXT>,
+  modules: IModule<REQ, RES, NEXT>[],
   AppConfig?: IAppConfig,
 ): { doc: NestedApiDoc; extras: any } => {
   const basePath = AppConfig?.path.basic ?? "";
   const doc: NestedApiDoc = {};
   let extras: any = {};
+
+  const _SPS_ = modules.reduce(
+    (acc, module) => {
+      return { ...acc, ...module.services };
+    },
+    {} as IServiceProvider<REQ, RES, NEXT>,
+  );
 
   const makeExtrasMiddleware = (
     extrasObj: any,

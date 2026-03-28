@@ -21,8 +21,8 @@ import { ChatOpenAI } from '@langchain/openai';
 import { TavilySearch } from '@langchain/tavily';
 import Damba from '@Damba/v2';
 import IORedis from 'ioredis';
-import { _SPS_AGENT_MODULE_ } from './AgentModule';
-import { _SPS_INDEX_ } from './services';
+import { AgentModule, _SPS_AGENT_MODULE_ } from './AgentModule';
+import { _SPS_INDEX_, indexModule } from './services';
 import { initOrm } from '@Database/DataSource';
 import { oauth2Google } from './config/google.auth';
 
@@ -60,15 +60,13 @@ declare module 'express-session' {
   }
 }
 
-const _SPS_ = { ..._SPS_INDEX_, ..._SPS_AGENT_MODULE_ };
-
 async function main() {
   dotenv.config();
   const db = await initOrm<DataSource>(process.env as any);
 
   try {
     await Damba.start({
-      _SPS_,
+      modules: [indexModule, AgentModule],
       googleAuth: oauth2Google,
       AppConfig,
       express,

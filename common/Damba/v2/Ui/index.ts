@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { IAppConfig } from "./../config/IAppConfig";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -41,7 +40,6 @@ export interface WelcomeOptions {
 }
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
-
 const defaultTheme: WelcomeTheme = {
   primary: "#fb732c",
   bg: "#fafafa",
