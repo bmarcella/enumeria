@@ -27,7 +27,7 @@ export function shardForTenant(tenantId: string, shardCount = 128) {
 export function shardQueueName(
   baseName: string,
   tenantId: string,
-  shardCount = 128
+  shardCount = 128,
 ) {
   const shard = shardForTenant(tenantId, shardCount);
   return `${baseName}_${shard}`;
@@ -45,12 +45,12 @@ export type QCtor<T> = new (
     autorun?: boolean;
     streams?: any; // QueueEvents supports streams; Queue ignores it (safe to pass only in QueueEvents)
     [k: string]: any;
-  }
+  },
 ) => T;
 
 function assertCtor<T>(
   Ctor: QCtor<T> | undefined | null,
-  label: string
+  label: string,
 ): asserts Ctor is QCtor<T> {
   if (!Ctor) throw new Error(`${label} is required`);
 }
@@ -75,7 +75,7 @@ export function getKeyPrefix(fallback = "default"): string {
 
 export async function runWithQueueContext<T>(
   ctx: QueueContext,
-  fn: () => Promise<T> | T
+  fn: () => Promise<T> | T,
 ): Promise<T> {
   return await new Promise<T>((resolve, reject) => {
     queueALS.run(ctx, async () => {
@@ -127,7 +127,7 @@ function getConnRegistry(): ConnRegistry {
 
 export function getSingletonConnection(
   key: string,
-  factory: () => BullConn
+  factory: () => BullConn,
 ): BullConn {
   const reg = getConnRegistry();
   const existing = reg.conns.get(key);
@@ -152,7 +152,7 @@ function makeKey(prefix: string | undefined, name: string) {
 function makeListenerKey(
   prefix: string | undefined,
   name: string,
-  ev: "completed" | "failed" | "progress"
+  ev: "completed" | "failed" | "progress",
 ) {
   return prefix ? `${prefix}:${name}:${ev}` : `${name}:${ev}`;
 }
@@ -200,7 +200,7 @@ function tryParseJson(x: any) {
  */
 function extractQueueContextFromEventPayload(
   payload: any,
-  fallbackPrefix?: string
+  fallbackPrefix?: string,
 ): QueueContext {
   const obj = tryParseJson(payload) ?? payload ?? {};
 
@@ -246,8 +246,8 @@ export function getQueue<TQueue>(
   name: string,
   connection: BullConn,
   opts: GetQueueOptions = {},
-    /** REQUIRED: factory that returns a fresh ioredis connection. Each QueueEvents MUST have its own. */
-  connectionFactory?: RedisConnectionFactory
+  /** REQUIRED: factory that returns a fresh ioredis connection. Each QueueEvents MUST have its own. */
+  connectionFactory?: RedisConnectionFactory,
 ): TQueue {
   assertCtor(QueueClass, "QueueClass");
 
@@ -262,11 +262,13 @@ export function getQueue<TQueue>(
   const existing = reg.queues.get(key);
   if (existing) return existing as TQueue;
 
-   // BullMQ QueueEvents holds a blocking subscribe-style connection.
+  // BullMQ QueueEvents holds a blocking subscribe-style connection.
   // It MUST have its own dedicated connection — never share with Queue or other QueueEvents.
   const dedicatedConn = connectionFactory
     ? connectionFactory()
-    : (typeof connection.duplicate === "function" ? connection.duplicate() : connection);
+    : typeof connection.duplicate === "function"
+      ? connection.duplicate()
+      : connection;
 
   const q = new QueueClass(name, {
     connection: dedicatedConn,
@@ -293,7 +295,7 @@ export function getQueueEvents<TQueueEvents = any>(
   handlers?: QueueEventsHandlers<any>,
   opts: GetQueueEventsOptions = {},
   /** REQUIRED: factory that returns a fresh ioredis connection. Each QueueEvents MUST have its own. */
-  connectionFactory?: RedisConnectionFactory
+  connectionFactory?: RedisConnectionFactory,
 ): TQueueEvents {
   assertCtor(QueueEventsClass, "QueueEventsClass");
 
@@ -312,7 +314,9 @@ export function getQueueEvents<TQueueEvents = any>(
   // It MUST have its own dedicated connection — never share with Queue or other QueueEvents.
   const dedicatedConn = connectionFactory
     ? connectionFactory()
-    : (typeof connection.duplicate === "function" ? connection.duplicate() : connection);
+    : typeof connection.duplicate === "function"
+      ? connection.duplicate()
+      : connection;
 
   const qe = new QueueEventsClass(name, {
     connection: dedicatedConn,
@@ -332,7 +336,7 @@ export function getQueueEvents<TQueueEvents = any>(
    */
   const withContexts = <T>(ctx: QueueContext, fn: () => Promise<T> | T) => {
     return runWithQueueContext(ctx, () =>
-      RegistryContext.run({ queue: ctx }, fn)
+      RegistryContext.run({ queue: ctx }, fn),
     );
   };
 
@@ -345,7 +349,7 @@ export function getQueueEvents<TQueueEvents = any>(
       qe.on("completed", ({ jobId, returnvalue }: any) => {
         const ctx = extractQueueContextFromEventPayload(returnvalue, prefix);
         void withContexts(ctx, () =>
-          handlers.completed!(api, { jobId: String(jobId), returnvalue })
+          handlers.completed!(api, { jobId: String(jobId), returnvalue }),
         );
       });
     }
@@ -360,7 +364,7 @@ export function getQueueEvents<TQueueEvents = any>(
       qe.on("failed", ({ jobId, failedReason }: any) => {
         const ctx = extractQueueContextFromEventPayload(failedReason, prefix);
         void withContexts(ctx, () =>
-          handlers.failed!(api, { jobId: String(jobId), failedReason })
+          handlers.failed!(api, { jobId: String(jobId), failedReason }),
         );
       });
     }
@@ -375,7 +379,7 @@ export function getQueueEvents<TQueueEvents = any>(
       qe.on("progress", ({ jobId, data }: any) => {
         const ctx = extractQueueContextFromEventPayload(data, prefix);
         void withContexts(ctx, () =>
-          handlers.progress!(api, { jobId: String(jobId), data })
+          handlers.progress!(api, { jobId: String(jobId), data }),
         );
       });
     }

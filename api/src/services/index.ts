@@ -14,7 +14,8 @@ import _UseCase from './UseCase/behaviors';
 import _ProjectAccess from './ProjectAccess/behaviors';
 import _Workspace from './Workspace/behaviors';
 import { NextFunction, Request, Response } from 'express';
-import { IServiceProvider } from '@Damba/v2/service/IServiceDamba';
+import { IModule, IServiceProvider } from '@Damba/v2/service/IServiceDamba';
+import Test from './test/Test';
 
 export const _SPS_INDEX_: IServiceProvider<Request, Response, NextFunction> = {
   ..._Org,
@@ -32,4 +33,11 @@ export const _SPS_INDEX_: IServiceProvider<Request, Response, NextFunction> = {
   ..._UseCase,
   ..._ProjectAccess,
   ..._Workspace,
+  ...Test,
+};
+
+export const indexModule: IModule<Request, Response, NextFunction> = {
+  name: 'index',
+  services: _SPS_INDEX_,
+  middleware: [],
 };

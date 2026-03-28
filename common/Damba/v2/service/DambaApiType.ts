@@ -15,14 +15,18 @@ export type DambaApiType<
   REQ = any,
   RES = any,
   NEXT = any,
-  ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any
+  ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any,
 > = {
   simple_service_name: string;
   Entity: ENTITY | undefined; // runtime "typeof entity" is not representable; see below note
   __redis: any;
   DRepository: () => DambaRepository;
   QueryBuilder: (name?: boolean) => any;
-  on: <SK, IO = any>(name: string, on: EventHandler<SK, IO> | EventHandler<SK, IO> [], middleware?: any[]) => void;
+  on: <SK, IO = any>(
+    name: string,
+    on: EventHandler<SK, IO> | EventHandler<SK, IO>[],
+    middleware?: any[],
+  ) => void;
   DFindOne: (where: any) => Promise<any>;
   DFindAll: (where: any) => Promise<any>;
   DFindOneById: () => Promise<any>;
@@ -32,7 +36,7 @@ export type DambaApiType<
     fullQueueName: string,
     data: E,
     opts?: any,
-    jobName?: string
+    jobName?: string,
   ) => Promise<{ id: string; full: any }>;
 
   middlewares: any;
@@ -50,7 +54,7 @@ export type DambaApiType<
     _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
     _extras?: Record<string, AnyFn>,
     _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
+    _config?: IDActionConfig,
   ) => void;
 
   DPost: (
@@ -58,7 +62,7 @@ export type DambaApiType<
     _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
     _extras?: Record<string, AnyFn>,
     _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
+    _config?: IDActionConfig,
   ) => void;
 
   DDelete: (
@@ -66,7 +70,7 @@ export type DambaApiType<
     _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
     _extras?: Record<string, AnyFn>,
     _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
+    _config?: IDActionConfig,
   ) => void;
 
   DPatch: (
@@ -74,7 +78,7 @@ export type DambaApiType<
     _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
     _extras?: Record<string, AnyFn>,
     _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
+    _config?: IDActionConfig,
   ) => void;
 
   DPut: (
@@ -82,10 +86,12 @@ export type DambaApiType<
     _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
     _extras?: Record<string, AnyFn>,
     _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    _config?: IDActionConfig
+    _config?: IDActionConfig,
   ) => void;
 
   extras: any;
 
-  done: (rootExtras?: Extras<DambaApi<T, REQ, RES, NEXT>> | undefined) => IServiceProvider<REQ, RES, NEXT>;
+  done: (
+    rootExtras?: Extras<DambaApi<T, REQ, RES, NEXT>> | undefined,
+  ) => IServiceProvider<REQ, RES, NEXT>;
 };

@@ -23,6 +23,7 @@ import { BehaviorConfigValidator } from "../entities/Behaviors/BehaviorValidator
 import { CodeFile } from "../entities/Behaviors/CodeFile";
 import { Extra_Hook } from "../entities/Extra/ExtraHook";
 import { AppFile } from "../entities/AppFile";
+import { Test } from "../entities/Test";
 
 export const DBEntities = [
   User,
@@ -49,5 +50,6 @@ export const DBEntities = [
   DambaCoreCode,
   Validators,
   AppFile,
+  Test,
   ...AgentMarketplaceEntities,
 ];

@@ -4,30 +4,29 @@
 import dotenv from 'dotenv';
 import type { NextFunction, Request, Response } from 'express';
 import nodemailer from 'nodemailer';
-import type { ExtrasMap } from '@Damba/v1/service/IServiceDamba';
+import { ExtrasMap } from '@Damba/v2/route/IRoute';
 import { DambaRepository } from '@Damba/v2/dao';
-import { extrasToJSON } from '@Damba/v1/Extras';
+import { extrasToJSON } from '@Damba/v2/Extras';
 import {
   parseBoolean,
   SameSiteOption,
   mustEnv,
   AppShutdownParams,
-} from '@Damba/v1/config/ConfigHelper';
+} from '@Damba/v2/config/ConfigHelper';
 import { IAppConfig } from '@Damba/v2/config/IAppConfig';
 import { Mail } from '@Damba/v2/mail';
 import { Server } from 'http';
 import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
 import { DataSource } from 'typeorm';
-
 import { DEvent } from '@App/damba.import';
-import { authorize } from '@Damba/v1/auth/AuthMiddleware';
+import { authorize } from '@Damba/v2/auth/AuthMiddleware';
 import jwt from 'jsonwebtoken';
 import { ChatOllama } from '@langchain/ollama';
-import createWelcomeHandler from '@Damba/v2/welcome';
+import createWelcomeHandler, { createApiDocUi, createExtrasDocUi } from '@Damba/v2/Ui';
 import { TavilySearch } from '@langchain/tavily';
 import { ChatOpenAI } from '@langchain/openai';
 import { socketConfig } from './SocketConfig';
-import IORedis from "ioredis";
+import IORedis from 'ioredis';
 import { QueueConfig } from './QueueConfig';
 import { oauth2Google } from './google.auth';
 import { authorizeSocket } from '@Damba/v2/auth/SocketAuthMiddleware';
@@ -99,11 +98,11 @@ export const AppConfig: IAppConfig<DataSource> = {
   call: {
     helper: (extras: ExtrasMap, DB?: DataSource) => {
       const DRepo = DambaRepository.init(DB);
-      
+
       const aiApiKey = mustEnv('OPENAI_API_KEY');
       const openAi = new ChatOpenAI({
         apiKey: aiApiKey,
-        model: "gpt-4o-mini",
+        model: 'gpt-4o-mini',
         temperature: 0.2,
       });
       const smtpUser = mustEnv('SMTP_USER');
@@ -111,16 +110,16 @@ export const AppConfig: IAppConfig<DataSource> = {
       const mail = new Mail(nodemailer, smtpUser, smtpPass);
       const ollama = new ChatOllama({
         temperature: 0,
-        model:"qwen2.5-coder:32b-instruct"
+        model: 'qwen2.5-coder:32b-instruct',
       });
 
       const redis = new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
         maxRetriesPerRequest: null,
       });
-      
+
       const tavily = new TavilySearch({
-           maxResults: 5,
-           tavilyApiKey: process.env.TAVILY_API_KEY
+        maxResults: 5,
+        tavilyApiKey: process.env.TAVILY_API_KEY,
       });
 
       return (req: Request, _res: Response, next: NextFunction) => {
@@ -140,7 +139,6 @@ export const AppConfig: IAppConfig<DataSource> = {
         `[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`,
       );
     },
-    welcome: createWelcomeHandler,
     extrasDoc: (extras: any) => (req: Request, res: Response) => {
       res.send(extrasToJSON(extras));
     },
@@ -162,6 +160,14 @@ export const AppConfig: IAppConfig<DataSource> = {
       const ready = true;
       res.status(ready ? 200 : 503).json({ ready });
     },
+    apiDocUi: {
+      isSecure: false,
+      path: '/api/docs',
+    },
+    extrasDocUi: {
+      isSecure: false,
+      path: '/extras/docs',
+    },
   },
   authorization: {
     strategy: 'localstorage',
@@ -174,11 +180,7 @@ export const AppConfig: IAppConfig<DataSource> = {
       );
     },
     socketCheck: (roles?: string[]) => {
-      return authorizeSocket(
-        mustEnv('JWT_PUBLIC_KEY'),
-        jwt,
-        roles,
-      );
+      return authorizeSocket(mustEnv('JWT_PUBLIC_KEY'), jwt, roles);
     },
   },
   processes: (orm: DambaTypeOrm<DataSource>) => {
@@ -208,7 +210,7 @@ export const AppConfig: IAppConfig<DataSource> = {
         error: true,
         withError: (err: any) => {
           console.error('unhandledRejection', err);
-      },
+        },
       },
       {
         name: 'uncaughtException',
@@ -225,6 +227,6 @@ export const AppConfig: IAppConfig<DataSource> = {
       },
     ];
   },
-  socket : socketConfig,
-  queue : QueueConfig
+  socket: socketConfig,
+  queue: QueueConfig,
 } as const;

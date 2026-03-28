@@ -13,7 +13,7 @@ import { DataSource } from 'typeorm';
 import { AppConfig } from './config/app.config';
 import { OAuth2Client } from 'google-auth-library';
 import { JwtPayload } from 'jsonwebtoken';
-import { ExtrasMap } from '@Damba/v1/route/DambaRoute';
+import { ExtrasMap } from '@Damba/v2/route/IRoute';
 import { DambaRepository } from '@Damba/v2/dao';
 import { Mail } from '@Damba/v2/mail';
 import { ChatOllama } from '@langchain/ollama';
@@ -21,11 +21,10 @@ import { ChatOpenAI } from '@langchain/openai';
 import { TavilySearch } from '@langchain/tavily';
 import Damba from '@Damba/v2';
 import IORedis from 'ioredis';
-import { _SPS_AGENT_MODULE_ } from './AgentModule';
-import { _SPS_INDEX_ } from './services';
+import { AgentModule, _SPS_AGENT_MODULE_ } from './AgentModule';
+import { _SPS_INDEX_, indexModule } from './services';
 import { initOrm } from '@Database/DataSource';
 import { oauth2Google } from './config/google.auth';
-
 
 declare global {
   namespace Express {
@@ -61,15 +60,13 @@ declare module 'express-session' {
   }
 }
 
-const _SPS_ = { ..._SPS_INDEX_, ..._SPS_AGENT_MODULE_ };
-
 async function main() {
   dotenv.config();
   const db = await initOrm<DataSource>(process.env as any);
 
   try {
-  await Damba.start({
-      _SPS_,
+    await Damba.start({
+      modules: [indexModule, AgentModule],
       googleAuth: oauth2Google,
       AppConfig,
       express,
@@ -82,7 +79,6 @@ async function main() {
         correlation: 'x-correlation-id',
       },
     });
-
   } catch (err) {
     console.error(err);
     process.exitCode = 1;

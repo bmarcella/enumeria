@@ -123,6 +123,7 @@ export const buildProjectHierarchy = async (
       return saveFilesForApp(llm, app, project, mods, dao);
     }),
   );
+
   const totalFiles = allFiles.reduce((sum, f) => sum + f.length, 0);
   await job.updateProgress({
     requestId,
@@ -149,7 +150,7 @@ export const buildProjectHierarchy = async (
     pct: 65,
     message: `Generated ${globalValidators.length} validator(s)`,
   });
-  
+
   // ── Extras + Behaviors per service (per API) ───────────────────────────────
   for (const { svc, mod, api } of allServices) {
     const extras = await saveExtrasForService(llm, svc, mod, api, project, dao);
