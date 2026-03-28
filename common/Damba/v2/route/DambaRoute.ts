@@ -19,7 +19,7 @@ import {
 export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
   { root, express }: any,
   _SPS_: IServiceProvider<REQ, RES, NEXT>,
-  AppConfig?: IAppConfig<any>
+  AppConfig?: IAppConfig<any>,
 ): { route: ROUTER; extras: any; events: any } => {
   let extras: any = {};
   let all_events: SocketEventHandlerChain = {};
@@ -29,15 +29,12 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
     // eslint-disable-next-line no-console
     if (AppConfig?.logRoute) console.debug("Mount service:", serviceMount);
 
-    const { service, middleware, events, rootExtras } = serviceComplete as IServiceComplete<
-      REQ,
-      RES,
-      NEXT
-    >;
+    const { service, middleware, events, rootExtras } =
+      serviceComplete as IServiceComplete<REQ, RES, NEXT>;
     const name = serviceMount.replace("/", "").toLowerCase();
 
     if (rootExtras) {
-       extras = makeExtrasMiddleware(extras, name, rootExtras);
+      extras = makeExtrasMiddleware(extras, name, rootExtras);
     }
 
     all_events = { ...all_events, ...events };
@@ -53,12 +50,11 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
         // eslint-disable-next-line no-console
         if (AppConfig?.logRoute)
           console.warn(
-            `Unknown HTTP verb "${rawMethod}" for route key "${key}" — skipping.`
+            `Unknown HTTP verb "${rawMethod}" for route key "${key}" — skipping.`,
           );
         continue;
       }
       const routePath = normalizePath(rawPath); // ensure leading slash
-     
 
       extras = makeExtrasMiddleware(extras, name, value.extras);
       const config = (value as any)?.config as IDActionConfig;
@@ -73,31 +69,26 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
           return next();
         });
       }
+
       //validators (Zod-style)
       if (config?.validators) {
         addZodValidator(mws, "body", config.validators.body);
         addZodValidator(mws, "params", config.validators.params);
         addZodValidator(mws, "query", config.validators.query);
       }
+
       // eslint-disable-next-line no-console
-      if (AppConfig?.logRoute)
+      if (AppConfig?.logRoute) {
         console.debug(
           method,
           ":",
-          `${AppConfig?.path.basic}${serviceMount}${routePath}`
+          `${AppConfig?.path.basic}${serviceMount}${routePath}`,
         );
+      }
+
       const handlers = Array.isArray(value.behavior)
         ? value.behavior
         : [value.behavior];
-
-      // const handlers_test = handlers.map((handler) => {
-      //    return  async (req: any, res: any, next: any) => {
-      //     const result = await asyncWrap(handler);
-      //     if (result) {
-      //       res.send(result);
-      //     }
-      //    }
-      // });
 
       switch (method) {
         case Http.GET:
@@ -119,10 +110,11 @@ export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
           // eslint-disable-next-line no-console
           if (AppConfig?.logRoute)
             console.warn(
-              `Unhandled HTTP method "${method}" for route key "${key}"`
+              `Unhandled HTTP method "${method}" for route key "${key}"`,
             );
       }
     }
+
     // mount service-level middlewares (array or single), then sub-router
     const topLevel = toArray(middleware).map(asyncWrap);
     if (topLevel.length) {

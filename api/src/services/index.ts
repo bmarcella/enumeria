@@ -15,6 +15,7 @@ import _ProjectAccess from './ProjectAccess/behaviors';
 import _Workspace from './Workspace/behaviors';
 import { NextFunction, Request, Response } from 'express';
 import { IServiceProvider } from '@Damba/v2/service/IServiceDamba';
+import Test from './test/Test';
 
 export const _SPS_INDEX_: IServiceProvider<Request, Response, NextFunction> = {
   ..._Org,
@@ -32,4 +33,5 @@ export const _SPS_INDEX_: IServiceProvider<Request, Response, NextFunction> = {
   ..._UseCase,
   ..._ProjectAccess,
   ..._Workspace,
+  ...Test,
 };

@@ -11,7 +11,7 @@ import { auth } from '@App/damba.import';
 import { ModulesExtras } from './extras';
 import z from 'zod';
 import { Modules } from '@Database/entities/Modules';
-import { DEvent } from '@Damba/v1/service/DEvent';
+import { DEvent } from '@Damba/v2/service/DEvent';
 
 export const ModuleSchema = z.object({
   name: z.string().min(1, 'Name is required'),

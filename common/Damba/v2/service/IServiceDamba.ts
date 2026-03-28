@@ -13,7 +13,7 @@ export interface IDActionConfig {
     params?: unknown;
     query?: unknown;
     body?: unknown;
-    response?: { statusCode: number, schema: unknown};
+    response?: { statusCode: number; schema: unknown };
   };
 }
 
@@ -36,11 +36,11 @@ export type EventHandler<SK = any, IO = any> = (
   sokect: SK,
   payload?: any,
   _callback?: any,
-  io?: IO
+  io?: IO,
 ) => void | any | Promise<void> | Promise<any>;
 
 export type ServiceFn<REQ, RES, NEXT> = (
-  damba_event: DEvent<REQ, RES, NEXT>
+  damba_event: DEvent<REQ, RES, NEXT>,
 ) => any | Promise<any>;
 
 export interface IServiceDefinition<REQ, RES, NEXT> {
@@ -55,15 +55,25 @@ export type IServicesMap<REQ, RES, NEXT> = {
   [K in RouteKey]?: IServiceDefinition<REQ, RES, NEXT>;
 };
 
-export interface IServiceProvider<REQ, RES, NEXT> {
+export type IServiceProvider<REQ, RES, NEXT> = {
   [path: string]: IServiceComplete<REQ, RES, NEXT>;
-}
+};
 
-export type SocketEventHandler<S = any, IO = any> = { handler: EventHandler<S, IO> | EventHandler<S, IO> [], middleware?: any[] }
+export type IModule<REQ, RES, NEXT> = {
+  name: string;
+  services: IServiceProvider<REQ, RES, NEXT>;
+  middleware?: ((req: REQ, res: RES, next: NEXT) => any)[] | [];
+};
 
+export type SocketEventHandler<S = any, IO = any> = {
+  handler: EventHandler<S, IO> | EventHandler<S, IO>[];
+  middleware?: any[];
+};
 
-export type SocketEventHandlerChain<S = any, IO = any> = Record<string, SocketEventHandler<S, IO>>;
-
+export type SocketEventHandlerChain<S = any, IO = any> = Record<
+  string,
+  SocketEventHandler<S, IO>
+>;
 
 export interface IServiceComplete<REQ, RES, NEXT> {
   service: IServicesMap<REQ, RES, NEXT>;
@@ -80,5 +90,10 @@ export type AnyFn = (...args: any[]) => any;
  * @param callback - The callback function.
  * @param io - The IO instance.
  * @returns The socket instance or undefined if the socket should be disconnected.
-*/
-export  type SocketMiddleware<S = any, IO = any> = (socket: S, payload?: any, callback?: any, io?: IO) => Promise<S | undefined> | S | undefined;
+ */
+export type SocketMiddleware<S = any, IO = any> = (
+  socket: S,
+  payload?: any,
+  callback?: any,
+  io?: IO,
+) => Promise<S | undefined> | S | undefined;

@@ -5,9 +5,18 @@ import { DambaIO, DambaIOApp } from "./IO/DambaIO";
 import { SocketRegistry } from "./IO/RegistrySocket";
 import { DambaRoute } from "./route/DambaRoute";
 import DambaApiDocNested from "./route/DambaRouteDoc";
-import { IServiceProvider, SocketEventHandler, SocketEventHandlerChain } from "./service/IServiceDamba";
+import {
+  IServiceProvider,
+  SocketEventHandlerChain,
+} from "./service/IServiceDamba";
 import { runWithQueueContext } from "./service/QueuesBull";
 import { ServiceRegistry } from "./service/ServiceRegistry";
+import {
+  createErrorHandler,
+  NotFoundError,
+  DambaErrorHandlerOptions,
+} from "./errors";
+import createWelcomeHandler from "./Ui";
 
 export interface IDambaParams<DS = any> {
   _SPS_: IServiceProvider<any, any, any>;
@@ -25,15 +34,10 @@ export interface IDambaParams<DS = any> {
     correlation: string;
   };
   db?: { orm: any; dataSource: DS };
-  googleAuth : any
+  googleAuth: any;
+  errorHandler?: DambaErrorHandlerOptions | false;
 }
-export class DambaApp<
-  REQ = any,
-  RES = any,
-  NEXT = any,
-  DS = any,
-  IO = any
-> {
+export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   public readonly app: any;
   public readonly server?: any;
   public dambaIo: DambaIOApp | undefined = undefined;
@@ -44,7 +48,7 @@ export class DambaApp<
     const { route, extras, doc, events } = this.DambaServices(
       params._SPS_,
       params.AppConfig,
-      params
+      params,
     );
 
     this.app = params.express();
@@ -52,6 +56,7 @@ export class DambaApp<
     this.registerMiddleware(params, extras, database);
     this.registerDocs(params.AppConfig, extras, doc);
     this.registerRoutes(params.AppConfig, route);
+    this.registerErrorHandler(params);
     this.server = this.launch(params, events);
     this.registerProcessHandlers(params, database);
   }
@@ -59,7 +64,7 @@ export class DambaApp<
   DambaServices = (
     _SPS_: IServiceProvider<REQ, RES, NEXT>,
     AppConfig: IAppConfig<DS>,
-    params: IDambaParams<DS>
+    params: IDambaParams<DS>,
   ) => {
     ServiceRegistry._init();
 
@@ -69,7 +74,7 @@ export class DambaApp<
     const { route, extras, events } = DambaRoute<REQ, RES, NEXT, any>(
       { root, express },
       _SPS_,
-      AppConfig
+      AppConfig,
     );
     const { doc } = DambaApiDocNested<REQ, RES, NEXT>(_SPS_, AppConfig);
     return { route, extras, doc, events };
@@ -82,7 +87,7 @@ export class DambaApp<
 
     if (typeof params.express !== "function") {
       throw new Error(
-        `${params.AppConfig.appName}: express() factory is required`
+        `${params.AppConfig.appName}: express() factory is required`,
       );
     }
   }
@@ -90,7 +95,7 @@ export class DambaApp<
   private registerMiddleware(
     params: IDambaParams<DS>,
     extras: any,
-    database?: Database<DS>
+    database?: Database<DS>,
   ) {
     const { AppConfig, queue } = params;
 
@@ -123,23 +128,21 @@ export class DambaApp<
         const tenant = req.header(queue.tenant) ?? "default";
         const correlationId = req.header(queue.correlation) ?? undefined;
         try {
-          return runWithQueueContext(
-            { keyPrefix: tenant, correlationId },
-            () => next()
+          return runWithQueueContext({ keyPrefix: tenant, correlationId }, () =>
+            next(),
           );
         } catch (err) {
           return next(err);
         }
       });
     }
-
   }
 
   private registerDocs(AppConfig: IAppConfig<DS>, extras: any, doc: any) {
     if (AppConfig.path?.docs?.extras && AppConfig.call?.extrasDoc && extras) {
       this.app.use(
         AppConfig.path.docs.extras,
-        AppConfig.call.extrasDoc(extras)
+        AppConfig.call.extrasDoc(extras),
       );
     }
 
@@ -158,9 +161,24 @@ export class DambaApp<
     }
   }
 
+  private registerErrorHandler(params: IDambaParams<DS>) {
+    // Skip if explicitly disabled
+    if (params.errorHandler === false) return;
+
+    // 404 catch-all for unmatched routes
+    this.app.use((req: any, _res: any, next: any) => {
+      next(
+        new NotFoundError(`Route not found: ${req.method} ${req.originalUrl}`),
+      );
+    });
+
+    const options: DambaErrorHandlerOptions = params.errorHandler ?? {};
+    this.app.use(createErrorHandler(options));
+  }
+
   private launch(
     params: IDambaParams<DS>,
-    events: SocketEventHandlerChain
+    events: SocketEventHandlerChain,
   ): any | undefined {
     const { AppConfig } = params;
     const port = params.port ?? (AppConfig as any).port;
@@ -190,7 +208,7 @@ export class DambaApp<
 
   private registerProcessHandlers(
     params: IDambaParams<DS>,
-    database?: Database<DS>
+    database?: Database<DS>,
   ) {
     if (!this.server) return;
 
@@ -223,35 +241,43 @@ export default class Damba {
 
   private constructor() {}
 
-  public static async start<
-    REQ = any,
-    RES = any,
-    NEXT = any,
-    T = any,
-    I = any
-  > (params: IDambaParams<T>): Promise<DambaApp<REQ, RES, NEXT, T, I>> {
+  public static async start<REQ = any, RES = any, NEXT = any, T = any, I = any>(
+    params: IDambaParams<T>,
+  ): Promise<DambaApp<REQ, RES, NEXT, T, I>> {
     if (!this.instance) {
       let database: Database<T> | undefined;
 
+      if (!params.AppConfig.call?.welcome) {
+        params.AppConfig.call.welcome = createWelcomeHandler;
+      }
+
+      // if (!params.AppConfig.call?.apiDocUi) {
+      //   params.AppConfig.call.apiDocUi = createApiDocUiHandler;
+      // }
+
+      // if (!params.AppConfig.call?.extrasDocUi) {
+      //   params.AppConfig.call.extrasDocUi = createExtrasDocUiHandler;
+      // }
+
       if (params.AppConfig.databaseConfig) {
-         database = await params.AppConfig.databaseConfig.initOrm();
+        database = await params.AppConfig.databaseConfig.initOrm();
       } else if (params.db) {
-         database = params.db;
+        database = params.db;
       }
 
       this.instance = new DambaApp<REQ, RES, NEXT, T, I>(params, database);
     }
 
-    return this.instance ;
+    return this.instance;
   }
 
-  public static getInstance<
+  public static getInstance<REQ, RES, NEXT, T = any, I = any>(): DambaApp<
     REQ,
     RES,
     NEXT,
-    T = any,
-    I = any
-  >(): DambaApp<REQ, RES, NEXT, T, I> {
+    T,
+    I
+  > {
     if (!this.instance) {
       throw new Error("Damba: instance not started. Call Damba.start() first.");
     }

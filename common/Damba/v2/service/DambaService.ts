@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
-
 import {
   AnyFn,
   EventHandler,
@@ -41,7 +40,7 @@ export type DambaApi<
   REQ = any,
   RES = any,
   NEXT = any,
-  ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any
+  ENTITY extends new (...args: any[]) => any = new (...args: any[]) => any,
 > = DambaApiType<T, REQ, RES, NEXT, ENTITY>;
 
 export type DExtrasHandler = Record<string, AnyFn>;
@@ -51,18 +50,18 @@ type DExtrasHandlerFactory<API = DambaApi> = (api?: API) => DExtrasHandler;
 export type Extras<API = DambaApi> = DExtrasHandlerFactory<API>;
 
 export type DEventHandler<REQ = any, RES = any, NEXT = any> = (
-  e: DEvent<REQ, RES, NEXT>
+  e: DEvent<REQ, RES, NEXT>,
 ) => Promise<any> | any;
 
 type DEventHandlerFactory<API = DambaApi, REQ = any, RES = any, NEXT = any> = (
-  api?: API
+  api?: API,
 ) => DEventHandler<REQ, RES, NEXT> | DEventHandler<REQ, RES, NEXT>[];
 
 export type Behavior<
   API = DambaApi,
   REQ = any,
   RES = any,
-  NEXT = any
+  NEXT = any,
 > = DEventHandlerFactory<API, REQ, RES, NEXT>;
 
 export type BehaviorsChain<REQ = any, RES = any, NEXT = any> = Record<
@@ -86,7 +85,7 @@ export type BehaviorsChainLooperContent<
   T = any,
   REQ = any,
   RES = any,
-  NEXT = any
+  NEXT = any,
 > =
   | BehaviorChainLooperContent<T, REQ, RES, NEXT>
   | BehaviorChainLooperContent<T, REQ, RES, NEXT>[];
@@ -95,11 +94,11 @@ export type BehaviorsChainLooper<
   T = any,
   REQ = any,
   RES = any,
-  NEXT = any
+  NEXT = any,
 > = Record<string, BehaviorsChainLooperContent<T, REQ, RES, NEXT>>;
 
 type EventBehaviorChainLooperContent<API = DambaApi, SK = any> = (
-  api?: API
+  api?: API,
 ) => EventHandler<SK>;
 
 export type EventBehavior = EventBehaviorChainLooperContent;
@@ -127,16 +126,16 @@ export const createDambaService = <
   REQ = any,
   RES = any,
   NEXT = any,
-  SK = any
+  SK = any,
 >(
-  params: ServiceBuilderParams
+  params: ServiceBuilderParams,
 ): IServiceProvider<REQ, RES, NEXT> => {
   const api = createBehaviors<T, REQ, RES, NEXT>(
     params.service.name,
     params.service.entity as any,
     params.service.config,
     params.service.middlewares,
-    params.service.redis
+    params.service.redis,
   );
 
   if (params.service.Queue) api.setQueue(params.service.Queue);
@@ -157,7 +156,7 @@ export const createDambaService = <
     params.service.QueueEvents,
     params.service.queuePrefix ?? false,
     params.service.redisConnectionFactory,
-    params.extras
+    params.extras,
   );
 };
 
@@ -167,7 +166,7 @@ export const DambaMakeApi = <
   NEXT = any,
   SK = any,
   Q = any,
-  EQ = any
+  EQ = any,
 >(
   api: DambaApi,
   behaviors?: BehaviorsChainLooper,
@@ -177,7 +176,7 @@ export const DambaMakeApi = <
   QueueEventsCtor?: QCtor<EQ>,
   isQueuePrefix = false,
   redisConnectionFactory?: RedisConnectionFactory,
-  rootExtras?: Extras<DambaApi<any, REQ, RES, NEXT>>
+  rootExtras?: Extras<DambaApi<any, REQ, RES, NEXT>>,
 ): IServiceProvider<REQ, RES, NEXT> => {
   if (behaviors) {
     for (const [path, chains] of Object.entries(behaviors)) {
@@ -238,7 +237,7 @@ export const DambaMakeApi = <
       console.warn(
         "[DambaService] No redisConnectionFactory provided. " +
           "QueueEvents will attempt to duplicate the shared connection. " +
-          "Provide service.redisConnectionFactory to avoid ECONNABORTED errors."
+          "Provide service.redisConnectionFactory to avoid ECONNABORTED errors.",
       );
     }
 
@@ -267,7 +266,7 @@ export const DambaMakeApi = <
             prefixEnabled: false,
             streams: undefined,
           },
-          redisConnectionFactory
+          redisConnectionFactory,
         );
       }
     }
@@ -288,10 +287,10 @@ export type DambaService<
   REQ = any,
   RES = any,
   NEXT = any,
-  REDIS = any
+  REDIS = any,
 > = {
   name: string;
-  entity?: T;
+  entity?: T | T[];
   config?: ServiceConfig<REQ, RES, NEXT>;
   middlewares?: ((de: DEvent<REQ, RES, NEXT>) => any)[];
   redis?: REDIS;
@@ -315,7 +314,7 @@ export const createBehaviors = <
   REQ,
   RES,
   NEXT,
-  ENTITY extends EntityCtor = EntityCtor
+  ENTITY extends EntityCtor = EntityCtor,
 >(
   name: string,
   entity?: ENTITY,
@@ -325,7 +324,7 @@ export const createBehaviors = <
     crud: DefaultDCrudValues,
   },
   _fmiddleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-  redis?: any
+  redis?: any,
 ): Omit<DambaApi<T, REQ, RES, NEXT, ENTITY>, "Entity"> & {
   Entity: ENTITY | undefined;
 } => {
@@ -359,7 +358,7 @@ export const createBehaviors = <
     behavior: any, // Express handler(s) ou array de handlers
     middleware?: ((req: REQ, res: RES, next: NEXT) => any)[] | [],
     extras?: Record<string, (...args: any[]) => any>,
-    cfg?: IDActionConfig
+    cfg?: IDActionConfig,
   ) => {
     routes[path] = { behavior, middleware, extras, config: cfg };
   };
@@ -381,7 +380,7 @@ export const createBehaviors = <
     data: E,
     id_user?: string,
     opts?: any,
-    jobName = "job"
+    jobName = "job",
   ) => {
     const tenantId = getKeyPrefix(); // via ALS
     const correlationId = getQueueContext()?.correlationId; // si exposé
@@ -389,7 +388,7 @@ export const createBehaviors = <
     const shardName = shardQueueName(
       baseName,
       tenantId,
-      Number(process.env.QUEUE_SHARDS ?? 128)
+      Number(process.env.QUEUE_SHARDS ?? 128),
     );
 
     const q = queue<typeof Queue>(shardName) as any;
@@ -425,12 +424,21 @@ export const createBehaviors = <
         config,
         routeConfig,
       };
-      return DambaContext.run<REQ, RES, NEXT>(ctx as any, () => _fn(de));
+      try {
+        const result = DambaContext.run<REQ, RES, NEXT>(ctx as any, () =>
+          _fn(de),
+        );
+        if (result && typeof result.catch === "function") {
+          result.catch(next as any);
+        }
+      } catch (err) {
+        (next as any)(err);
+      }
     };
 
   const getMiddlewares = (
     _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-    routeConfig?: IDActionConfig
+    routeConfig?: IDActionConfig,
   ) =>
     _middleware?.length
       ? _middleware.map((mw) => wrapDEventFn(mw, routeConfig))
@@ -438,7 +446,7 @@ export const createBehaviors = <
 
   const getBehaviors = (
     _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
-    routeConfig?: IDActionConfig
+    routeConfig?: IDActionConfig,
   ) =>
     Array.isArray(_behavior)
       ? _behavior.map((b) => wrapDEventFn(b, routeConfig))
@@ -453,7 +461,7 @@ export const createBehaviors = <
       _behavior: ServiceFn<REQ, RES, NEXT>[] | ServiceFn<REQ, RES, NEXT>,
       _extras?: Record<string, (...args: any[]) => any>,
       _middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-      _config?: IDActionConfig
+      _config?: IDActionConfig,
     ) => {
       const middleware = getMiddlewares(_middleware, _config);
       const behavior = getBehaviors(_behavior, _config);
@@ -468,7 +476,7 @@ export const createBehaviors = <
         behavior,
         middleware,
         _extras,
-        _config
+        _config,
       );
     };
   };
@@ -482,7 +490,7 @@ export const createBehaviors = <
   const on = (
     name: string,
     handler: EventHandler<any, any> | EventHandler<any, any>[],
-    middleware?: any[]
+    middleware?: any[],
   ) => {
     events[name] = { handler, middleware };
   };
@@ -491,7 +499,7 @@ export const createBehaviors = <
     const ctx = DambaContext.get<REQ, RES, NEXT>();
     if (!ctx) {
       throw new Error(
-        "DambaContext not available. Are you calling helpers en dehors d'une requête ?"
+        "DambaContext not available. Are you calling helpers en dehors d'une requête ?",
       );
     }
     return ctx;
@@ -603,7 +611,7 @@ export const createBehaviors = <
       params: LoaderParams,
       e: DEvent,
       callBack: CrudActions,
-      previous?: T
+      previous?: T,
     ) => {
       try {
         // Only pass "previous" when it exists
@@ -612,7 +620,7 @@ export const createBehaviors = <
           : await callBack(e, previous);
       } catch {
         throw new Error(
-          `Error on Method ${params.method} in ${params.action} at position ${params.index}`
+          `Error on Method ${params.method} in ${params.action} at position ${params.index}`,
         );
       }
     };
@@ -622,7 +630,7 @@ export const createBehaviors = <
       e: DEvent,
       looper: CrudWorkerHandler,
       prev?: T,
-      _before?: any
+      _before?: any,
     ) => {
       let previous: T | any = prev;
       let i = 0;
@@ -656,7 +664,7 @@ export const createBehaviors = <
               { method: "GET ALL", action: "BEFORE" },
               e,
               befores,
-              undefined
+              undefined,
             );
           }
 
@@ -668,7 +676,7 @@ export const createBehaviors = <
           const entities = (await req.DRepository.DGet(
             entity,
             predicate,
-            true
+            true,
           )) as (typeof entity)[];
 
           let after: any = entities;
@@ -678,14 +686,14 @@ export const createBehaviors = <
               e,
               afters,
               entities,
-              before
+              before,
             );
           }
 
           return res.send(after);
         },
         {},
-        config?.crud?.all?.middlewares
+        config?.crud?.all?.middlewares,
       );
     // ---------------------------
     // GET ONE
@@ -708,7 +716,7 @@ export const createBehaviors = <
               { method: "GET ONE", action: "BEFORE" },
               e,
               befores,
-              undefined
+              undefined,
             );
           }
 
@@ -728,14 +736,14 @@ export const createBehaviors = <
               e,
               afters,
               entityResult,
-              before
+              before,
             );
           }
 
           return res.send(after);
         },
         {},
-        config?.crud?.get?.middlewares
+        config?.crud?.get?.middlewares,
       );
     // ---------------------------
     // GET RELATION (collection)
@@ -762,7 +770,7 @@ export const createBehaviors = <
               { method: "GET RELATION", action: "BEFORE" },
               e,
               befores,
-              undefined
+              undefined,
             );
           }
 
@@ -782,7 +790,7 @@ export const createBehaviors = <
           }
 
           const all = ["one-to-many", "many-to-many"].includes(
-            rel.relationType
+            rel.relationType,
           );
 
           const entityWithRel = await DRep.DGet(
@@ -791,7 +799,7 @@ export const createBehaviors = <
               where: { id },
               relations: { [relation]: true } as any,
             },
-            all
+            all,
           );
 
           let result: any = (entityWithRel as any)[relation];
@@ -802,14 +810,14 @@ export const createBehaviors = <
               e,
               afters,
               result,
-              before
+              before,
             );
           }
 
           return res.json(result);
         },
         {},
-        config?.crud?.get?.middlewares
+        config?.crud?.get?.middlewares,
       );
     // ---------------------------
     // POST
@@ -833,7 +841,7 @@ export const createBehaviors = <
               { method: "POST", action: "BEFORE" },
               e,
               befores,
-              object
+              object,
             );
           }
 
@@ -848,14 +856,14 @@ export const createBehaviors = <
               e,
               afters,
               saved,
-              before
+              before,
             );
           }
 
           return res.send(after);
         },
         {},
-        config?.crud?.post?.middlewares
+        config?.crud?.post?.middlewares,
       );
 
     // ---------------------------
@@ -883,7 +891,7 @@ export const createBehaviors = <
               { method: "PATCH", action: "BEFORE" },
               e,
               befores,
-              object
+              object,
             );
           }
 
@@ -898,14 +906,14 @@ export const createBehaviors = <
               e,
               afters,
               saved,
-              before
+              before,
             );
           }
 
           return res.status(200).json(after);
         },
         {},
-        config?.crud?.patch?.middlewares
+        config?.crud?.patch?.middlewares,
       );
 
     // ---------------------------
@@ -933,7 +941,7 @@ export const createBehaviors = <
               { method: "PUT", action: "BEFORE" },
               e,
               befores,
-              object
+              object,
             );
           }
 
@@ -948,14 +956,14 @@ export const createBehaviors = <
               e,
               afters,
               saved,
-              before
+              before,
             );
           }
 
           return res.send(after);
         },
         {},
-        config?.crud?.put?.middlewares
+        config?.crud?.put?.middlewares,
       );
 
     // ---------------------------
@@ -982,7 +990,7 @@ export const createBehaviors = <
               { method: "DELETE", action: "BEFORE" },
               e,
               befores,
-              undefined
+              undefined,
             );
           }
 
@@ -997,14 +1005,14 @@ export const createBehaviors = <
               e,
               afters,
               deleted,
-              before
+              before,
             );
           }
 
           return res.send(after);
         },
         {},
-        config?.crud?.delete?.middlewares
+        config?.crud?.delete?.middlewares,
       );
   };
 
@@ -1036,7 +1044,7 @@ export const createBehaviors = <
     extras: DExtras,
     on,
     done: (
-      extras?: Extras<DambaApi<T, REQ, RES, NEXT>>
+      extras?: Extras<DambaApi<T, REQ, RES, NEXT>>,
     ): IServiceProvider<REQ, RES, NEXT> => {
       if (entity) {
         runCrud();
