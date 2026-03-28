@@ -106,8 +106,16 @@ export interface IAppConfig<DS = any, S = any, IO = any> {
     apiDoc?: (api: any) => any;
     shutdown: (params: AppShutdownParams) => void;
     welcome?: (appConfig: IAppConfig<DS>) => any;
-    apiDocUi?: (appConfig: IAppConfig<DS>, api: any) => any;
-    extrasDocUi?: (appConfig: IAppConfig<DS>, extras: any) => any;
+    apiDocUi?: {
+      isSecure: boolean | false;
+      path?: string | "/api/docs";
+      call?: (appConfig: IAppConfig<DS>, api: any) => any;
+    };
+    extrasDocUi?: {
+      isSecure: boolean | false;
+      path?: string | "/extras/docs";
+      call?: (appConfig: IAppConfig<DS>, extras: any) => any;
+    };
   };
   authorization?: {
     strategy: string;

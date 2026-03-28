@@ -5,10 +5,7 @@ import { DambaIO, DambaIOApp } from "./IO/DambaIO";
 import { SocketRegistry } from "./IO/RegistrySocket";
 import { DambaRoute } from "./route/DambaRoute";
 import DambaApiDocNested from "./route/DambaRouteDoc";
-import {
-  IServiceProvider,
-  SocketEventHandlerChain,
-} from "./service/IServiceDamba";
+import { IModule, SocketEventHandlerChain } from "./service/IServiceDamba";
 import { runWithQueueContext } from "./service/QueuesBull";
 import { ServiceRegistry } from "./service/ServiceRegistry";
 import {
@@ -16,10 +13,10 @@ import {
   NotFoundError,
   DambaErrorHandlerOptions,
 } from "./errors";
-import createWelcomeHandler from "./Ui";
+import createWelcomeHandler, { createApiDocUi, createExtrasDocUi } from "./Ui";
 
 export interface IDambaParams<DS = any> {
-  _SPS_: IServiceProvider<any, any, any>;
+  modules: IModule<any, any, any>[];
   AppConfig: IAppConfig<DS>;
   express: any;
   cors?: (options?: any) => any;
@@ -41,18 +38,14 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   public readonly app: any;
   public readonly server?: any;
   public dambaIo: DambaIOApp | undefined = undefined;
-
   constructor(params: IDambaParams<DS>, database?: Database<DS>) {
     this.assertValid(params);
-
     const { route, extras, doc, events } = this.DambaServices(
-      params._SPS_,
+      params.modules,
       params.AppConfig,
       params,
     );
-
     this.app = params.express();
-
     this.registerMiddleware(params, extras, database);
     this.registerDocs(params.AppConfig, extras, doc);
     this.registerRoutes(params.AppConfig, route);
@@ -62,7 +55,7 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   }
 
   DambaServices = (
-    _SPS_: IServiceProvider<REQ, RES, NEXT>,
+    modules: IModule<any, any, any>[],
     AppConfig: IAppConfig<DS>,
     params: IDambaParams<DS>,
   ) => {
@@ -73,10 +66,10 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
 
     const { route, extras, events } = DambaRoute<REQ, RES, NEXT, any>(
       { root, express },
-      _SPS_,
+      modules,
       AppConfig,
     );
-    const { doc } = DambaApiDocNested<REQ, RES, NEXT>(_SPS_, AppConfig);
+    const { doc } = DambaApiDocNested<REQ, RES, NEXT>(modules, AppConfig);
     return { route, extras, doc, events };
   };
 
@@ -143,6 +136,24 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
       this.app.use(
         AppConfig.path.docs.extras,
         AppConfig.call.extrasDoc(extras),
+      );
+    }
+
+    if (
+      AppConfig.call?.extrasDocUi &&
+      AppConfig.call.extrasDocUi?.call &&
+      extras
+    ) {
+      this.app.use(
+        AppConfig.call?.extrasDocUi.path ?? "/extras/docs",
+        AppConfig.call.extrasDocUi?.call(AppConfig, extras),
+      );
+    }
+
+    if (AppConfig.call?.apiDocUi && AppConfig.call.apiDocUi?.call && doc) {
+      this.app.use(
+        AppConfig.call?.apiDocUi.path ?? "/api/docs",
+        AppConfig.call.apiDocUi?.call(AppConfig, doc),
       );
     }
 
@@ -251,13 +262,32 @@ export default class Damba {
         params.AppConfig.call.welcome = createWelcomeHandler;
       }
 
-      // if (!params.AppConfig.call?.apiDocUi) {
-      //   params.AppConfig.call.apiDocUi = createApiDocUiHandler;
-      // }
-
-      // if (!params.AppConfig.call?.extrasDocUi) {
-      //   params.AppConfig.call.extrasDocUi = createExtrasDocUiHandler;
-      // }
+      if (!params.AppConfig.call?.apiDocUi) {
+        params.AppConfig.call.apiDocUi = {
+          isSecure: false,
+          call: createApiDocUi,
+          path: "/api/docs",
+        };
+      } else {
+        params.AppConfig.call.apiDocUi = {
+          isSecure: params.AppConfig.call.apiDocUi.isSecure,
+          call: params.AppConfig.call.apiDocUi?.call || createApiDocUi,
+          path: params.AppConfig.call.apiDocUi.path ?? "/api/docs",
+        };
+      }
+      if (!params.AppConfig.call?.extrasDocUi) {
+        params.AppConfig.call.extrasDocUi = {
+          isSecure: false,
+          call: createExtrasDocUi,
+          path: "/extras/docs",
+        };
+      } else {
+        params.AppConfig.call.extrasDocUi = {
+          isSecure: params.AppConfig.call.extrasDocUi.isSecure,
+          call: params.AppConfig.call.extrasDocUi?.call || createExtrasDocUi,
+          path: params.AppConfig.call.extrasDocUi.path ?? "/extras/docs",
+        };
+      }
 
       if (params.AppConfig.databaseConfig) {
         database = await params.AppConfig.databaseConfig.initOrm();

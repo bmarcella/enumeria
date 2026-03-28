@@ -22,7 +22,7 @@ import { DEvent } from '@App/damba.import';
 import { authorize } from '@Damba/v2/auth/AuthMiddleware';
 import jwt from 'jsonwebtoken';
 import { ChatOllama } from '@langchain/ollama';
-import createWelcomeHandler from '@Damba/v2/Ui';
+import createWelcomeHandler, { createApiDocUi, createExtrasDocUi } from '@Damba/v2/Ui';
 import { TavilySearch } from '@langchain/tavily';
 import { ChatOpenAI } from '@langchain/openai';
 import { socketConfig } from './SocketConfig';
@@ -159,6 +159,14 @@ export const AppConfig: IAppConfig<DataSource> = {
     health: () => (req: Request, res: Response) => {
       const ready = true;
       res.status(ready ? 200 : 503).json({ ready });
+    },
+    apiDocUi: {
+      isSecure: false,
+      path: '/api/docs',
+    },
+    extrasDocUi: {
+      isSecure: false,
+      path: '/extras/docs',
     },
   },
   authorization: {

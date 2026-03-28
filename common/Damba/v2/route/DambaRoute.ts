@@ -3,6 +3,7 @@ import { IAppConfig } from "@Damba/v2/config/IAppConfig";
 import {
   Http,
   IDActionConfig,
+  IModule,
   IServiceComplete,
   IServiceProvider,
   SocketEventHandlerChain,
@@ -18,11 +19,18 @@ import {
 
 export const DambaRoute = <REQ, RES, NEXT, ROUTER>(
   { root, express }: any,
-  _SPS_: IServiceProvider<REQ, RES, NEXT>,
+  modules: IModule<REQ, RES, NEXT>[],
   AppConfig?: IAppConfig<any>,
 ): { route: ROUTER; extras: any; events: any } => {
   let extras: any = {};
   let all_events: SocketEventHandlerChain = {};
+
+  const _SPS_ = modules.reduce(
+    (acc, module) => {
+      return { ...acc, ...module.services };
+    },
+    {} as IServiceProvider<REQ, RES, NEXT>,
+  );
 
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
     const sub = express.Router();

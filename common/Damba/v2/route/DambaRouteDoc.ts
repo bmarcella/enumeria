@@ -3,6 +3,7 @@
 import { IAppConfig } from "@Damba/v2/config/IAppConfig";
 import {
   IDActionConfig,
+  IModule,
   IServiceComplete,
   IServiceProvider,
   TimeoutType,
@@ -17,34 +18,49 @@ const normalizePath = (p?: string) => {
 
 const toArray = <T>(m?: T | T[]) => (Array.isArray(m) ? m : m ? [m] : []);
 
+export interface RouteDocEntry {
+  fullPath: string;
+  mount: string;
+  method: string;
+  path: string;
+  decription?: string;
+  serviceMiddlewareCount: number;
+  routeMiddlewareCount: number;
+  hasHandler: boolean;
+  extras?: any;
+  timeout?: TimeoutType;
+  validators?: {
+    params?: unknown;
+    query?: unknown;
+    body?: unknown;
+    response?: { statusCode: number; schema: unknown };
+  };
+}
+
 export type NestedApiDoc = Record<
   string, // mount e.g. "/users"
   Record<
     string, // method e.g. "GET"
     Record<
       string, // path e.g. "/:id"
-      {
-        fullPath: string; // base_path + mount + path
-        mount: string;
-        method: string;
-        path: string;
-        decription?: string;
-        serviceMiddlewareCount: number;
-        routeMiddlewareCount: number;
-        hasHandler: boolean;
-        extras?: any;
-        timeout?: TimeoutType;
-      }
+      RouteDocEntry
     >
   >
 >;
 const DambaApiDocNested = <REQ, RES, NEXT>(
-  _SPS_: IServiceProvider<REQ, RES, NEXT>,
+  modules: IModule<REQ, RES, NEXT>[],
   AppConfig?: IAppConfig,
 ): { doc: NestedApiDoc; extras: any } => {
   const basePath = AppConfig?.path.basic ?? "";
   const doc: NestedApiDoc = {};
   let extras: any = {};
+
+  const _SPS_ = modules.reduce(
+    (acc, module) => {
+      return { ...acc, ...module.services };
+    },
+    {} as IServiceProvider<REQ, RES, NEXT>,
+  );
 
   const makeExtrasMiddleware = (
     extrasObj: any,
@@ -100,6 +116,7 @@ const DambaApiDocNested = <REQ, RES, NEXT>(
         extras: (value as any)?.extras,
         decription: config?.description,
         timeout: config?.timeout,
+        validators: config?.validators,
       };
     }
   }
