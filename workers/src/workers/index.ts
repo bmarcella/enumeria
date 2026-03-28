@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { Worker, type Processor, type ConnectionOptions } from 'bullmq';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
+import { ChatOllama } from '@langchain/ollama';
 import { DataSource } from 'typeorm';
 
 import { AppConfig } from '../config/app.config';
@@ -17,7 +18,7 @@ export enum DLLM {
   ANTHROPIC = 'ANTHROPIC',
 }
 
-export const DefaultLLM = DLLM.ANTHROPIC;
+export const DefaultLLM = DLLM.OLLAMA;
 
 export type OpenAiLlm = ChatOpenAI;
 export type OllamaLlm = any;
@@ -35,9 +36,13 @@ export type MakeAiAgentProcessor<D, R, X extends string = string, L = unknown, D
   dao?: DambaRepository<DAO>,
 ) => Processor<D, R, X>;
 
-export const getLLM = <P extends DLLM>(provider: P, apiKey: string): LlmProviderMap[P] => {
+export const getLLM = <P extends DLLM>(
+  provider: P,
+  apiKey: string | undefined,
+): LlmProviderMap[P] => {
   switch (provider) {
     case DLLM.OPENAI:
+      if (!apiKey) throw new Error('OPENAI_API_KEY is not defined');
       return new ChatOpenAI({
         apiKey,
         model: 'gpt-4o-mini',
@@ -45,14 +50,17 @@ export const getLLM = <P extends DLLM>(provider: P, apiKey: string): LlmProvider
       }) as LlmProviderMap[P];
 
     case DLLM.OLLAMA:
-      throw new Error(`LLM provider not implemented: ${provider}`);
+      return new ChatOllama({
+        model: 'qwen2.5-coder:32b-instruct',
+        temperature: 0,
+      }) as LlmProviderMap[P];
 
     case DLLM.ANTHROPIC:
+      if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not defined');
       return new ChatAnthropic({
         model: 'claude-sonnet-4-5',
         anthropicApiKey: apiKey,
         temperature: 0,
-        // Retry up to 6 times with exponential backoff on 429 / 529
         maxRetries: 6,
       }) as LlmProviderMap[P];
 
@@ -93,7 +101,8 @@ export const startWorkers = async <
   makeProcessor: MakeAiAgentProcessor<D, R, X, LlmProviderMap[P], DAO>,
   opts: WorkerPoolOptions = {},
 ): Promise<Array<Worker<D, R, X>>> => {
-  const aiApiKey = mustEnv(`${provider}_API_KEY`);
+  const aiApiKey = provider === DLLM.OLLAMA ? undefined : mustEnv(`${provider}_API_KEY`);
+
   const llm = getLLM(provider, aiApiKey);
 
   const shards = opts.shards ?? Number(process.env.QUEUE_SHARDS ?? 3);
@@ -129,8 +138,8 @@ export const startWorkers = async <
       autorun: true,
       // Allow jobs to run for up to 30 minutes before being considered stalled.
       // LLM pipelines with retries on rate-limit can legitimately take a long time.
-      stalledInterval: 60_000,   // check for stalled jobs every 60 s (default: 30 s)
-      maxStalledCount: 30,       // allow 30 missed heartbeats (~30 min) before marking stalled
+      stalledInterval: 60_000, // check for stalled jobs every 60 s (default: 30 s)
+      maxStalledCount: 30, // allow 30 missed heartbeats (~30 min) before marking stalled
     });
 
     worker.on('ready', () => {

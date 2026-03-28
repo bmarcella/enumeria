@@ -3,24 +3,19 @@
 // config/app-config.ts
 import dotenv from 'dotenv';
 import type { NextFunction, Request, Response } from 'express';
-import type { ExtrasMap } from '@Damba/v1/service/IServiceDamba';
-import { extrasToJSON } from '@Damba/v1/Extras';
+import type { ExtrasMap } from '@Damba/v2/service/IServiceDamba';
+import { extrasToJSON } from '@Damba/v2/Extras';
 import {
   parseBoolean,
   SameSiteOption,
   mustEnv,
   AppShutdownParams,
-} from '@Damba/v1/config/ConfigHelper';
+} from '@Damba/v2/config/ConfigHelper';
 import { IAppConfig } from '@Damba/v2/config/IAppConfig';
 import { Server } from 'http';
 import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
 import { DataSource } from 'typeorm';
-
-import { DEvent } from '@App/damba.import';
-import { authorize } from '@Damba/v1/auth/AuthMiddleware';
-import jwt from 'jsonwebtoken';
 import { DBEntities } from './db';
-import createWelcomeHandler from '@Damba/v2/welcome';
 import { socketConfig } from './SocketConfig';
 dotenv.config();
 
@@ -97,7 +92,6 @@ export const AppConfig: IAppConfig<DataSource> = {
         `[server]: Server ${process.env.APP_NAME} is running at http://localhost:${AppConfig.port}`,
       );
     },
-    welcome: createWelcomeHandler,
     extrasDoc: (extras: any) => (req: Request, res: Response) => {
       res.send(extrasToJSON(extras));
     },
@@ -118,17 +112,6 @@ export const AppConfig: IAppConfig<DataSource> = {
     health: () => (req: Request, res: Response) => {
       const ready = true;
       res.status(ready ? 200 : 503).json({ ready });
-    },
-  },
-  authoriztion: {
-    strategy: 'localstorage',
-    check: (roles?: string[]) => {
-      return authorize<DEvent>(
-        mustEnv('JWT_PUBLIC_KEY'),
-        jwt,
-        roles,
-        AppConfig?.authorization?.strategy,
-      );
     },
   },
   databaseConfig: {

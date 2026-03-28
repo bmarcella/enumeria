@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DEvent } from '@App/damba.import';
 import { must_have_org_access, must_be_admin } from '../../policies';
-import { applyPolicies, policyMiddleware } from '@Damba/v1/policies';
-import { createBehaviors } from '@Damba/v1/service/DambaService';
+import { applyPolicies, policyMiddleware } from '@Damba/v2/policies';
+import { createBehaviors } from '@Damba/v2/service/DambaService';
 
 export const CreateProject = async (e: DEvent) => {
   await applyPolicies(e, must_have_org_access, must_be_admin);

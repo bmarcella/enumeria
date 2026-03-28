@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { DEvent } from "./DEvent";
-import { ServiceConfig } from "../../v1/service/ServiceConfig";
+import { ServiceConfig } from "@Damba/v2/service/ServiceConfig";
 import { AsyncLocalStorage } from "async_hooks";
 import { IDActionConfig } from "./IServiceDamba";
 
@@ -11,8 +11,8 @@ export interface DambaExecutionContext<REQ, RES, NEXT> {
   simpleServiceName: string;
   entity?: new (...args: any[]) => any;
   config: ServiceConfig<REQ, RES, NEXT>;
-  middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[],
-  routeConfig: IDActionConfig,
+  middleware?: ((de: DEvent<REQ, RES, NEXT>) => any)[];
+  routeConfig: IDActionConfig;
   meta?: Record<string, any>;
   state?: Record<string, any>;
 }
@@ -20,10 +20,9 @@ export interface DambaExecutionContext<REQ, RES, NEXT> {
 const storage = new AsyncLocalStorage<DambaExecutionContext<any, any, any>>();
 
 export const DambaContext = {
-
   run<REQ, RES, NEXT>(
     ctx: DambaExecutionContext<REQ, RES, NEXT>,
-    fn: () => any
+    fn: () => any,
   ) {
     return storage.run(ctx as any, fn);
   },
@@ -35,10 +34,12 @@ export const DambaContext = {
   },
 
   require<REQ, RES, NEXT>(): DambaExecutionContext<REQ, RES, NEXT> {
-    const ctx = storage.getStore() as DambaExecutionContext<REQ, RES, NEXT> | undefined;
+    const ctx = storage.getStore() as
+      | DambaExecutionContext<REQ, RES, NEXT>
+      | undefined;
     if (!ctx) {
       throw new Error(
-        "DambaContext not available. You are calling a Damba helper outside a request pipeline."
+        "DambaContext not available. You are calling a Damba helper outside a request pipeline.",
       );
     }
     return ctx;
@@ -78,5 +79,4 @@ export const DambaContext = {
     const ctx = this.require();
     ctx.state = { ...(ctx.state ?? {}), ...(obj ?? {}) };
   },
-
 };

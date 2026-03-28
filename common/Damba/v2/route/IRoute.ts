@@ -1,28 +1,46 @@
-export type ExtrasMap = Record<string, any>
+export type ExtrasMap = Record<string, any>;
 
 export const normalizePath = (p?: string) => {
-  if (!p || p === '/') return '/';
+  if (!p || p === "/") return "/";
   // strip leading slashes then re-add one
-  const clean = p.replace(/^\/+/, '');
+  const clean = p.replace(/^\/+/, "");
   return `/${clean}`;
 };
 
-export const toArray = <T>(m?: T | T[]) => (Array.isArray(m) ? m : m ? [m] : []);
+export const toArray = <T>(m?: T | T[]) =>
+  Array.isArray(m) ? m : m ? [m] : [];
 
-export const asyncWrap = (fn: (req: any, res: any, next: any) => any) =>
-  <REQ, RES, NEXT>(req: REQ, res: RES, next: NEXT) =>
-    Promise.resolve(fn(req, res, next)).catch(next as any);
+export const asyncWrap =
+  (fn: (req: any, res: any, next: any) => any) =>
+  (req: any, res: any, next: any) => {
+    try {
+      const result = fn(req, res, next);
+      if (result && typeof result.catch === "function") {
+        result.catch(next);
+      }
+    } catch (err) {
+      next(err);
+    }
+  };
 
-export const makeExtrasMiddleware = (extras: any, name: string, routeExtras?: any) => {
+export const makeExtrasMiddleware = (
+  extras: any,
+  name: string,
+  routeExtras?: any,
+) => {
   const incoming = routeExtras ?? {};
-  const existing = extras?.[name] ?? {}
+  const existing = extras?.[name] ?? {};
   return {
     ...extras,
-    [name]: { ...existing, ...incoming }
+    [name]: { ...existing, ...incoming },
   };
-}
+};
 
-export const addZodValidator = (mws: any[], which: "body" | "params" | "query", schema: any) => {
+export const addZodValidator = (
+  mws: any[],
+  which: "body" | "params" | "query",
+  schema: any,
+) => {
   if (!schema?.safeParse) return;
   mws.push((req: any, res: any, next: any) => {
     const result = schema.safeParse(req[which]);

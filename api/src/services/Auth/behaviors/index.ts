@@ -9,7 +9,7 @@ import { Request, Response } from 'express';
 import { Organization } from '@Database/entities/Organization';
 import { SessionUser } from '@Damba/v2/Entity/UserDto';
 import { createService, DEvent } from '@App/damba.import';
-import { GenTokenJwt } from '@Damba/v1/auth/AuthMiddleware';
+import { GenTokenJwt } from '@Damba/v2/auth/AuthMiddleware';
 import { AppConfig } from '@App/config/app.config';
 import { Role, RoleName } from '@Database/entities/Role';
 import { User } from '@Database/entities/User';

@@ -7,7 +7,7 @@ import {
   IServiceProvider,
   TimeoutType,
 } from "../service/IServiceDamba";
-import { toHttpEnum } from "@Damba/v1/service/DambaHelper";
+import { toHttpEnum } from "@Damba/v2/service/DambaHelper";
 
 const normalizePath = (p?: string) => {
   if (!p || p === "/") return "/";
@@ -40,7 +40,7 @@ export type NestedApiDoc = Record<
 >;
 const DambaApiDocNested = <REQ, RES, NEXT>(
   _SPS_: IServiceProvider<REQ, RES, NEXT>,
-  AppConfig?: IAppConfig
+  AppConfig?: IAppConfig,
 ): { doc: NestedApiDoc; extras: any } => {
   const basePath = AppConfig?.path.basic ?? "";
   const doc: NestedApiDoc = {};
@@ -49,7 +49,7 @@ const DambaApiDocNested = <REQ, RES, NEXT>(
   const makeExtrasMiddleware = (
     extrasObj: any,
     name: string,
-    routeExtras?: any
+    routeExtras?: any,
   ) => {
     const incoming = routeExtras ?? {};
     const existing = extrasObj?.[name] ?? {};
@@ -57,17 +57,14 @@ const DambaApiDocNested = <REQ, RES, NEXT>(
   };
 
   for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
-    const { service, middleware , rootExtras} = serviceComplete as IServiceComplete<
-      REQ,
-      RES,
-      NEXT
-    >;
+    const { service, middleware, rootExtras } =
+      serviceComplete as IServiceComplete<REQ, RES, NEXT>;
 
     const serviceMws = toArray(middleware);
     const name = serviceMount.replace("/", "").toLowerCase();
 
     if (rootExtras) {
-        extras = makeExtrasMiddleware(extras, name, rootExtras);
+      extras = makeExtrasMiddleware(extras, name, rootExtras);
     }
 
     if (!doc[serviceMount]) doc[serviceMount] = {};
