@@ -16,8 +16,6 @@ export const saveModulesForApp = async (
   project: Project,
   dao: DambaRepository<DataSource>,
 ): Promise<Modules[]> => {
-  const environments: DambaEnvironmentType[] = (project as any).environments ?? [DambaEnvironmentType.DEV];
-
   const { modules } = await callLLMForModules(
     llm,
     app.name!,
@@ -27,23 +25,30 @@ export const saveModulesForApp = async (
     project.initialPrompt ?? '',
   );
 
-  return Promise.all(
-    environments.flatMap((env) =>
-      modules.map(
-        (mod) =>
-          dao.DSave(Modules, {
-            name: mod.name,
-            description: mod.description,
-            codeFileContent: mod.codeFileContent,
-            application: app,
-            projId: project.id,
-            orgId: (project as any).organization?.id,
-            environment: env,
-            created_by: project.created_by,
-          } as Partial<Modules>) as Promise<Modules>,
-      ),
+  // Save one module per LLM result (not duplicated per environment).
+  // Skip modules that already exist for this app+project (handles retries).
+  const existing = (await dao.DGet(Modules, { where: { projId: project.id, application: { id: app.id } } }, true)) as Modules[];
+  const existingNames = new Set(existing.map((m) => m.name));
+
+  const toSave = modules.filter((mod) => !existingNames.has(mod.name));
+
+  const saved = await Promise.all(
+    toSave.map(
+      (mod) =>
+        dao.DSave(Modules, {
+          name: mod.name,
+          description: mod.description,
+          codeFileContent: mod.codeFileContent,
+          application: app,
+          projId: project.id,
+          orgId: (project as any).organization?.id,
+          environment: DambaEnvironmentType.DEV,
+          created_by: project.created_by,
+        } as Partial<Modules>) as Promise<Modules>,
     ),
   );
+
+  return [...existing, ...saved];
 };
 
 export const generateModuleIndexContent = (moduleName: string, serviceNames: string[]): string => {

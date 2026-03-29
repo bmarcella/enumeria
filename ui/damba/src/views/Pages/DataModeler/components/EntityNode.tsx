@@ -11,6 +11,7 @@ export type EntityNodeData = {
     isPrimaryKey: boolean;
     isForeignKey: boolean;
     isNotNull: boolean;
+    isUnique: boolean;
   }>;
   color?: string;
 };

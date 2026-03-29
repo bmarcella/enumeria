@@ -1,0 +1,10 @@
+{
+  "name": "@damba/policies",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^25.5.0"
+  }
+}

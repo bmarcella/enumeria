@@ -24,6 +24,8 @@ import { CodeFile } from "../entities/Behaviors/CodeFile";
 import { Extra_Hook } from "../entities/Extra/ExtraHook";
 import { AppFile } from "../entities/AppFile";
 import { Test } from "../entities/Test";
+import { BehaviorHook } from "../entities/Behaviors/BehaviorHook";
+import { BehaviorChain } from "../entities/Behaviors/BehaviorChain";
 
 export const DBEntities = [
   User,
@@ -39,7 +41,9 @@ export const DBEntities = [
   Modules,
   AppServices,
   BehaviorConfigValidator,
+  BehaviorHook,
   Behavior,
+  BehaviorChain,
   Middleware,
   Policy,
   Extra_Hook,

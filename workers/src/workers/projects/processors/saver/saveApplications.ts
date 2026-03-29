@@ -39,20 +39,58 @@ export const saveApplications = async (
   )) as Application[];
 
   // Always create the two shared packages
-  const [databasePkg, validatorsPkg] = (await dao.DSaveMany(Application, [
-    { ...base, name: `${project.name} - Database`, description: `Database package for ${project.name}`, type_app: 'packages' },
-    { ...base, name: `${project.name} - Validators`, description: `Validators package for ${project.name}`, type_app: 'packages' },
+  const [databasePkg, validatorsPkg, policiesPkg] = (await dao.DSaveMany(Application, [
+    {
+      ...base,
+      name: `${project.name} - Database`,
+      description: `Database package for ${project.name}`,
+      type_app: 'package-entities',
+    },
+    {
+      ...base,
+      name: `${project.name} - Validators`,
+      description: `Validators package for ${project.name}`,
+      type_app: 'package-validators',
+    },
+    {
+      ...base,
+      name: `${project.name} - Policies & Middlewares`,
+      description: `Policies & Middlewares package for ${project.name}`,
+      type_app: 'package-policies-middlewares',
+    },
   ] as Partial<Application>[])) as Application[];
 
-  const apis = llmApps.filter((app) => app.type_app === 'api');
-  const uis = llmApps.filter((app) => app.type_app === 'ui');
+  let apis = llmApps.filter((app) => app.type_app === 'api' || app.type_app === 'microservice');
+  let uis = llmApps.filter((app) => app.type_app === 'ui');
   const workers = llmApps.filter((app) => app.type_app === 'workers');
+
+  // Ensure at least one API and one UI app exist
+  if (apis.length === 0) {
+    const [defaultApi] = (await dao.DSaveMany(Application, [{
+      ...base,
+      name: `${project.name} API`,
+      description: `Main API for ${project.name}`,
+      type_app: 'api',
+    }] as Partial<Application>[])) as Application[];
+    apis = [defaultApi];
+  }
+
+  if (uis.length === 0) {
+    const [defaultUi] = (await dao.DSaveMany(Application, [{
+      ...base,
+      name: `${project.name} UI`,
+      description: `Frontend for ${project.name}`,
+      type_app: 'ui',
+    }] as Partial<Application>[])) as Application[];
+    uis = [defaultUi];
+  }
 
   return {
     apis,
     uis,
     databasePkg,
     validatorsPkg,
+    policiesPkg,
     ...(workers.length > 0 ? { workers } : {}),
   };
 };

@@ -1,23 +1,27 @@
 {
-  "nav": {
-    "home": "Dashboard",
-    "example": {
-      "key": "values"
+    "project": {
+        "resume": "Resume",
+        "open": "Open"
+    },
+    "nav": {
+        "home": "Dashboard",
+        "example": {
+            "key": "values"
+        }
+    },
+    "envs": {
+        "dev": "Development",
+        "qa": "Quality Assurance",
+        "staging": "Staging",
+        "prod": "Production"
+    },
+    "common": {
+        "select": "Please select"
+    },
+    "error": {
+        "project": {
+            "mustSelectDev": "Development envirroment is required",
+            "mustSelectProg": "Production envirroment is required"
+        }
     }
-  },
-  "envs": {
-    "dev": "Development",
-    "qa": "Quality Assurance",
-    "staging": "Staging",
-    "prod": "Production"
-  },
-  "common" : {
-    "select": "Please select"
-  },
-  "error": {
-    "project" :{
-      "mustSelectDev" : "Development envirroment is required",
-      "mustSelectProg" : "Production envirroment is required"
-    }
-  }
 }

@@ -1,0 +1,10 @@
+export { step1Processor } from './step1.projectAndApps';
+export { step2Processor } from './step2.entities';
+export { step3Processor } from './step3.modules';
+export { step4Processor } from './step4.services';
+export { step5Processor } from './step5.validators';
+export { step6Processor } from './step6.middlewaresPolicies';
+export { step7Processor } from './step7.behaviorsExtras';
+export { step8Processor } from './step8.appFiles';
+export { step9Processor } from './step9.dambaCommon';
+export { loadProjectContext, loadFullProjectContext } from './helpers';

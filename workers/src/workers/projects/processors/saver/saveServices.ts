@@ -58,7 +58,7 @@ export const saveServicesForModule = async (
     project.initialPrompt ?? '',
     mod.name!,
     mod.description ?? '',
-    env ?? DambaEnvironmentType.PROD,
+    env ?? DambaEnvironmentType.DEV,
   );
   return Promise.all(
     services.map(async (svc) => {

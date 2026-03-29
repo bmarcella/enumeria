@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
-import { HiOutlineCube, HiOutlineCheckCircle, HiTrash } from 'react-icons/hi'
+import { HiOutlineCube, HiOutlineCheckCircle, HiTrash, HiOutlineSparkles, HiOutlineViewGrid } from 'react-icons/hi'
 
 import { useProjectStore, selectProjects } from '@/stores/useProjectStore'
 import { ProjectStats } from './ProjectStats'
@@ -28,6 +28,7 @@ import { Card } from '@/components/ui/Card'
 import CardQueue from './CardQueue'
 import { JobAckPayload } from '@/services/socket.io/JobAckPlayload'
 import { deleteProject } from '@/services/Project'
+import { usePipelineStore, getResumeStepIndex, getCompletionPercent } from '@/stores/usePipelineStore'
 import { CurrentSetting } from '../../../../../../common/Damba/v2/Entity/UserDto'
 
 type LoadingMap = Record<string, boolean>
@@ -62,6 +63,10 @@ export const ProjectList = () => {
 
     const [jobs, setJobs] = useState<JobAckPayload[]>([])
     const [counter, setCounter] = useState(0)
+    const [usePipelineMode, setUsePipelineMode] = useState(true)
+    const [activeTab, setActiveTab] = useState<'projects' | 'new'>('projects')
+    const startPipeline = usePipelineStore((s) => s.startPipeline)
+    const resumePipeline = usePipelineStore((s) => s.resumePipeline)
 
     const {
         control,
@@ -76,24 +81,55 @@ export const ProjectList = () => {
     })
 
     const changeProject = (id_project?: string) => {
+        if (!id_project) {
+            setProject('')
+            navigate('/home')
+            return
+        }
+
+        // Check if the project is still being built
+        const proj = projects.find((p) => p.id === id_project) as any
+        const buildStatus = proj?.buildStatus
+        const lastStep = proj?.lastCompletedStep
+
+        if (buildStatus && buildStatus !== 'completed') {
+            const resumeAt = getResumeStepIndex(buildStatus, lastStep)
+            if (resumeAt >= 0) {
+                resumePipeline(
+                    id_project,
+                    proj?.initialPrompt ?? proj?.description ?? '',
+                    resumeAt,
+                )
+                navigate('/pipeline')
+                return
+            }
+        }
+
         if (user) {
             setUser({
                 ...user,
                 currentSetting: {
                     ...user.currentSetting,
-                    projId: id_project ?? '',
+                    projId: id_project,
                     moduleId: '',
                     servId: '',
                     env: undefined,
                 } as CurrentSetting,
             })
         }
-        setProject(id_project ?? '')
-        navigate(id_project ? '/projects' : '/home')
+        setProject(id_project)
+        navigate('/projects')
     }
 
     const onSubmitProject = async (data: ProjectFormValues) => {
         const promptText = data.description
+
+        // Pipeline mode: go to step-by-step wizard
+        if (usePipelineMode && promptText) {
+            startPipeline(promptText)
+            navigate('/pipeline')
+            return
+        }
 
         if (!isConnected) {
             setMessage('Socket not connected. Please try again.')
@@ -178,137 +214,196 @@ export const ProjectList = () => {
     }, [socket])
 
     return (
-        <div className="mt-8 flex flex-col gap-10">
-            {/* Section Supérieure : Création de projet */}
-            <section className="w-full">
-                <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-800 shadow-xl rounded-lg bg-white dark:bg-[#0B1120]">
-                    <div className="px-6 py-5 border-b border-gray-200 dark:border-[#1E293B] bg-gray-50 dark:bg-[#0F172A]">
-                        <h6 className="font-bold text-lg tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
-                            <HiOutlineCube className="text-blue-600 dark:text-blue-500" />
-                            New Automation Project
-                        </h6>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
-                            Describe the application you want to generate with
-                            our AI engine
-                        </p>
-                    </div>
+        <div className="p-6 space-y-6 h-full overflow-y-auto">
+            {/* Header with tabs */}
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold dark:text-gray-100">Projects</h2>
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                    <button
+                        onClick={() => setActiveTab('projects')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                            activeTab === 'projects'
+                                ? 'bg-white dark:bg-gray-700 text-[#fb732c] shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                        }`}
+                    >
+                        <HiOutlineViewGrid /> My Projects
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('new')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                            activeTab === 'new'
+                                ? 'bg-white dark:bg-gray-700 text-[#fb732c] shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                        }`}
+                    >
+                        <HiOutlineSparkles /> New Project
+                    </button>
+                </div>
+            </div>
 
-                    <div className="p-6">
-                        {message && (
-                            <Alert showIcon className="mb-4" type="danger">
-                                <span className="break-all text-xs">
-                                    {message}
-                                </span>
-                            </Alert>
-                        )}
-
-                        <Form
-                            onSubmit={handleSubmit(onSubmitProject)}
-                            className="space-y-4"
-                        >
-                            <FormItem
-                                invalid={!!errors.description}
-                                errorMessage={
-                                    errors.description?.message as
-                                        | string
-                                        | undefined
-                                }
-                            >
-                                <Controller
-                                    name="description"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            textArea
-                                            rows={8}
-                                            className="text-sm font-mono leading-relaxed resize-none rounded-md bg-gray-50 dark:bg-[#0f172a] border-gray-300 dark:border-[#1E293B] focus:ring-blue-500 focus:border-blue-500 shadow-inner"
-                                            placeholder="e.g. Create a todo list app that permits users to..."
-                                            value={field.value ?? ''}
-                                            onChange={(e) =>
-                                                field.onChange(e.target.value)
-                                            }
-                                        />
-                                    )}
-                                />
-                            </FormItem>
-
-                            <div className="pt-2 flex justify-end">
-                                <Button
-                                    type="submit"
-                                    variant="solid"
-                                    loading={saving}
-                                    className="px-8 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 font-semibold tracking-wide rounded-md shadow-md shadow-blue-500/20"
-                                >
-                                    {saving
-                                        ? (t('project.saving') ??
-                                          'Generating...')
-                                        : (t('project.save') ??
-                                          'Generate with AI')}
-                                </Button>
-                            </div>
-                        </Form>
-                    </div>
-                </Card>
-
-                {jobs.length > 0 && (
-                    <Card className="p-0 overflow-hidden mt-6 border border-gray-200 dark:border-gray-800 rounded-lg">
-                        <div className="px-5 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#0F172A]">
-                            <h6 className="font-semibold text-sm tracking-wide uppercase text-gray-600 dark:text-gray-300">
-                                Active Jobs
+            {activeTab === 'new' ? (
+                /* ── New Project tab ─────────────────────────────────── */
+                <div className="space-y-6">
+                    <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-800 shadow-xl rounded-lg bg-white dark:bg-[#0B1120]">
+                        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#1E293B] bg-gray-50 dark:bg-[#0F172A]">
+                            <h6 className="font-bold text-lg tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
+                                <HiOutlineSparkles className="text-blue-600 dark:text-blue-500" />
+                                Create with AI
                             </h6>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
+                                Describe the application you want to generate
+                            </p>
                         </div>
-                        <div className="p-4 bg-white dark:bg-[#0B1120]">
-                            <CardQueue data={jobs} />
+
+                        <div className="p-6">
+                            {message && (
+                                <Alert showIcon className="mb-4" type="danger">
+                                    <span className="break-all text-xs">{message}</span>
+                                </Alert>
+                            )}
+
+                            <Form
+                                onSubmit={handleSubmit(onSubmitProject)}
+                                className="space-y-4"
+                            >
+                                <FormItem
+                                    invalid={!!errors.description}
+                                    errorMessage={errors.description?.message as string | undefined}
+                                >
+                                    <Controller
+                                        name="description"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                textArea
+                                                rows={8}
+                                                className="text-sm font-mono leading-relaxed resize-none rounded-md bg-gray-50 dark:bg-[#0f172a] border-gray-300 dark:border-[#1E293B] focus:ring-blue-500 focus:border-blue-500 shadow-inner"
+                                                placeholder="e.g. Create a todo list app that permits users to..."
+                                                value={field.value ?? ''}
+                                                onChange={(e) => field.onChange(e.target.value)}
+                                            />
+                                        )}
+                                    />
+                                </FormItem>
+
+                                <div className="flex items-center justify-between pt-2">
+                                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={usePipelineMode}
+                                            onChange={(e) => setUsePipelineMode(e.target.checked)}
+                                            className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 w-4 h-4"
+                                        />
+                                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                            Step-by-step pipeline
+                                        </span>
+                                    </label>
+                                    <Button
+                                        type="submit"
+                                        variant="solid"
+                                        loading={saving}
+                                        className="px-8 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 font-semibold tracking-wide rounded-md shadow-md shadow-blue-500/20"
+                                    >
+                                        {saving
+                                            ? (t('project.saving') ?? 'Generating...')
+                                            : (t('project.save') ?? 'Generate with AI')}
+                                    </Button>
+                                </div>
+                            </Form>
                         </div>
                     </Card>
-                )}
-            </section>
 
-            {/* Section Inférieure : Liste des projets */}
-            <section className="flex flex-col gap-6">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-[#1E293B]">
-                    <div>
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            Projects
-                        </h3>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                            Manage and access your generated applications
-                        </p>
-                    </div>
-                    <Button
-                        variant="default"
-                        className="border-gray-300 dark:border-gray-700 font-semibold bg-white dark:bg-[#0F172A] hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
-                        onClick={() => navigate('/developer/create-agent')}
-                    >
-                        Advance Developer Mode
-                    </Button>
+                    {jobs.length > 0 && (
+                        <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg">
+                            <div className="px-5 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#0F172A]">
+                                <h6 className="font-semibold text-sm tracking-wide uppercase text-gray-600 dark:text-gray-300">
+                                    Active Jobs
+                                </h6>
+                            </div>
+                            <div className="p-4 bg-white dark:bg-[#0B1120]">
+                                <CardQueue data={jobs} />
+                            </div>
+                        </Card>
+                    )}
                 </div>
-
+            ) : (
+                /* ── Projects tab ────────────────────────────────────── */
+                <div className="space-y-5">
                 {projects.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-16 text-center border-2 border-dashed rounded-lg border-gray-300 dark:border-[#1E293B] bg-gray-50/50 dark:bg-[#0f172a]/50">
-                        <HiOutlineCube className="text-5xl text-gray-400 mb-4" />
-                        <p className="text-gray-500 dark:text-gray-400 font-medium tracking-wide">
-                            No projects found. Create one above to get started.
+                        <HiOutlineSparkles className="text-5xl text-[#fb732c] mb-4" />
+                        <p className="text-gray-900 dark:text-white font-semibold text-lg mb-1">
+                            No projects yet
                         </p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+                            Create your first project with AI
+                        </p>
+                        <Button
+                            variant="solid"
+                            className="bg-[#fb732c] hover:bg-[#e5631f] text-white font-semibold px-6 rounded-md shadow-md"
+                            onClick={() => setActiveTab('new')}
+                            icon={<HiOutlineSparkles />}
+                        >
+                            New Project
+                        </Button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                         {projects.map((project) => {
                             const id = String(project.id)
                             const isLoading = !!loading[id]
+                            const buildStatus = (project as any).buildStatus as string | undefined
+                            const isComplete = !buildStatus || buildStatus === 'completed'
+                            const isFailed = buildStatus === 'failed'
+                            const isBuilding = buildStatus === 'in_progress' || buildStatus === 'initializing'
+
+                            const borderClass = isFailed
+                                ? 'border-red-300 dark:border-red-800'
+                                : isBuilding
+                                  ? 'border-amber-300 dark:border-amber-800'
+                                  : 'border-gray-200 dark:border-[#1E293B]'
+
+                            const completionPct = !isComplete
+                                ? getCompletionPercent(buildStatus, (project as any).lastCompletedStep)
+                                : 100
+
+                            const statusBadge = !isComplete && (
+                                <span className={classNames(
+                                    'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
+                                    isFailed && 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400',
+                                    isBuilding && 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
+                                    buildStatus === 'pending' && 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
+                                )}>
+                                    {isFailed ? 'Failed' : isBuilding ? `${completionPct}%` : buildStatus}
+                                </span>
+                            )
 
                             return (
                                 <Card
                                     key={id}
-                                    className="flex flex-col h-full overflow-hidden border border-gray-200 dark:border-[#1E293B] bg-white dark:bg-[#0B1120] hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 rounded-lg"
+                                    className={classNames(
+                                        'flex flex-col h-full overflow-hidden border bg-white dark:bg-[#0B1120] transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 rounded-lg',
+                                        borderClass,
+                                        isComplete && 'hover:border-blue-400 dark:hover:border-blue-500',
+                                        !isComplete && 'opacity-90',
+                                    )}
                                 >
                                     <div className="p-6 flex-grow flex flex-col gap-4">
                                         <div className="flex items-start justify-between">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                            <div className={classNames(
+                                                'flex h-12 w-12 items-center justify-center rounded-md',
+                                                isComplete ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400' :
+                                                isFailed ? 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400' :
+                                                'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400',
+                                            )}>
                                                 <HiOutlineCube className="text-2xl" />
                                             </div>
-                                            <ProjectStats projectId={id} />
+                                            <div className="flex items-center gap-2">
+                                                {statusBadge}
+                                                {isComplete && <ProjectStats projectId={id} />}
+                                            </div>
                                         </div>
                                         <div>
                                             <h6
@@ -322,6 +417,30 @@ export const ProjectList = () => {
                                             <p className="m-0 text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed font-normal">
                                                 {project.description}
                                             </p>
+                                            {!isComplete && (
+                                                <div className="mt-3">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                                                            Pipeline progress
+                                                        </span>
+                                                        <span className={classNames(
+                                                            'text-[10px] font-bold',
+                                                            isFailed ? 'text-red-500' : 'text-amber-500',
+                                                        )}>
+                                                            {completionPct}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-1.5">
+                                                        <div
+                                                            className={classNames(
+                                                                'h-1.5 rounded-full transition-all duration-500',
+                                                                isFailed ? 'bg-red-500' : 'bg-amber-500',
+                                                            )}
+                                                            style={{ width: `${completionPct}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -329,7 +448,14 @@ export const ProjectList = () => {
                                         <Button
                                             variant="solid"
                                             size="sm"
-                                            className="flex-grow font-semibold tracking-wide bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded shadow-sm"
+                                            className={classNames(
+                                                'flex-grow font-semibold tracking-wide rounded shadow-sm',
+                                                isComplete
+                                                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100'
+                                                    : isFailed
+                                                      ? 'bg-red-600 text-white hover:bg-red-700'
+                                                      : 'bg-amber-600 text-white hover:bg-amber-700',
+                                            )}
                                             disabled={isLoading}
                                             onClick={() =>
                                                 changeProject(project.id)
@@ -338,7 +464,11 @@ export const ProjectList = () => {
                                                 <HiOutlineCheckCircle className="text-lg" />
                                             }
                                         >
-                                            {t('project.open') ?? 'Open'}
+                                            {isComplete
+                                                ? (t('project.open') ?? 'Open')
+                                                : isFailed
+                                                  ? 'Retry Pipeline'
+                                                  : 'Continue Setup'}
                                         </Button>
 
                                         <Button
@@ -375,7 +505,8 @@ export const ProjectList = () => {
                         })}
                     </div>
                 )}
-            </section>
+                </div>
+            )}
         </div>
     )
 }

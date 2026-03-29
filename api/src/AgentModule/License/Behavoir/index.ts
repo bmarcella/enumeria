@@ -1,8 +1,11 @@
-import { DEvent } from "@App/damba.import";
-import { PriceType, License, LicenseStatus } from "@Database/entities/agents/contracts/Agents";
-import { OrgParams, InstallAgentBody, PurchaseAgentBody } from "@Validators/contracts/AgentDefinitionValidators";
-import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
-
+import { PriceType, License, LicenseStatus } from '@Database/entities/agents/contracts/Agents';
+import {
+  OrgParams,
+  InstallAgentBody,
+  PurchaseAgentBody,
+} from '@Validators/contracts/AgentDefinitionValidators';
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
+import { DEvent } from '@Damba/v2/service/DEvent';
 
 export const installFreeAgentBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
@@ -12,9 +15,13 @@ export const installFreeAgentBehavior: Behavior = (api?: DambaApi) => {
     await e.in.extras.marketplace_extras.loadApprovedAgent(agentDefinitionId);
     const listing = await e.in.extras.marketplace_extras.loadListing(agentDefinitionId);
 
-    if (listing.priceType !== PriceType.Free) throw new Error("Agent is not free");
+    if (listing.priceType !== PriceType.Free) throw new Error('Agent is not free');
 
-    const license = await e.in.extras.marketplace_extras.getOrCreateActiveLicense(orgId, agentDefinitionId, null);
+    const license = await e.in.extras.marketplace_extras.getOrCreateActiveLicense(
+      orgId,
+      agentDefinitionId,
+      null,
+    );
 
     e.out.send({ license });
   };
@@ -29,7 +36,11 @@ export const purchaseOneTimeBehavior: Behavior = (api?: DambaApi) => {
     const listing = await e.in.extras.marketplace_extras.loadListing(agentDefinitionId);
 
     if (listing.priceType === PriceType.Free) {
-      const license = await e.in.extras.marketplace_extras.getOrCreateActiveLicense(orgId, agentDefinitionId, null);
+      const license = await e.in.extras.marketplace_extras.getOrCreateActiveLicense(
+        orgId,
+        agentDefinitionId,
+        null,
+      );
       return e.out.send({ license, purchase: null });
     }
 
@@ -37,10 +48,14 @@ export const purchaseOneTimeBehavior: Behavior = (api?: DambaApi) => {
       orgId,
       agentDefinitionId,
       listing.priceCents ?? 0,
-      listing.currency ?? "USD",
+      listing.currency ?? 'USD',
     );
 
-    const license = await e.in.extras.marketplace_extras.getOrCreateActiveLicense(orgId, agentDefinitionId, purchase.id);
+    const license = await e.in.extras.marketplace_extras.getOrCreateActiveLicense(
+      orgId,
+      agentDefinitionId,
+      purchase.id,
+    );
 
     e.out.send({ purchase, license });
   };
@@ -58,4 +73,3 @@ export const listOrgLibraryBehavior: Behavior = (api?: DambaApi) => {
     e.out.send({ licenses: licenses ?? [] });
   };
 };
-

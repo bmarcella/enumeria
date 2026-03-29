@@ -1,3 +1,5 @@
+import { PipelineStep } from "./CreateProjectStep";
+
 export enum DQueues {
   TOOlS_RUN = "tools_run",
   CREATE_PROJECT = "create_project",
@@ -7,3 +9,7 @@ export enum DQueues {
   UPDATE_ENTITIES = "update_entities",
   AGENT_RUN = "agent_run",
 }
+
+/** Returns the queue name for a given pipeline step */
+export const pipelineQueue = (step: PipelineStep): string =>
+  `create_project-${step}`;

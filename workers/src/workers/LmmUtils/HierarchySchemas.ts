@@ -134,7 +134,7 @@ export type PoliciesResponse = z.infer<typeof PoliciesResponseSchema>;
 export const BehaviorItemSchema = z.object({
   name: z.string().min(1),
   path: z.string().startsWith('/'),
-  method: z.enum(['GET', 'POST', 'PUT', 'DELETE']),
+  method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
   description: z.string().min(1),
   config: z.object({
     body: JsonSchemaSchema.optional(),

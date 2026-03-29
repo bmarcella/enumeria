@@ -15,8 +15,11 @@ export const updateProjectBuildStatus = async (
   projectId: string,
   status: BuildStatus,
   dao: DambaRepository<DataSource>,
+  lastCompletedStep?: string,
 ): Promise<void> => {
-  await dao.DUpdate(Project, { id: projectId }, { buildStatus: status, updated_at: new Date() });
+  const update: Partial<Project> = { buildStatus: status, updated_at: new Date() };
+  if (lastCompletedStep) update.lastCompletedStep = lastCompletedStep;
+  await dao.DUpdate(Project, { id: projectId }, update);
 };
 
 export const saveCodeFile = async (

@@ -40,14 +40,14 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   public dambaIo: DambaIOApp | undefined = undefined;
   constructor(params: IDambaParams<DS>, database?: Database<DS>) {
     this.assertValid(params);
-    const { route, extras, doc, events } = this.DambaServices(
+    const { route, extras, doc, flatDoc, modularExtras, events } = this.DambaServices(
       params.modules,
       params.AppConfig,
       params,
     );
     this.app = params.express();
     this.registerMiddleware(params, extras, database);
-    this.registerDocs(params.AppConfig, extras, doc);
+    this.registerDocs(params.AppConfig, extras, modularExtras, doc, flatDoc);
     this.registerRoutes(params.AppConfig, route);
     this.registerErrorHandler(params);
     this.server = this.launch(params, events);
@@ -69,8 +69,8 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
       modules,
       AppConfig,
     );
-    const { doc } = DambaApiDocNested<REQ, RES, NEXT>(modules, AppConfig);
-    return { route, extras, doc, events };
+    const { doc, flatDoc, modularExtras } = DambaApiDocNested<REQ, RES, NEXT>(modules, AppConfig);
+    return { route, extras, doc, flatDoc, modularExtras, events };
   };
 
   private assertValid(params: IDambaParams<DS>) {
@@ -131,7 +131,7 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
     }
   }
 
-  private registerDocs(AppConfig: IAppConfig<DS>, extras: any, doc: any) {
+  private registerDocs(AppConfig: IAppConfig<DS>, extras: any, modularExtras: any, doc: any, flatDoc: any) {
     if (AppConfig.path?.docs?.extras && AppConfig.call?.extrasDoc && extras) {
       this.app.use(
         AppConfig.path.docs.extras,
@@ -146,10 +146,11 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
     ) {
       this.app.use(
         AppConfig.call?.extrasDocUi.path ?? "/extras/docs",
-        AppConfig.call.extrasDocUi?.call(AppConfig, extras),
+        AppConfig.call.extrasDocUi?.call(AppConfig, modularExtras),
       );
     }
 
+    // UI gets module-grouped doc, JSON endpoint gets flat doc
     if (AppConfig.call?.apiDocUi && AppConfig.call.apiDocUi?.call && doc) {
       this.app.use(
         AppConfig.call?.apiDocUi.path ?? "/api/docs",
@@ -157,8 +158,8 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
       );
     }
 
-    if (AppConfig.path?.docs?.api && AppConfig.call?.apiDoc && doc) {
-      this.app.use(AppConfig.path.docs.api, AppConfig.call.apiDoc(doc));
+    if (AppConfig.path?.docs?.api && AppConfig.call?.apiDoc && flatDoc) {
+      this.app.use(AppConfig.path.docs.api, AppConfig.call.apiDoc(flatDoc));
     }
   }
 
