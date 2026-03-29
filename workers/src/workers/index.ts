@@ -18,7 +18,7 @@ export enum DLLM {
   ANTHROPIC = 'ANTHROPIC',
 }
 
-export const DefaultLLM = DLLM.OLLAMA;
+export const DefaultLLM = DLLM.ANTHROPIC;
 
 export type OpenAiLlm = ChatOpenAI;
 export type OllamaLlm = any;

@@ -8,6 +8,7 @@ import {
 import { Behavior } from ".";
 import { DambaFullMeta } from "../BaseEntity";
 import { Validators } from "../Validators";
+import { BehaviorHook } from "./BehaviorHook";
 
 @Entity("behavior_config_validator")
 export class BehaviorConfigValidator extends DambaFullMeta {
@@ -30,6 +31,6 @@ export class BehaviorConfigValidator extends DambaFullMeta {
   @JoinColumn({ name: "responseId" })
   response!: Validators;
 
-  @OneToOne(() => Behavior, { nullable: false })
-  Behavior?: Behavior;
+  @OneToOne(() => BehaviorHook, { nullable: false })
+  BehaviorHook?: BehaviorHook;
 }

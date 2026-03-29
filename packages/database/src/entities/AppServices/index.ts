@@ -10,6 +10,8 @@ import {
 import { DambaMeta } from "../BaseEntity";
 import { Modules } from "../Modules";
 import { Extra } from "../Extra";
+import { Behavior } from "../Behaviors";
+import { BehaviorChain } from "../Behaviors/BehaviorChain";
 
 @Entity("app_services")
 export class AppServices extends DambaMeta {
@@ -47,4 +49,13 @@ export class AppServices extends DambaMeta {
   })
   @JoinColumn({ name: "serviceId" })
   extras?: Extra[];
+
+  @OneToMany(() => BehaviorChain, (o) => o.appService, {
+    nullable: true,
+    cascade: true,
+    onDelete: "CASCADE",
+    eager: true,
+  })
+  @JoinColumn({ name: "serviceId" })
+  behaviorChains?: BehaviorChain[];
 }

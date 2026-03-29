@@ -69,7 +69,7 @@ export const useProjectStore = create<ProjectState & ProjectActions>()(
 
         updateProject: (project) => {
           const { projects, projectId } = get()
-          const nextProjects = projects.map((p) => (p.id === project.id ? project : p))
+          const nextProjects = projects.map((p) => (p.id === project.id ? { ...p, ...project } : p))
           // keep selection if still valid
           const stillValid = !!findProject(nextProjects, projectId)
           set({ projects: nextProjects, projectId: stillValid ? projectId : '' })

@@ -8,16 +8,16 @@ export class CodeFile extends AppBaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id?: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar", nullable: true })
   name!: string;
 
   @Column({ type: "enum", enum: DStereotype, nullable: false })
   stereotype?: DStereotype;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar", nullable: true })
   applicationId?: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar", nullable: true })
   projectId?: string;
 
   @Column({ type: "varchar", nullable: true })
@@ -30,7 +30,7 @@ export class CodeFile extends AppBaseEntity {
   behaviorId?: string;
 
   @Column({ type: "varchar", nullable: true })
-  fileExtension?: string;
+  fileExtension!: string;
 
   @Column({ type: "varchar", nullable: true })
   path?: string;

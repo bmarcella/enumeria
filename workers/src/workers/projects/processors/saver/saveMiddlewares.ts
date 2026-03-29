@@ -14,7 +14,9 @@ export const saveGlobalMiddlewaresForApp = async (
   app: Application,
   project: Project,
   dao: DambaRepository<DataSource>,
+  targetApp?: Application,
 ): Promise<Middleware[]> => {
+  const saveTarget = targetApp ?? app;
   const { middlewares } = await callLLMForMiddlewares(
     llm,
     app.name!,
@@ -26,7 +28,7 @@ export const saveGlobalMiddlewaresForApp = async (
   );
   return Promise.all(
     middlewares.map((mw) =>
-      saveMiddleware(mw, dao, app, {
+      saveMiddleware(mw, dao, saveTarget, {
         orgId: (project as any).organization?.id,
         projId: project.id,
         environment: undefined,
@@ -42,7 +44,9 @@ export const saveGlobalPoliciesForApp = async (
   project: Project,
   dao: DambaRepository<DataSource>,
   availableMiddlewares: Middleware[],
+  targetApp?: Application,
 ): Promise<Policy[]> => {
+  const saveTarget = targetApp ?? app;
   const { policies } = await callLLMForPolicies(
     llm,
     app.name!,
@@ -57,7 +61,7 @@ export const saveGlobalPoliciesForApp = async (
         .map((mwItem) => availableMiddlewares.find((m) => m.name === mwItem.name))
         .filter((m): m is Middleware => !!m);
 
-      return savePolicy(pol, matchedMws, dao, app, {
+      return savePolicy(pol, matchedMws, dao, saveTarget, {
         orgId: (project as any).organization?.id,
         projId: project.id,
         environment: undefined,

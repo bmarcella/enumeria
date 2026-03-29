@@ -52,6 +52,17 @@ export const callLLM =  async <T>  (llm : any, prompt: any, input: any, runnable
 }
 
 export const getDambaCode = async (version: string = 'v2') => {
-    const files = await LoadFiles(resolve(process.cwd(), `../../common/Damba/${version}`));
-    return files;
+    const candidates = [
+      resolve(process.cwd(), `../common/Damba/${version}`),
+      resolve(process.cwd(), `../../common/Damba/${version}`),
+      resolve(__dirname, `../../../../common/Damba/${version}`),
+      resolve(__dirname, `../../../../../common/Damba/${version}`),
+    ];
+    for (const candidate of candidates) {
+      try {
+        const files = await LoadFiles(candidate);
+        if (files.length > 0) return files;
+      } catch { /* try next */ }
+    }
+    throw new Error(`Damba ${version} source not found. Tried: ${candidates.join(', ')}`);
 }

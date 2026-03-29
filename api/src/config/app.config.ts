@@ -18,11 +18,9 @@ import { Mail } from '@Damba/v2/mail';
 import { Server } from 'http';
 import { DambaTypeOrm } from '@Damba/v2/dao/DambaDb';
 import { DataSource } from 'typeorm';
-import { DEvent } from '@App/damba.import';
 import { authorize } from '@Damba/v2/auth/AuthMiddleware';
 import jwt from 'jsonwebtoken';
 import { ChatOllama } from '@langchain/ollama';
-import createWelcomeHandler, { createApiDocUi, createExtrasDocUi } from '@Damba/v2/Ui';
 import { TavilySearch } from '@langchain/tavily';
 import { ChatOpenAI } from '@langchain/openai';
 import { socketConfig } from './SocketConfig';
@@ -30,6 +28,7 @@ import IORedis from 'ioredis';
 import { QueueConfig } from './QueueConfig';
 import { oauth2Google } from './google.auth';
 import { authorizeSocket } from '@Damba/v2/auth/SocketAuthMiddleware';
+import { DEvent } from '@Damba/v2/service/DEvent';
 
 dotenv.config();
 
@@ -126,7 +125,6 @@ export const AppConfig: IAppConfig<DataSource> = {
         req.extras = extras;
         req.DRepository = DRepo;
         req.openAi = openAi;
-        req.mail = mail;
         req.oauth2Google = oauth2Google;
         req.ollama = ollama;
         req.tavily = tavily;

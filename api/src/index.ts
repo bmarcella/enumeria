@@ -63,7 +63,6 @@ declare module 'express-session' {
 async function main() {
   dotenv.config();
   const db = await initOrm<DataSource>(process.env as any);
-
   try {
     await Damba.start({
       modules: [indexModule, AgentModule],

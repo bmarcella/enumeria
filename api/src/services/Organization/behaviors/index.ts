@@ -24,10 +24,10 @@ api.DGet(
   },
   {
     getOrgById: async (e: DEvent, id: string) => {
-      return   await e.in.DRepository.DGet(Organization, { where: { id: id } });
+      return await e.in.DRepository.DGet(Organization, { where: { id: id } });
     },
     getOrgByUserId: async (e: DEvent, id: string) => {
-       return await e.in.DRepository.DGet(Organization, { where: { user: { id: id } } });
+      return await e.in.DRepository.DGet(Organization, { where: { user: { id: id } } });
     },
   },
 );

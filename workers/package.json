@@ -11,12 +11,11 @@
     "dev-2": "nodemon ./src/index.ts",
     "dev": "nodemon --watch src --ext ts,js,json --exec ts-node -r tsconfig-paths/register src/index.ts",
     "prepare": "husky",
-    "worker:create-entity": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/entities/create.worker.ts",
-    "worker:update-entity": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/entities/update.worker.ts",
     "worker:run-agent": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/agents/startAgentRunWorkers.ts",
     "worker:create-project": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/projects/create.worker.ts",
     "worker:delete-project": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/projects/delete.worker.ts",
-    "workers": "concurrently -k \"npm run worker:create-entity\" \"npm run worker:update-entity\" \"npm run worker:create-project\" \"npm run worker:delete-project\" \"npm run worker:run-agent\" "
+    "worker:create-project-pipeline": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/projects/pipeline.worker.ts",
+    "workers": "concurrently -k \"npm run worker:create-project\" \"npm run worker:delete-project\" \"npm run worker:run-agent\" \"npm run worker:create-project-pipeline\" "
   },
   "lint-staged": {
     "**/*.{js,cjs,mjs,ts,tsx,json,md,yml,yaml,css,scss,html}": "prettier --write"

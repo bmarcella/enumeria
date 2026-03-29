@@ -5,7 +5,6 @@ import {
   IDActionConfig,
   IModule,
   IServiceComplete,
-  IServiceProvider,
   TimeoutType,
 } from "../service/IServiceDamba";
 import { toHttpEnum } from "@Damba/v2/service/DambaHelper";
@@ -26,6 +25,7 @@ export interface RouteDocEntry {
   decription?: string;
   serviceMiddlewareCount: number;
   routeMiddlewareCount: number;
+  moduleMidlewareCount: number;
   hasHandler: boolean;
   extras?: any;
   timeout?: TimeoutType;
@@ -37,30 +37,30 @@ export interface RouteDocEntry {
   };
 }
 
-export type NestedApiDoc = Record<
-  string, // mount e.g. "/users"
-  Record<
-    string, // method e.g. "GET"
-    Record<
-      string, // path e.g. "/:id"
-      RouteDocEntry
-    >
-  >
->;
+// Service-level doc: methods → paths → entry
+export type ServiceDoc = Record<string, Record<string, RouteDocEntry>>;
+
+// Module-level doc: module name → services → ServiceDoc
+export interface ModuleDocEntry {
+  name: string;
+  middlewareCount: number;
+  services: Record<string, ServiceDoc>;
+}
+
+export type ModularApiDoc = ModuleDocEntry[];
+
+// Legacy flat format (still exported for JSON endpoints)
+export type NestedApiDoc = Record<string, ServiceDoc>;
+
 const DambaApiDocNested = <REQ, RES, NEXT>(
   modules: IModule<REQ, RES, NEXT>[],
   AppConfig?: IAppConfig,
-): { doc: NestedApiDoc; extras: any } => {
+): { doc: ModularApiDoc; flatDoc: NestedApiDoc; extras: Record<string, any>; modularExtras: Record<string, Record<string, any>> } => {
   const basePath = AppConfig?.path.basic ?? "";
-  const doc: NestedApiDoc = {};
+  const modularDoc: ModularApiDoc = [];
+  const flatDoc: NestedApiDoc = {};
   let extras: any = {};
-
-  const _SPS_ = modules.reduce(
-    (acc, module) => {
-      return { ...acc, ...module.services };
-    },
-    {} as IServiceProvider<REQ, RES, NEXT>,
-  );
+  const modularExtras: Record<string, Record<string, any>> = {};
 
   const makeExtrasMiddleware = (
     extrasObj: any,
@@ -72,56 +72,82 @@ const DambaApiDocNested = <REQ, RES, NEXT>(
     return { ...extrasObj, [name]: { ...existing, ...incoming } };
   };
 
-  for (const [serviceMount, serviceComplete] of Object.entries(_SPS_)) {
-    const { service, middleware, rootExtras } =
-      serviceComplete as IServiceComplete<REQ, RES, NEXT>;
+  for (const mod of modules) {
+    const moduleMws = toArray(mod.middleware);
+    const moduleEntry: ModuleDocEntry = {
+      name: mod.name,
+      middlewareCount: moduleMws.length,
+      services: {},
+    };
 
-    const serviceMws = toArray(middleware);
-    const name = serviceMount.replace("/", "").toLowerCase();
+    for (const [serviceMount, serviceComplete] of Object.entries(mod.services)) {
+      const { service, middleware, rootExtras } =
+        serviceComplete as IServiceComplete<REQ, RES, NEXT>;
 
-    if (rootExtras) {
-      extras = makeExtrasMiddleware(extras, name, rootExtras);
+      const serviceMws = toArray(middleware);
+      const name = serviceMount.replace("/", "").toLowerCase();
+
+      if (rootExtras) {
+        extras = makeExtrasMiddleware(extras, name, rootExtras);
+      }
+
+      const serviceDoc: ServiceDoc = {};
+
+      for (const [key, value] of Object.entries(service ?? {})) {
+        if (!value) continue;
+
+        const [rawMethod, rawPath] = String(key).split("@");
+        const methodEnum = toHttpEnum(rawMethod);
+        if (!methodEnum) continue;
+
+        const method = String(methodEnum);
+        const path = normalizePath(rawPath);
+        const fullPath = `${basePath}${serviceMount}${path}`;
+
+        const routeMws = toArray((value as any)?.middleware);
+        const handler = (value as any)?.behavior;
+        const config = (value as any)?.config as IDActionConfig;
+
+        extras = makeExtrasMiddleware(extras, name, (value as any)?.extras);
+
+        if (!serviceDoc[method]) serviceDoc[method] = {};
+
+        serviceDoc[method][path] = {
+          fullPath,
+          mount: serviceMount,
+          method,
+          path,
+          serviceMiddlewareCount: serviceMws.length,
+          routeMiddlewareCount: routeMws.length,
+          moduleMidlewareCount: moduleMws.length,
+          hasHandler: !!handler,
+          extras: (value as any)?.extras,
+          decription: config?.description,
+          timeout: config?.timeout,
+          validators: config?.validators,
+        };
+      }
+
+      moduleEntry.services[serviceMount] = serviceDoc;
+      flatDoc[serviceMount] = serviceDoc;
     }
 
-    if (!doc[serviceMount]) doc[serviceMount] = {};
+    modularDoc.push(moduleEntry);
 
-    for (const [key, value] of Object.entries(service ?? {})) {
-      if (!value) continue;
-
-      const [rawMethod, rawPath] = String(key).split("@");
-      const methodEnum = toHttpEnum(rawMethod);
-
-      if (!methodEnum) continue;
-
-      const method = String(methodEnum); // works for string enums; if numeric you may want Http[methodEnum]
-      const path = normalizePath(rawPath);
-      const fullPath = `${basePath}${serviceMount}${path}`;
-
-      const routeMws = toArray((value as any)?.middleware);
-      const handler = (value as any)?.behavior;
-      const config = (value as any)?.config as IDActionConfig;
-
-      extras = makeExtrasMiddleware(extras, name, (value as any)?.extras);
-
-      if (!doc[serviceMount][method]) doc[serviceMount][method] = {};
-
-      doc[serviceMount][method][path] = {
-        fullPath,
-        mount: serviceMount,
-        method,
-        path,
-        serviceMiddlewareCount: serviceMws.length,
-        routeMiddlewareCount: routeMws.length,
-        hasHandler: !!handler,
-        extras: (value as any)?.extras,
-        decription: config?.description,
-        timeout: config?.timeout,
-        validators: config?.validators,
-      };
+    // Collect extras grouped by module
+    const moduleExtrasForMod: Record<string, any> = {};
+    for (const serviceMount of Object.keys(mod.services)) {
+      const svcName = serviceMount.replace("/", "").toLowerCase();
+      if (extras[svcName]) {
+        moduleExtrasForMod[svcName] = extras[svcName];
+      }
+    }
+    if (Object.keys(moduleExtrasForMod).length > 0) {
+      modularExtras[mod.name] = moduleExtrasForMod;
     }
   }
 
-  return { doc, extras };
+  return { doc: modularDoc, flatDoc, extras, modularExtras };
 };
 
 export default DambaApiDocNested;

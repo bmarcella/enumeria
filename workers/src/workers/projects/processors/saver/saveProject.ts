@@ -28,12 +28,7 @@ export const saveProject = async (
     isForSale: false,
     price: 0,
     dambaVersion: 'v2',
-    environments: [
-      DambaEnvironmentType.DEV,
-      DambaEnvironmentType.QA,
-      DambaEnvironmentType.STAGING,
-      DambaEnvironmentType.PROD,
-    ],
+    environments: [DambaEnvironmentType.DEV],
     currentPlan: 'free',
   };
   return dao.DSave(Project, data) as Promise<Project>;

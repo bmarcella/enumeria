@@ -29,7 +29,10 @@ type TypeApp =
   | "daemon"
   | "workers"
   | "microservice"
-  | "packages";
+  | "packages"
+  | "package-entities"
+  | "package-validators"
+  | "package-policies-middlewares";
 
 @Entity("applications")
 export class Application extends AppBaseEntity {
