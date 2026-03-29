@@ -49,6 +49,8 @@ type DExtrasHandlerFactory<API = DambaApi> = (api?: API) => DExtrasHandler;
 
 export type Extras<API = DambaApi> = DExtrasHandlerFactory<API>;
 
+export type ExtraHook<API = DambaApi> = (api?: API) => AnyFn;
+
 export type DEventHandler<REQ = any, RES = any, NEXT = any> = (
   e: DEvent<REQ, RES, NEXT>,
 ) => Promise<any> | any;

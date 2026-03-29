@@ -56,10 +56,10 @@ export class DambaFullMeta extends DambaMeta {
   @Column({ type: "varchar", nullable: false })
   appId?: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar", nullable: true })
   moduleId?: string;
 
-  @Column({ type: "varchar", nullable: false })
+  @Column({ type: "varchar", nullable: true })
   servId?: string;
 }
 

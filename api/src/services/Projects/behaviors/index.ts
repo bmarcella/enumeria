@@ -86,6 +86,7 @@ export const getApplicationsByProjectId: Behavior = (api?: DambaApi) => {
     const id_project = api?.params()?.id;
     if (!id_project) return e.out.status(401).json({ error: ErrorMessage.INVALID_URL_PARAMS });
 
+    const { In } = await import('typeorm');
     const apps = (await e.in.DRepository.DGet(
       Application,
       {
@@ -98,6 +99,7 @@ export const getApplicationsByProjectId: Behavior = (api?: DambaApi) => {
           project: {
             id: id_project,
           },
+          type_app: In(['api', 'ui', 'microservice']),
         },
       },
       true,

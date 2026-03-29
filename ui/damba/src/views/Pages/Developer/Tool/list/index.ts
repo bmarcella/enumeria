@@ -1,3 +1,3 @@
-import ToolArtifactsListPage from "./ToolArtifactsListPage";
-export { ToolArtifactsListPageBase } from "./ToolArtifactsListPage"
-export default ToolArtifactsListPage;
+import ToolArtifactsListPage from './ToolArtifactsListPage'
+export { ToolArtifactsListPageBase } from './ToolArtifactsListPage'
+export default ToolArtifactsListPage

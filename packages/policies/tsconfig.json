@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+    "target": "ES2017", // or ES2018+
+    "lib": ["ES2017"], // or ["ES2015", "DOM"] if needed
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@Damba/*": ["../../common/Damba/*"],
+      "@Common/*": ["../../common/*"],
+      "@Database/*": ["../../packages/database/src/*"],
+      "@Policies/*": ["../../packages/policies/src/*"],
+      "@Validators/*": ["../../packages/validators/src/*"]
+    }
+  }
+}

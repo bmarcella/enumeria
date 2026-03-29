@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { DEvent } from "@App/damba.import";
 import {
   AgentDefinition,
   AgentAssignment,
@@ -10,10 +8,10 @@ import {
   AgentProposal,
   ProposalStatus,
   AgentRun,
-} from "@App/entities/agents/Agents";
-import { OrgParams } from "@App/Validators/agents";
-import { DambaApi, Behavior } from "@Damba/v2/service/DambaService";
-import { RunRequestBody } from "../../../../../packages/validators/src/contracts/AgentRunValidators";
+} from '@Database/entities/agents/contracts/Agents';
+import { OrgParams } from '@Validators/contracts/AgentRunValidators';
+import { DambaApi, Behavior } from '@Damba/v2/service/DambaService';
+import { RunRequestBody } from '../../../../../packages/validators/src/contracts/AgentRunValidators';
 import {
   audit,
   buildToolRegistryV2,
@@ -22,8 +20,9 @@ import {
   runManifestAgent,
   safeTrace,
   validateAssignmentConfig,
-} from "@App/AgentModule/helper";
-import { AuditEventType } from "@App/entities/agents/AuditEvent";
+} from '@App/AgentModule/helper';
+import { AuditEventType } from '@Database/entities/agents/contracts/AuditEvent';
+import { DEvent } from '@Damba/v2/service/DEvent';
 
 export const runAgentBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
@@ -34,8 +33,8 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
     // -----------------------------
     const { orgId } = OrgParams.parse(e.in.params);
     const body = RunRequestBody.parse(e.in.body ?? {});
-    const request = (body.request ?? api?.params().query ?? "").trim();
-    if (!request) throw new Error("request is required");
+    const request = (body.request ?? api?.params().query ?? '').trim();
+    if (!request) throw new Error('request is required');
 
     // -----------------------------
     // 2) Load assignment
@@ -44,8 +43,8 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
       where: { id: body.assignmentId, buyerOrgId: orgId },
     });
 
-    if (!assignment) throw new Error("Assignment not found");
-    if (!assignment.enabled) throw new Error("Assignment disabled");
+    if (!assignment) throw new Error('Assignment not found');
+    if (!assignment.enabled) throw new Error('Assignment disabled');
 
     // -----------------------------
     // 3) License check
@@ -55,7 +54,7 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
     });
 
     if (!license || license.status !== LicenseStatus.Active) {
-      throw new Error("License inactive");
+      throw new Error('License inactive');
     }
 
     // -----------------------------
@@ -64,7 +63,7 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
     const agent = await repo?.DGet1<AgentDefinition>(AgentDefinition, {
       where: { id: assignment.agentDefinitionId },
     });
-    if (!agent) throw new Error("Agent definition missing");
+    if (!agent) throw new Error('Agent definition missing');
 
     // -----------------------------
     // 5) Validate assignment config against agent.inputsSchema
@@ -96,7 +95,7 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_RUN_STARTED,
       orgId,
-      resourceType: "AgentRun",
+      resourceType: 'AgentRun',
       resourceId: savedRun?.id ?? null,
       metadata: {
         assignmentId: assignment.id,
@@ -145,9 +144,9 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
       // -----------------------------
       // 10) Execute (artifact or manifest)
       // -----------------------------
-      const manifestMode = (agent as any).agentManifest?.mode ?? "artifact";
+      const manifestMode = (agent as any).agentManifest?.mode ?? 'artifact';
 
-      const out =  await runManifestAgent({ agent, ctx });
+      const out = await runManifestAgent({ agent, ctx });
 
       // -----------------------------
       // 11) Persist run success
@@ -170,7 +169,7 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
       if (out.proposalPatch) {
         proposal = new AgentProposal();
         proposal.runId = savedRun.id;
-        proposal.type = "ast_patch" as any;
+        proposal.type = 'ast_patch' as any;
         proposal.patch = out.proposalPatch;
         proposal.status = ProposalStatus.Proposed;
 
@@ -183,7 +182,7 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
       await audit(api, e, {
         type: AuditEventType.AGENT_RUN_SUCCEEDED,
         orgId,
-        resourceType: "AgentRun",
+        resourceType: 'AgentRun',
         resourceId: savedRun?.id ?? null,
         metadata: {
           agentDefinitionId: agent.id,
@@ -211,8 +210,12 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
 
       // still store tool trace if available
       (savedRun as any).trace = safeTrace(
-        { toolTrace: (toolsRegistry as any).__trace ?? [], agentTrace: null, error: savedRun.error },
-        20000
+        {
+          toolTrace: (toolsRegistry as any).__trace ?? [],
+          agentTrace: null,
+          error: savedRun.error,
+        },
+        20000,
       );
 
       await api?.DSave(savedRun);
@@ -223,7 +226,7 @@ export const runAgentBehavior: Behavior = (api?: DambaApi) => {
       await audit(api, e, {
         type: AuditEventType.AGENT_RUN_FAILED,
         orgId,
-        resourceType: "AgentRun",
+        resourceType: 'AgentRun',
         resourceId: savedRun?.id ?? null,
         metadata: {
           agentDefinitionId: assignment.agentDefinitionId,

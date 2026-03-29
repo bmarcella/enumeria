@@ -2,10 +2,13 @@
 // Behaviors
 // --------------------------------------------------
 
-import { DEvent } from "@App/damba.import";
-import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
-import { CreateAuditEventBody, QueryAuditEvents } from "../../../../../packages/validators/src/contracts/AuditEventValidators";
-import { AuditEvent } from "@App/entities/agents/AuditEvent";
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
+import {
+  CreateAuditEventBody,
+  QueryAuditEvents,
+} from '../../../../../packages/validators/src/contracts/AuditEventValidators';
+import { AuditEvent } from '@Database/entities/agents/contracts/AuditEvent';
+import { DEvent } from '@Damba/v2/service/DEvent';
 
 /**
  * POST /audit_events/create
@@ -47,7 +50,7 @@ export const listAuditEventsBehavior: Behavior = (api?: DambaApi) => {
     const events = await repo?.DGetAll<AuditEvent>(AuditEvent, {
       where,
       take: q.limit,
-      order: { createdAt: "DESC" },
+      order: { createdAt: 'DESC' },
     });
 
     e.out.send({ events: events ?? [] });

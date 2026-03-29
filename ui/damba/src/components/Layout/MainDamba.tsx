@@ -1,7 +1,6 @@
 import { ReactNode } from 'react'
 import classNames from 'classnames'
 
-
 interface Props {
     sidebar?: ReactNode
     content: ReactNode
@@ -15,12 +14,12 @@ const MainDamba = ({ sidebar, content }: Props) => {
                     'w-full h-full grid',
                     sidebar
                         ? 'grid-cols-1 lg:grid-cols-[auto_1fr]'
-                        : 'grid-cols-1'
+                        : 'grid-cols-1',
                 )}
             >
                 {/* Left Sidebar */}
                 {sidebar && (
-                    <aside className="lg:sticky lg:top-0 lg:h-screen bg-white dark:bg-gray-900 p-1 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <aside className="mr-2 lg:sticky lg:top-0 lg:h-screen bg-white dark:bg-gray-900 p-1 rounded-lg border border-gray-200 dark:border-gray-700">
                         {sidebar}
                     </aside>
                 )}

@@ -87,4 +87,7 @@ export class Project extends AppBaseEntity {
 
   @Column({ type: "varchar", nullable: true })
   gitLabRepo?: string;
+
+  @Column({ type: "varchar", nullable: true })
+  lastCompletedStep?: string;
 }

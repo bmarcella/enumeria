@@ -1,15 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import crypto from "crypto";
-import { DEvent } from "@App/damba.import";
-import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
-import { audit } from "../../helper";
-import { AuditEventType } from "@Database/entities/agents/contracts/AuditEvent";
+import crypto from 'crypto';
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
+import { audit } from '../../helper';
+import { AuditEventType } from '@Database/entities/agents/contracts/AuditEvent';
 import {
   CreateRunnableLambdaBody,
   UpdateRunnableLambdaBody,
   RunnableLambdaIdParams,
-} from "../../../../../packages/validators/src/contracts/RunnableLambdaValidators";
-import { RunnableLambda, RunnableLambdaStatus, RunnableLambdaVisibility } from "@Database/entities/agents/contracts/ToolArtifactAndRunnableLambda";
+} from '../../../../../packages/validators/src/contracts/RunnableLambdaValidators';
+import {
+  RunnableLambda,
+  RunnableLambdaStatus,
+  RunnableLambdaVisibility,
+} from '@Database/entities/agents/contracts/ToolArtifactAndRunnableLambda';
+import { DEvent } from '@Damba/v2/service/DEvent';
 
 /**
  * Hash reproductible de la lambda
@@ -35,7 +39,7 @@ export function computeRunnableLambdaContentHash(payload: {
     permissionsRequested: [...(payload.permissionsRequested ?? [])].sort(),
   });
 
-  const hash = crypto.createHash("sha256").update(normalized).digest("hex");
+  const hash = crypto.createHash('sha256').update(normalized).digest('hex');
   return `sha256:${hash}`;
 }
 
@@ -56,12 +60,12 @@ export const createRunnableLambdaBehavior: Behavior = (api?: DambaApi) => {
 
     const { orgId, userId } = await getOrgAndUser(e);
     if (!orgId || !userId) {
-        return e.out.status(401).send({ message: "Unauthorized" });
+      return e.out.status(401).send({ message: 'Unauthorized' });
     }
 
     const lambda = new RunnableLambda();
     lambda.name = body.name;
-    lambda.description = body.description ?? "";
+    lambda.description = body.description ?? '';
     lambda.version = body.version;
     lambda.runtime = body.runtime;
     lambda.kind = body.kind;
@@ -93,7 +97,7 @@ export const createRunnableLambdaBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_CREATED,
       orgId,
-      resourceType: "RunnableLambda",
+      resourceType: 'RunnableLambda',
       resourceId: saved?.id ?? null,
       metadata: {
         name: saved?.name,
@@ -118,25 +122,21 @@ export const updateRunnableLambdaBehavior: Behavior = (api?: DambaApi) => {
     const body = UpdateRunnableLambdaBody.parse(e.in.body);
 
     const { orgId, userId } = await getOrgAndUser(e);
-    if (!orgId || !userId) throw new Error("Unauthorized");
+    if (!orgId || !userId) throw new Error('Unauthorized');
 
     const lambda = await repo?.DGet1<RunnableLambda>(RunnableLambda, {
       where: { id: runnableLambdaId },
     });
 
-    if (!lambda) throw new Error("RunnableLambda not found");
-    if (lambda.publisherOrgId !== orgId) throw new Error("Forbidden");
+    if (!lambda) throw new Error('RunnableLambda not found');
+    if (lambda.publisherOrgId !== orgId) throw new Error('Forbidden');
 
-    if (
-      ![RunnableLambdaStatus.Draft, RunnableLambdaStatus.Rejected].includes(
-        lambda.status
-      )
-    ) {
-      throw new Error("Only draft or rejected runnable lambdas can be edited");
+    if (![RunnableLambdaStatus.Draft, RunnableLambdaStatus.Rejected].includes(lambda.status)) {
+      throw new Error('Only draft or rejected runnable lambdas can be edited');
     }
 
     if (body.name !== undefined) lambda.name = body.name;
-    if (body.description !== undefined) lambda.description = body.description ?? "";
+    if (body.description !== undefined) lambda.description = body.description ?? '';
     if (body.version !== undefined) lambda.version = body.version;
     if (body.runtime !== undefined) lambda.runtime = body.runtime;
     if (body.kind !== undefined) lambda.kind = body.kind;
@@ -167,7 +167,7 @@ export const updateRunnableLambdaBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_UPDATED,
       orgId,
-      resourceType: "RunnableLambda",
+      resourceType: 'RunnableLambda',
       resourceId: saved?.id ?? null,
       metadata: {
         name: saved?.name,
@@ -189,21 +189,17 @@ export const deleteRunnableLambdaBehavior: Behavior = (api?: DambaApi) => {
     const { runnableLambdaId } = RunnableLambdaIdParams.parse(e.in.params);
 
     const { orgId, userId } = await getOrgAndUser(e);
-    if (!orgId || !userId) throw new Error("Unauthorized");
+    if (!orgId || !userId) throw new Error('Unauthorized');
 
     const lambda = await repo?.DGet1<RunnableLambda>(RunnableLambda, {
       where: { id: runnableLambdaId },
     });
 
-    if (!lambda) throw new Error("RunnableLambda not found");
-    if (lambda.publisherOrgId !== orgId) throw new Error("Forbidden");
+    if (!lambda) throw new Error('RunnableLambda not found');
+    if (lambda.publisherOrgId !== orgId) throw new Error('Forbidden');
 
-    if (
-      ![RunnableLambdaStatus.Draft, RunnableLambdaStatus.Rejected].includes(
-        lambda.status
-      )
-    ) {
-      throw new Error("Only draft or rejected runnable lambdas can be deleted");
+    if (![RunnableLambdaStatus.Draft, RunnableLambdaStatus.Rejected].includes(lambda.status)) {
+      throw new Error('Only draft or rejected runnable lambdas can be deleted');
     }
 
     await repo?.DDelete?.(RunnableLambda, { id: runnableLambdaId });
@@ -211,7 +207,7 @@ export const deleteRunnableLambdaBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_REJECTED,
       orgId,
-      resourceType: "RunnableLambda",
+      resourceType: 'RunnableLambda',
       resourceId: runnableLambdaId,
       metadata: {
         deleted: true,
@@ -221,7 +217,7 @@ export const deleteRunnableLambdaBehavior: Behavior = (api?: DambaApi) => {
     });
 
     e.out.send({
-      message: "RunnableLambda deleted successfully",
+      message: 'RunnableLambda deleted successfully',
       runnableLambdaId,
     });
   };
@@ -239,7 +235,7 @@ export const getRunnableLambdaBehavior: Behavior = (api?: DambaApi) => {
       where: { id: runnableLambdaId },
     });
 
-    if (!lambda) throw new Error("RunnableLambda not found");
+    if (!lambda) throw new Error('RunnableLambda not found');
 
     e.out.send({ runnableLambda: lambda });
   };
@@ -253,11 +249,11 @@ export const listRunnableLambdasBehavior: Behavior = (api?: DambaApi) => {
     const repo = api?.DRepository();
 
     const { orgId, userId } = await getOrgAndUser(e);
-    if (!orgId || !userId) throw new Error("Unauthorized");
+    if (!orgId || !userId) throw new Error('Unauthorized');
 
     const lambdas = await repo?.DGetAll<RunnableLambda>(RunnableLambda, {
       where: { publisherOrgId: orgId },
-      order: { created_at: "DESC" as any },
+      order: { created_at: 'DESC' as any },
       take: 200,
     });
 

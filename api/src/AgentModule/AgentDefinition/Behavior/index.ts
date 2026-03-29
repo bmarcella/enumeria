@@ -1,28 +1,39 @@
-
-import { DEvent } from "@App/damba.import";
-import { Behavior, DambaApi } from "@Damba/v2/service/DambaService";
-import { AgentDefinition, AgentDefinitionStatus, AgentListing, ListingVisibility, AgentSnapshot } from "@Database/entities/agents/contracts/Agents";
-import { audit, clampStr } from "../../helper";
-import crypto from "crypto";
-import { z } from "zod";
-import { AgentIdParams, AgentManifestSchema, ApprovalListingDefaults, CreateAgentDefinitionBody, ModerationBody, ParamsSchema, UpdateAgentDefinitionBody } from "@Validators/contracts/AgentDefinitionValidators";
-import { AuditEvent, AuditEventType } from "@Database/entities/agents/contracts/AuditEvent";
+import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
+import {
+  AgentDefinition,
+  AgentDefinitionStatus,
+  AgentListing,
+  ListingVisibility,
+  AgentSnapshot,
+} from '@Database/entities/agents/contracts/Agents';
+import { audit, clampStr } from '../../helper';
+import crypto from 'crypto';
+import { z } from 'zod';
+import {
+  AgentIdParams,
+  AgentManifestSchema,
+  ApprovalListingDefaults,
+  CreateAgentDefinitionBody,
+  ModerationBody,
+  ParamsSchema,
+  UpdateAgentDefinitionBody,
+} from '@Validators/contracts/AgentDefinitionValidators';
+import { AuditEvent, AuditEventType } from '@Database/entities/agents/contracts/AuditEvent';
+import { DEvent } from '@Damba/v2/service/DEvent';
 
 function stableStringify(value: any): string {
-  if (value === null || typeof value !== "object") {
+  if (value === null || typeof value !== 'object') {
     return JSON.stringify(value);
   }
 
   if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
+    return `[${value.map(stableStringify).join(',')}]`;
   }
 
   const keys = Object.keys(value).sort();
-  const entries = keys.map(
-    (k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`
-  );
+  const entries = keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`);
 
-  return `{${entries.join(",")}}`;
+  return `{${entries.join(',')}}`;
 }
 
 export function computeContentHash(snap: AgentSnapshot): string {
@@ -35,10 +46,7 @@ export function computeContentHash(snap: AgentSnapshot): string {
 
   const canonical = stableStringify(payload);
 
-  return crypto
-    .createHash("sha256")
-    .update(canonical)
-    .digest("hex");
+  return crypto.createHash('sha256').update(canonical).digest('hex');
 }
 
 export const createAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
@@ -48,7 +56,7 @@ export const createAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     const config = await e.in.extras.users.getCurrentSetting(e);
     const orgId = config.orgId;
     if (!orgId || !userId) {
-       e.out.status(402).send({})
+      e.out.status(402).send({});
     }
     const def = new AgentDefinition();
     def.name = body.name;
@@ -69,7 +77,6 @@ export const createAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
 
     def.inputsSchema = body.inputsSchema ?? null;
 
-
     def.status = AgentDefinitionStatus.Draft;
     def.created_by = userId;
 
@@ -78,12 +85,12 @@ export const createAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_CREATED,
       orgId: saved?.publisherOrgId ?? null,
-      resourceType: "AgentDefinition",
+      resourceType: 'AgentDefinition',
       resourceId: saved?.id ?? null,
       metadata: {
         name: saved?.name,
         version: saved?.version,
-        mode: saved?.agentManifest?.mode ?? "artifact",
+        mode: saved?.agentManifest?.mode ?? 'artifact',
         executionMode: saved?.executionMode,
       },
     });
@@ -101,13 +108,14 @@ export const updateAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, {
       where: { id: agentDefinitionId },
     });
-    if (!def) throw new Error("AgentDefinition not found");
+    if (!def) throw new Error('AgentDefinition not found');
 
     // publisher guard (use policies in real app)
-    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId) throw new Error("Forbidden");
+    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId)
+      throw new Error('Forbidden');
 
     if (![AgentDefinitionStatus.Draft, AgentDefinitionStatus.Rejected].includes(def.status))
-      throw new Error("Only draft or rejected definitions can be edited");
+      throw new Error('Only draft or rejected definitions can be edited');
 
     if (body.name !== undefined) def.name = body.name;
     if (body.description !== undefined) def.description = body.description;
@@ -120,7 +128,8 @@ export const updateAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
 
     if (body.scopes !== undefined) def.scopes = body.scopes as any;
     if (body.capabilities !== undefined) def.capabilities = body.capabilities;
-    if (body.permissionsRequested !== undefined) def.permissionsRequested = body.permissionsRequested;
+    if (body.permissionsRequested !== undefined)
+      def.permissionsRequested = body.permissionsRequested;
 
     if (body.inputsSchema !== undefined) def.inputsSchema = body.inputsSchema ?? null;
 
@@ -134,7 +143,7 @@ export const updateAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_UPDATED,
       orgId: saved?.publisherOrgId ?? null,
-      resourceType: "AgentDefinition",
+      resourceType: 'AgentDefinition',
       resourceId: saved?.id ?? null,
       metadata: { name: saved?.name, version: saved?.version },
     });
@@ -143,18 +152,20 @@ export const updateAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
   };
 };
 
-
 export const approveAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const repo = api?.DRepository();
     const { agentDefinitionId } = AgentIdParams.parse(e.in.params);
 
     // admin guard (use policies in real app)
-    if (!e.in.payload?.isAdmin) throw new Error("Admin required");
+    if (!e.in.payload?.isAdmin) throw new Error('Admin required');
 
-    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, { where: { id: agentDefinitionId } });
-    if (!def) throw new Error("AgentDefinition not found");
-    if (def.status !== AgentDefinitionStatus.Submitted) throw new Error("Only submitted can be approved");
+    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, {
+      where: { id: agentDefinitionId },
+    });
+    if (!def) throw new Error('AgentDefinition not found');
+    if (def.status !== AgentDefinitionStatus.Submitted)
+      throw new Error('Only submitted can be approved');
 
     const listingDefaults = ApprovalListingDefaults.parse(e.in.body ?? {});
 
@@ -183,7 +194,7 @@ export const approveAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_APPROVED,
       orgId: savedDef?.publisherOrgId ?? null,
-      resourceType: "AgentDefinition",
+      resourceType: 'AgentDefinition',
       resourceId: savedDef?.id ?? null,
       metadata: { name: savedDef?.name, version: savedDef?.version },
     });
@@ -197,11 +208,14 @@ export const rejectAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     const repo = api?.DRepository();
     const { agentDefinitionId } = AgentIdParams.parse(e.in.params);
 
-    if (!e.in.payload?.isAdmin) throw new Error("Admin required");
+    if (!e.in.payload?.isAdmin) throw new Error('Admin required');
 
-    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, { where: { id: agentDefinitionId } });
-    if (!def) throw new Error("AgentDefinition not found");
-    if (def.status !== AgentDefinitionStatus.Submitted) throw new Error("Only submitted can be rejected");
+    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, {
+      where: { id: agentDefinitionId },
+    });
+    if (!def) throw new Error('AgentDefinition not found');
+    if (def.status !== AgentDefinitionStatus.Submitted)
+      throw new Error('Only submitted can be rejected');
 
     const { reason } = ModerationBody.parse(e.in.body ?? {});
     def.status = AgentDefinitionStatus.Rejected;
@@ -211,7 +225,7 @@ export const rejectAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_REJECTED,
       orgId: saved?.publisherOrgId ?? null,
-      resourceType: "AgentDefinition",
+      resourceType: 'AgentDefinition',
       resourceId: saved?.id ?? null,
       metadata: { reason: clampStr(reason, 1000) },
     });
@@ -227,20 +241,21 @@ export const getAgentsDefinitionsBehavior: Behavior = (api?: DambaApi) => {
     const agents = await repo?.DGet(AgentDefinition, {
       where: {
         publisherOrgId: config?.orgId,
-      }
+      },
     });
     e.out.send({ agents });
   };
 };
-
 
 export const getAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     const repo = api?.DRepository();
     const { agentDefinitionId } = AgentIdParams.parse(e.in.params);
 
-    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, { where: { id: agentDefinitionId } });
-    if (!def) throw new Error("AgentDefinition not found");
+    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, {
+      where: { id: agentDefinitionId },
+    });
+    if (!def) throw new Error('AgentDefinition not found');
 
     e.out.send({ agentDefinition: def });
   };
@@ -257,7 +272,7 @@ export const delistAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     });
 
     if (!def) {
-      throw new Error("AgentDefinition not found");
+      throw new Error('AgentDefinition not found');
     }
 
     // 2️⃣ Authorization
@@ -265,7 +280,7 @@ export const delistAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     const isAdmin = e.in.payload?.isAdmin;
 
     if (!isOwner && !isAdmin) {
-      throw new Error("Forbidden");
+      throw new Error('Forbidden');
     }
 
     // 3️⃣ Load listing
@@ -275,7 +290,7 @@ export const delistAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
 
     if (!listing) {
       // Nothing to delist
-      e.out.send({ message: "No listing found", agentDefinitionId });
+      e.out.send({ message: 'No listing found', agentDefinitionId });
       return;
     }
 
@@ -291,7 +306,7 @@ export const delistAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
       audit.type = AuditEventType.AGENT_DELISTED;
       audit.orgId = def.publisherOrgId;
       audit.actorUserId = e.in.payload?.id ?? null;
-      audit.resourceType = "AgentDefinition";
+      audit.resourceType = 'AgentDefinition';
       audit.resourceId = def.id;
       audit.metadata = {
         listingId: listing.id,
@@ -303,7 +318,7 @@ export const delistAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     }
 
     e.out.send({
-      message: "Agent successfully delisted",
+      message: 'Agent successfully delisted',
       agentDefinitionId,
       listingId: listing.id,
     });
@@ -315,19 +330,20 @@ export const submitAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     const repo = api?.DRepository();
     const { agentDefinitionId } = AgentIdParams.parse(e.in.params);
 
-    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, { where: { id: agentDefinitionId } });
-    if (!def) throw new Error("AgentDefinition not found");
+    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, {
+      where: { id: agentDefinitionId },
+    });
+    if (!def) throw new Error('AgentDefinition not found');
 
-    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId) throw new Error("Forbidden");
+    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId)
+      throw new Error('Forbidden');
     if (![AgentDefinitionStatus.Draft, AgentDefinitionStatus.Rejected].includes(def.status))
-      throw new Error("Only draft/rejected can be submitted");
+      throw new Error('Only draft/rejected can be submitted');
 
     // 1) validate manifest again (submit gate)
     if (def.agentManifest) {
       def.agentManifest = AgentManifestSchema.parse(def.agentManifest) as any;
     }
-
-  
 
     def.status = AgentDefinitionStatus.Submitted;
     const saved = await api?.DSave(def);
@@ -350,9 +366,14 @@ export const submitAgentDefinitionBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_SUBMITTED,
       orgId: saved?.publisherOrgId ?? null,
-      resourceType: "AgentDefinition",
+      resourceType: 'AgentDefinition',
       resourceId: saved?.id ?? null,
-      metadata: { name: saved?.name, version: saved?.version, snapshotId: savedSnap?.id, contentHash: savedSnap?.contentHash },
+      metadata: {
+        name: saved?.name,
+        version: saved?.version,
+        snapshotId: savedSnap?.id,
+        contentHash: savedSnap?.contentHash,
+      },
     });
 
     // (optional) add a SNAPSHOT_CREATED audit type too
@@ -365,16 +386,21 @@ export const updateAgentManifestBehavior: Behavior = (api?: DambaApi) => {
     const repo = api?.DRepository();
     const { agentDefinitionId } = AgentIdParams.parse(e.in.params);
 
-    const body = z.object({
-      agentManifest: AgentManifestSchema.nullable(),
-    }).parse(e.in.body);
+    const body = z
+      .object({
+        agentManifest: AgentManifestSchema.nullable(),
+      })
+      .parse(e.in.body);
 
-    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, { where: { id: agentDefinitionId } });
-    if (!def) throw new Error("AgentDefinition not found");
+    const def = await repo?.DGet1<AgentDefinition>(AgentDefinition, {
+      where: { id: agentDefinitionId },
+    });
+    if (!def) throw new Error('AgentDefinition not found');
 
-    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId) throw new Error("Forbidden");
+    if (e.in.payload?.orgId && def.publisherOrgId !== e.in.payload.orgId)
+      throw new Error('Forbidden');
     if (![AgentDefinitionStatus.Draft, AgentDefinitionStatus.Rejected].includes(def.status))
-      throw new Error("Only draft/rejected can be edited");
+      throw new Error('Only draft/rejected can be edited');
 
     def.agentManifest = (body.agentManifest ?? null) as any;
 
@@ -383,9 +409,9 @@ export const updateAgentManifestBehavior: Behavior = (api?: DambaApi) => {
     await audit(api, e, {
       type: AuditEventType.AGENT_UPDATED,
       orgId: saved?.publisherOrgId ?? null,
-      resourceType: "AgentDefinition",
+      resourceType: 'AgentDefinition',
       resourceId: saved?.id ?? null,
-      metadata: { updated: "agentManifest" },
+      metadata: { updated: 'agentManifest' },
     });
 
     e.out.send({ agentDefinition: saved });

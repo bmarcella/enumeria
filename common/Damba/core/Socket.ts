@@ -20,6 +20,8 @@ export const SocketAction = {
     `${service ? `${service}:` : ""}update:${entity}`,
   delete: (entity: EntityType, service?: string) =>
     `${service ? `${service}:` : ""}delete:${entity}`,
+  /** Pipeline step action: `pipeline:{step_name}` */
+  pipeline: (step: string) => `pipeline:${step}`,
 };
 
 export const SocketResponse = {
@@ -30,7 +32,3 @@ export const SocketResponse = {
   delete: (entity: EntityType, step?: string) =>
     `${step ? `${step}:` : ""}delete:${entity}`,
 };
-
-// how to use it on client
-// socket.emit(SocketAction.create(EntityType.PROJECT));
-// socket.emit(SocketAction.update(EntityType.MODULE));
