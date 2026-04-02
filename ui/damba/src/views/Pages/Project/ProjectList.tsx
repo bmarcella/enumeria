@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
-import { HiOutlineCube, HiOutlineCheckCircle, HiTrash, HiOutlineSparkles, HiOutlineViewGrid } from 'react-icons/hi'
+import { HiOutlineCube, HiOutlineCheckCircle, HiTrash, HiOutlineSparkles, HiOutlineViewGrid, HiOutlinePencilAlt } from 'react-icons/hi'
 
 import { useProjectStore, selectProjects } from '@/stores/useProjectStore'
 import { ProjectStats } from './ProjectStats'
@@ -29,6 +29,7 @@ import CardQueue from './CardQueue'
 import { JobAckPayload } from '@/services/socket.io/JobAckPlayload'
 import { deleteProject } from '@/services/Project'
 import { usePipelineStore, getResumeStepIndex, getCompletionPercent } from '@/stores/usePipelineStore'
+import { useManualPipelineStore } from '@/stores/useManualPipelineStore'
 import { CurrentSetting } from '../../../../../../common/Damba/v2/Entity/UserDto'
 
 type LoadingMap = Record<string, boolean>
@@ -67,6 +68,7 @@ export const ProjectList = () => {
     const [activeTab, setActiveTab] = useState<'projects' | 'new'>('projects')
     const startPipeline = usePipelineStore((s) => s.startPipeline)
     const resumePipeline = usePipelineStore((s) => s.resumePipeline)
+    const startManualPipeline = useManualPipelineStore((s) => s.startManualPipeline)
 
     const {
         control,
@@ -90,9 +92,24 @@ export const ProjectList = () => {
         // Check if the project is still being built
         const proj = projects.find((p) => p.id === id_project) as any
         const buildStatus = proj?.buildStatus
-        const lastStep = proj?.lastCompletedStep
 
         if (buildStatus && buildStatus !== 'completed') {
+            const isManual = proj?.buildingType === 'manual'
+
+            if (isManual) {
+                const apps: any[] = proj?.applications ?? []
+                const BACKEND_TYPES = new Set([
+                    'api', 'microservice', 'daemon', 'workers', 'cli', 'library',
+                ])
+                const hasBackend = apps.some((a: any) =>
+                    BACKEND_TYPES.has(a.type_app),
+                )
+                startManualPipeline(id_project, hasBackend, apps)
+                navigate('/manual-pipeline')
+                return
+            }
+
+            const lastStep = proj?.lastCompletedStep
             const resumeAt = getResumeStepIndex(buildStatus, lastStep)
             if (resumeAt >= 0) {
                 resumePipeline(
@@ -359,6 +376,8 @@ export const ProjectList = () => {
                             const isFailed = buildStatus === 'failed'
                             const isBuilding = buildStatus === 'in_progress' || buildStatus === 'initializing'
 
+                            const isManual = (project as any).buildingType === 'manual'
+
                             const borderClass = isFailed
                                 ? 'border-red-300 dark:border-red-800'
                                 : isBuilding
@@ -394,11 +413,17 @@ export const ProjectList = () => {
                                         <div className="flex items-start justify-between">
                                             <div className={classNames(
                                                 'flex h-12 w-12 items-center justify-center rounded-md',
-                                                isComplete ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400' :
-                                                isFailed ? 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400' :
-                                                'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400',
+                                                isComplete
+                                                    ? isManual
+                                                        ? 'bg-[#fb732c]/10 text-[#fb732c]'
+                                                        : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                                    : isFailed ? 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400'
+                                                    : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400',
                                             )}>
-                                                <HiOutlineCube className="text-2xl" />
+                                                {isManual
+                                                    ? <HiOutlinePencilAlt className="text-2xl" />
+                                                    : <HiOutlineSparkles className="text-2xl" />
+                                                }
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 {statusBadge}

@@ -38,6 +38,10 @@ export enum SidebarMenuKey {
     Policies = 'Policies',
     Behaviors = 'Behaviors',
     Entities = 'Entities',
+    Modules = 'Modules',
+    Extras = 'Extras',
+    Validators = 'Validators',
+    Preview = 'Preview',
 }
 
 export type MenuKey = SidebarMenuKey | string

@@ -38,6 +38,9 @@ export class DataModelColumn extends AppBaseEntity {
   @Column({ type: 'varchar', nullable: true })
   defaultValue!: string | null;
 
+  @Column({ type: 'jsonb', nullable: true })
+  enumValues!: string[] | null;
+
   @Column({ type: 'varchar', nullable: true })
   checkConstraint!: string | null;
 

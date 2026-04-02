@@ -1,62 +1,35 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { SessionUser } from '../../common/Damba/v2/Entity/UserDto';
 import 'reflect-metadata';
 import 'tsconfig-paths/register';
-import bodyParser from 'body-parser';
-import cors from 'cors';
 import dotenv from 'dotenv';
-import express from 'express';
-import session from 'express-session';
 import { DataSource } from 'typeorm';
 import { AppConfig } from './config/app.config';
-import { OAuth2Client } from 'google-auth-library';
-import { JwtPayload } from 'jsonwebtoken';
-import { ExtrasMap } from '@Damba/v2/route/IRoute';
-import { DambaRepository } from '@Damba/v2/dao';
-import { Mail } from '@Damba/v2/mail';
-import { ChatOllama } from '@langchain/ollama';
-import { ChatOpenAI } from '@langchain/openai';
-import { TavilySearch } from '@langchain/tavily';
 import Damba from '@Damba/v2';
-import IORedis from 'ioredis';
 import { AgentModule, _SPS_AGENT_MODULE_ } from './AgentModule';
 import { _SPS_INDEX_, indexModule } from './services';
 import { initOrm } from '@Database/DataSource';
 import { oauth2Google } from './config/google.auth';
+import { TavilySearch } from '@langchain/tavily';
+import { ChatOllama } from '@langchain/ollama';
+import { ChatOpenAI } from '@langchain/openai';
 
 declare global {
   namespace Express {
     interface Request {
-      EurekaClient?: any;
-      payload?: JwtPayload;
-      token?: string;
-      mail: Mail;
+      // ── AI Providers (optional, set by app config) ──────────────────
+      /** OpenAI LLM client */
       openAi: ChatOpenAI;
-      oauth2Google: OAuth2Client | any;
-      DRepository: DambaRepository<DataSource>;
-      extras: ExtrasMap;
-      data: any;
+      /** Ollama LLM client */
       ollama: ChatOllama;
+      /** Tavily search client */
       tavily: TavilySearch;
-      redis: IORedis;
+
+      /** Anthropic LLM client */
+      anthropic?: any;
       retrieverTool: any;
       qdrantRetriever: any;
     }
-  }
-}
-
-declare module 'express-session' {
-  interface SessionData {
-    user?: SessionUser;
-    tokens?: {
-      access_token?: string;
-      refresh_token?: string;
-      id_token?: string;
-      expiry_date?: number;
-      scope?: string;
-    };
   }
 }
 
@@ -68,15 +41,7 @@ async function main() {
       modules: [indexModule, AgentModule],
       googleAuth: oauth2Google,
       AppConfig,
-      express,
-      cors,
-      bodyParser,
-      session,
       db,
-      queue: {
-        tenant: 'x-tenant',
-        correlation: 'x-correlation-id',
-      },
     });
   } catch (err) {
     console.error(err);

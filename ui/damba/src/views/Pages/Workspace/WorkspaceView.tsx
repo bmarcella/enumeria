@@ -1,146 +1,294 @@
-import { useState } from 'react';
-import { HiOutlineUser, HiOutlineOfficeBuilding, HiOutlineUserGroup, HiOutlineShieldCheck, HiOutlineSwitchHorizontal, HiOutlineFolder } from 'react-icons/hi';
+import { useCallback, useMemo, useState } from 'react'
+import { useApplicationStore } from '@/stores/useApplicationStore'
+import { AppSwitcher } from '@/components/AppSwitcher'
+import SidebarDamba, {
+    SidebarMenuKey,
+    SidebarItem,
+} from '@/components/Layout/SideBarDambaPure'
+import MainDamba from '@/components/Layout/MainDamba'
+import ModulesView from '../Module/ModulesView'
+import { ServiceProvider } from '@/providers/ServiceProvider'
+import { fetchServicesByModuleId } from '@/services/module'
+import ServiceView from '../Service/ServiceView'
+import BehaviorView from '../Behavior/BehaviorView'
+import PoliciesView from '../Policies/PoliciesView'
+import Preview from '@/views/IDE/Preview'
+import ChatBox from '@/components/view/ChatBox/ChatBox'
+import {
+    HiOutlineMenuAlt2,
+    HiOutlineCollection,
+    HiOutlineChip,
+    HiOutlinePuzzle,
+    HiOutlineShieldCheck,
+    HiOutlineKey,
+    HiOutlineEye,
+    HiOutlineChat,
+    HiOutlineLockClosed,
+} from 'react-icons/hi'
+import { HiOutlineViewColumns } from 'react-icons/hi2'
 
-type WorkspaceType = 'personal' | 'organization';
+const BACKEND_TYPES = new Set([
+    'api',
+    'microservice',
+    'daemon',
+    'workers',
+    'cli',
+    'library',
+    'packages',
+    'package-entities',
+    'package-validators',
+    'package-policies-middlewares',
+])
 
-type OrgItem = {
-  id: string;
-  name: string;
-  role: string;
-  memberCount: number;
-  projectCount: number;
-};
+const FRONTEND_TYPES = new Set(['ui', 'web', 'mobile'])
+
+const LS_KEY = 'workspace-sidebar-key'
 
 const WorkspaceView = () => {
-  const [activeTab, setActiveTab] = useState<WorkspaceType>('personal');
-  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+    const cApp = useApplicationStore((s) => s.cApp)
+    const typeApp: string = (cApp as any)?.type_app ?? ''
 
-  // TODO: Replace with API calls to /workspace endpoints
-  const orgs: OrgItem[] = [];
+    const isBackend = BACKEND_TYPES.has(typeApp)
+    const isFrontend = FRONTEND_TYPES.has(typeApp)
 
-  return (
-    <div className="p-6 space-y-6 h-full overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold dark:text-gray-100">Workspace</h2>
-        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab('personal')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'personal'
-                ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
-            }`}
-          >
-            <HiOutlineUser /> Personnel
-          </button>
-          <button
-            onClick={() => setActiveTab('organization')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'organization'
-                ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
-            }`}
-          >
-            <HiOutlineOfficeBuilding /> Organisation
-          </button>
-        </div>
-      </div>
+    const defaultKey = isBackend
+        ? SidebarMenuKey.Modules
+        : isFrontend
+          ? SidebarMenuKey.Preview
+          : ''
 
-      {activeTab === 'personal' ? (
-        /* Personal workspace */
-        <div className="space-y-4">
-          <div className="border rounded-lg p-6 dark:border-gray-700">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                <HiOutlineUser className="text-2xl text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold dark:text-gray-200">Espace Personnel</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Vos projets et ressources personnelles</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                  <HiOutlineFolder className="text-lg" />
-                  <span className="text-sm">Projets</span>
-                </div>
-                <span className="text-2xl font-bold dark:text-gray-200">--</span>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                  <HiOutlineShieldCheck className="text-lg" />
-                  <span className="text-sm">Role</span>
-                </div>
-                <span className="text-2xl font-bold dark:text-gray-200">Owner</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Organization workspace */
-        <div className="space-y-4">
-          {/* Org list */}
-          <div className="border rounded-lg dark:border-gray-700">
-            <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
-              <h3 className="font-semibold dark:text-gray-200">Vos Organisations</h3>
-            </div>
-            {orgs.length === 0 ? (
-              <div className="p-8 text-center">
-                <HiOutlineOfficeBuilding className="text-4xl text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-500 dark:text-gray-400">Aucune organisation</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                  Creez ou rejoignez une organisation pour collaborer
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y dark:divide-gray-700">
-                {orgs.map((org) => (
-                  <div
-                    key={org.id}
-                    onClick={() => setSelectedOrgId(org.id)}
-                    className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center justify-between ${
-                      selectedOrgId === org.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                        <HiOutlineOfficeBuilding className="text-green-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium dark:text-gray-200">{org.name}</h4>
-                        <p className="text-xs text-gray-500">{org.role}</p>
-                      </div>
+    const [activeKey, setActiveKey] = useState<string>(() => {
+        if (typeof window === 'undefined') return defaultKey
+        const saved = window.localStorage.getItem(LS_KEY)
+        return saved ?? defaultKey
+    })
+
+    const handleSelect = (key: string) => {
+        setActiveKey(key)
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(LS_KEY, key)
+        }
+    }
+
+    // Common tabs shared by all app types
+    const commonItems: SidebarItem[] = useMemo(
+        () => [
+            {
+                key: SidebarMenuKey.Validators,
+                title: 'Validators',
+                icon: <HiOutlineKey />,
+            },
+            {
+                key: SidebarMenuKey.Policies,
+                title: 'Policies',
+                icon: <HiOutlineShieldCheck />,
+            },
+            {
+                key: SidebarMenuKey.Middlewares,
+                title: 'Middlewares',
+                icon: <HiOutlineLockClosed />,
+            },
+        ],
+        [],
+    )
+
+    const backendItems: SidebarItem[] = useMemo(
+        () => [
+            {
+                key: SidebarMenuKey.Modules,
+                title: 'Modules',
+                icon: <HiOutlineMenuAlt2 />,
+            },
+            {
+                key: SidebarMenuKey.Services,
+                title: 'Services',
+                icon: <HiOutlineCollection />,
+            },
+            {
+                key: SidebarMenuKey.Behaviors,
+                title: 'Behaviors',
+                icon: <HiOutlineChip />,
+            },
+            {
+                key: SidebarMenuKey.Extras,
+                title: 'Extras',
+                icon: <HiOutlinePuzzle />,
+            },
+            ...commonItems,
+        ],
+        [commonItems],
+    )
+
+    const frontendItems: SidebarItem[] = useMemo(
+        () => [
+            {
+                key: SidebarMenuKey.Preview,
+                title: 'Preview',
+                icon: <HiOutlineEye />,
+            },
+            ...commonItems,
+        ],
+        [commonItems],
+    )
+
+    const items = isBackend ? backendItems : isFrontend ? frontendItems : []
+
+    const renderBackendView = useCallback(
+        (key: string) => {
+            switch (key) {
+                case SidebarMenuKey.Modules:
+                    return <ModulesView goTo={handleSelect} />
+                case SidebarMenuKey.Services:
+                    return (
+                        <ServiceProvider
+                            fetchServicesByModuleId={fetchServicesByModuleId}
+                        >
+                            <ServiceView />
+                        </ServiceProvider>
+                    )
+                case SidebarMenuKey.Behaviors:
+                    return <BehaviorView />
+                case SidebarMenuKey.Extras:
+                    return (
+                        <div className="p-6">
+                            <h2 className="text-lg font-semibold dark:text-gray-200">
+                                Extras
+                            </h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                Manage extras and hooks for your services.
+                            </p>
+                        </div>
+                    )
+                case SidebarMenuKey.Validators:
+                    return (
+                        <div className="p-6">
+                            <h2 className="text-lg font-semibold dark:text-gray-200">
+                                Validators
+                            </h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                Manage validation schemas for your application.
+                            </p>
+                        </div>
+                    )
+                case SidebarMenuKey.Policies:
+                    return <PoliciesView />
+                case SidebarMenuKey.Middlewares:
+                    return (
+                        <div className="p-6">
+                            <h2 className="text-lg font-semibold dark:text-gray-200">
+                                Middlewares
+                            </h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                Manage middleware pipelines for your application.
+                            </p>
+                        </div>
+                    )
+                default:
+                    return null
+            }
+        },
+        [handleSelect],
+    )
+
+    const renderFrontendView = useCallback((key: string) => {
+        switch (key) {
+            case SidebarMenuKey.Preview:
+                return (
+                    <div className="flex h-full">
+                        {/* Preview panel */}
+                        <div className="flex-1 flex flex-col min-w-0">
+                            <Preview
+                                previewUrl={
+                                    (cApp as any)?.host
+                                        ? `${(cApp as any).host}:${(cApp as any).port || 3000}`
+                                        : ''
+                                }
+                            />
+                        </div>
+                        {/* Chat panel */}
+                        <div className="w-[380px] border-l border-gray-200 dark:border-gray-700 flex flex-col">
+                            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                                <HiOutlineChat className="text-lg text-gray-500" />
+                                <span className="text-sm font-medium dark:text-gray-200">
+                                    Prompt
+                                </span>
+                            </div>
+                            <div className="flex-1 min-h-0">
+                                <ChatBox
+                                    messageList={[]}
+                                    placeholder="Describe what you want to build..."
+                                    onInputChange={() => {}}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
-                      <span className="flex items-center gap-1"><HiOutlineUserGroup /> {org.memberCount}</span>
-                      <span className="flex items-center gap-1"><HiOutlineFolder /> {org.projectCount}</span>
-                      <button className="text-blue-500 hover:text-blue-600">
-                        <HiOutlineSwitchHorizontal className="text-lg" />
-                      </button>
+                )
+            case SidebarMenuKey.Validators:
+                return (
+                    <div className="p-6">
+                        <h2 className="text-lg font-semibold dark:text-gray-200">
+                            Validators
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                            Manage validation schemas for your application.
+                        </p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                )
+            case SidebarMenuKey.Policies:
+                return <PoliciesView />
+            case SidebarMenuKey.Middlewares:
+                return (
+                    <div className="p-6">
+                        <h2 className="text-lg font-semibold dark:text-gray-200">
+                            Middlewares
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                            Manage middleware pipelines for your application.
+                        </p>
+                    </div>
+                )
+            default:
+                return null
+        }
+    }, [cApp])
 
-          {/* Members panel (shown when org is selected) */}
-          {selectedOrgId && (
-            <div className="border rounded-lg dark:border-gray-700">
-              <div className="p-4 border-b dark:border-gray-700">
-                <h3 className="font-semibold dark:text-gray-200">Membres</h3>
-              </div>
-              <div className="p-8 text-center text-sm text-gray-400">
-                Chargement des membres...
-              </div>
+    // No application selected
+    if (!cApp || (!isBackend && !isFrontend)) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full gap-6">
+                <div className="text-center">
+                    <HiOutlineViewColumns className="text-5xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold dark:text-gray-200">
+                        Select an Application
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md">
+                        Choose an application to open its workspace. The view
+                        adapts based on the application type.
+                    </p>
+                </div>
+                <div className="w-64">
+                    <AppSwitcher />
+                </div>
             </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+        )
+    }
 
-export default WorkspaceView;
+    return (
+        <MainDamba
+            sidebar={
+                <SidebarDamba
+                    items={items}
+                    activeKey={activeKey}
+                    onSelect={handleSelect}
+                />
+            }
+            content={
+                isBackend
+                    ? renderBackendView(activeKey)
+                    : renderFrontendView(activeKey)
+            }
+        />
+    )
+}
+
+export default WorkspaceView

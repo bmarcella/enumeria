@@ -6,6 +6,7 @@ import { CodeFile } from '@Database/entities/Behaviors/CodeFile';
 import { Project } from '@Database/entities/Project';
 import { DataSource } from 'typeorm';
 import { saveCodeFile } from './helpers';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 
 // ─── Template Generators ────────────────────────────────────────────────────
 const generateTsConfig = (appType: string): string => {
@@ -274,7 +275,7 @@ export const saveFilesForApp = async (
         projectId: project.id,
         orgId: (project as any).organization?.id,
         projId: project.id,
-        environment: undefined,
+        environment: DambaEnvironmentType.DEV,
         created_by: project.created_by,
       });
     }),

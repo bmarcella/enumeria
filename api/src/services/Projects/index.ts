@@ -10,6 +10,8 @@ import {
   getStatsByProjectId,
   saveProject,
   deleteProjectById,
+  saveProjectWithApp,
+  updateProjectStep,
 } from './behaviors';
 import { ProjectsExtras } from './extras';
 import { Http } from '@Damba/v2/service/IServiceDamba';
@@ -71,11 +73,28 @@ const behaviors: BehaviorsChainLooper = {
       description: 'Get project stats by id',
     },
   },
-  '/:id': {
-    method: Http.DELETE,
-    behavior: deleteProjectById,
+  '/:id': [
+    {
+      method: Http.DELETE,
+      behavior: deleteProjectById,
+      config: {
+        description: 'Queue deletion of a project and all its hierarchy',
+      },
+    },
+    {
+      method: Http.PATCH,
+      behavior: updateProjectStep,
+      config: {
+        description: 'Update project last completed step and build status',
+      },
+    },
+  ],
+  ':id_org/organization/:id_user/user': {
+    method: Http.POST,
+    behavior: saveProjectWithApp,
+    middlewares: [CheckIfOrgAndUserExist, GetCurrentOrg],
     config: {
-      description: 'Queue deletion of a project and all its hierarchy',
+      description: 'Save project',
     },
   },
 };

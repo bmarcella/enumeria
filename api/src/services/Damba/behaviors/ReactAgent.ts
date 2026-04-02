@@ -28,7 +28,7 @@ export const ChatPromptTemplateLangChain: Behavior = (api?: DambaApi) => {
       topic: topic,
       tone: 'beginner-friendly',
     });
-       // Dernière réponse (finale)
+    // Dernière réponse (finale)
     const last = response.messages?.at?.(-1);
     const content = last?.content ?? response.content ?? '';
 
@@ -58,7 +58,6 @@ export const searchBehavior: Behavior = (api?: DambaApi) => {
     const llm = e.in.openAi;
     const tools = [tool];
     const query = api?.params().query;
-
     if (!query) {
       e.out.status(400).send({ error: 'Query parameter is required' });
       return;
@@ -80,9 +79,7 @@ export const searchBehavior: Behavior = (api?: DambaApi) => {
 export const addChatBehavior: Behavior = (api?: DambaApi) => {
   return async (e: DEvent) => {
     try {
-      const files = (await LoadFiles(
-        resolve(process.cwd(), '../common/Damba/v2'),
-      )) as IDambaFile[];
+      const files = (await LoadFiles(resolve(process.cwd(), '../common/Damba/v2'))) as IDambaFile[];
 
       const efiles = (await LoadFiles(
         resolve(process.cwd(), '../common/Damba/example'),

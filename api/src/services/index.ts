@@ -3,19 +3,19 @@ import _Auth from './Auth/behaviors';
 import _Proj from './Projects';
 import _App from './Application/behaviors';
 import _Mod from './Modules/Modules';
-import _Box from './CanvasBox/behaviors';
 import _User from './User/behaviors';
 import _Serv from './AppService/behaviors';
 import _Helper from './Damba';
 import _AI from './AiAgentChat/AiChat';
 import _SK from './Socket';
-import _DataModeler from './DataModeler/behaviors';
+import _DataModeler from './DataModeler';
 import _UseCase from './UseCase/behaviors';
 import _ProjectAccess from './ProjectAccess/behaviors';
 import _Workspace from './Workspace/behaviors';
 import { NextFunction, Request, Response } from 'express';
 import { IModule, IServiceProvider } from '@Damba/v2/service/IServiceDamba';
 import Test from './test/Test';
+import _CodeFile from './CodeFile';
 
 export const _SPS_INDEX_: IServiceProvider<Request, Response, NextFunction> = {
   ..._Org,
@@ -24,7 +24,6 @@ export const _SPS_INDEX_: IServiceProvider<Request, Response, NextFunction> = {
   ..._App,
   ..._Mod,
   ..._Serv,
-  ..._Box,
   ..._User,
   ..._Helper,
   ..._AI,
@@ -34,6 +33,7 @@ export const _SPS_INDEX_: IServiceProvider<Request, Response, NextFunction> = {
   ..._ProjectAccess,
   ..._Workspace,
   ...Test,
+  ..._CodeFile,
 };
 
 export const indexModule: IModule<Request, Response, NextFunction> = {

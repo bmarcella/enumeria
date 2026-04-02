@@ -10,6 +10,7 @@ import {
   SocketEventHandlerChain,
   SocketMiddleware,
 } from "./IServiceDamba";
+
 import { DambaContext } from "./DambaContext";
 import { createSimpleName } from "./DambaHelper";
 import { DEvent } from "./DEvent";
@@ -226,53 +227,59 @@ export const DambaMakeApi = <
     }
   }
 
-  if (queues) {
-    const redisConnection = (api as any).__redis;
-    if (!redisConnection)
-      throw new Error("Redis connection missing for queues");
+  try {
+    if (queues) {
+      const redisConnection = (api as any).__redis;
+      if (!redisConnection)
+        throw new Error("Redis connection missing for queues");
 
-    if (!QueueCtor) throw new Error("Queue ctor missing (pass service.Queue)");
-    if (!QueueEventsCtor)
-      throw new Error("QueueEvents ctor missing (pass service.QueueEvents)");
+      if (!QueueCtor)
+        throw new Error("Queue ctor missing (pass service.Queue)");
+      if (!QueueEventsCtor)
+        throw new Error("QueueEvents ctor missing (pass service.QueueEvents)");
 
-    if (!redisConnectionFactory) {
-      console.warn(
-        "[DambaService] No redisConnectionFactory provided. " +
-          "QueueEvents will attempt to duplicate the shared connection. " +
-          "Provide service.redisConnectionFactory to avoid ECONNABORTED errors.",
-      );
-    }
-
-    const SHARDS = Number(process.env.QUEUE_SHARDS ?? 3);
-
-    for (const [baseName, cfg] of Object.entries(queues)) {
-      const handlers = cfg?.events;
-
-      for (let i = 0; i < SHARDS; i++) {
-        const shardName = `${baseName}_${i}`;
-        // Pre-warm the Queue (non-blocking, safe to share a connection)
-        getQueue(QueueCtor, shardName, redisConnection, {
-          prefixEnabled: false,
-          defaultJobOptions: cfg.options,
-        });
-
-        // Each QueueEvents MUST have its own dedicated ioredis connection.
-        // Sharing one connection across multiple QueueEvents is what causes ECONNABORTED.
-        getQueueEvents(
-          QueueEventsCtor,
-          shardName,
-          redisConnection,
-          api,
-          handlers,
-          {
-            prefixEnabled: false,
-            streams: undefined,
-          },
-          redisConnectionFactory,
+      if (!redisConnectionFactory) {
+        console.warn(
+          "[DambaService] No redisConnectionFactory provided. " +
+            "QueueEvents will attempt to duplicate the shared connection. " +
+            "Provide service.redisConnectionFactory to avoid ECONNABORTED errors.",
         );
       }
+
+      const SHARDS = Number(process.env.QUEUE_SHARDS ?? 3);
+
+      for (const [baseName, cfg] of Object.entries(queues)) {
+        const handlers = cfg?.events;
+
+        for (let i = 0; i < SHARDS; i++) {
+          const shardName = `${baseName}_${i}`;
+          // Pre-warm the Queue (non-blocking, safe to share a connection)
+          getQueue(QueueCtor, shardName, redisConnection, {
+            prefixEnabled: false,
+            defaultJobOptions: cfg.options,
+          });
+
+          // Each QueueEvents MUST have its own dedicated ioredis connection.
+          // Sharing one connection across multiple QueueEvents is what causes ECONNABORTED.
+          getQueueEvents(
+            QueueEventsCtor,
+            shardName,
+            redisConnection,
+            api,
+            handlers,
+            {
+              prefixEnabled: false,
+              streams: undefined,
+            },
+            redisConnectionFactory,
+          );
+        }
+      }
     }
+  } catch (error) {
+    console.error("Error setting up queues:", error);
   }
+
   return api.done(rootExtras);
 };
 

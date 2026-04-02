@@ -7,6 +7,7 @@ import { Project } from '@Database/entities/Project';
 import { DataSource } from 'typeorm';
 import { relative } from 'path';
 import { saveCodeFile } from './helpers';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 
 /**
  * Loads all Damba v2 framework files from disk and persists them
@@ -33,6 +34,7 @@ export const saveDambaCommonFiles = async (
         orgId: (project as any).organization?.id,
         projId: project.id,
         created_by: project.created_by,
+        environment: DambaEnvironmentType.DEV,
       });
     }),
   );

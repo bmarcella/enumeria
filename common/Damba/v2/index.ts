@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
+/// <reference path="./@types/express.d.ts" />
+import express from 'express';
+import cors from 'cors';
+import session from 'express-session';
+import bodyParser from 'body-parser';
 import type { Database, IAppConfig } from "./config/IAppConfig";
 import { DambaIO, DambaIOApp } from "./IO/DambaIO";
 import { SocketRegistry } from "./IO/RegistrySocket";
@@ -18,20 +22,9 @@ import createWelcomeHandler, { createApiDocUi, createExtrasDocUi } from "./Ui";
 export interface IDambaParams<DS = any> {
   modules: IModule<any, any, any>[];
   AppConfig: IAppConfig<DS>;
-  express: any;
-  cors?: (options?: any) => any;
-  bodyParser?: {
-    json: (options?: any) => any;
-    urlencoded: (options?: any) => any;
-  };
-  session?: (options?: any) => any;
   port?: number;
-  queue?: {
-    tenant: string;
-    correlation: string;
-  };
   db?: { orm: any; dataSource: DS };
-  googleAuth: any;
+  googleAuth?: any;
   errorHandler?: DambaErrorHandlerOptions | false;
 }
 export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
@@ -43,9 +36,8 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
     const { route, extras, doc, flatDoc, modularExtras, events } = this.DambaServices(
       params.modules,
       params.AppConfig,
-      params,
     );
-    this.app = params.express();
+    this.app = express();
     this.registerMiddleware(params, extras, database);
     this.registerDocs(params.AppConfig, extras, modularExtras, doc, flatDoc);
     this.registerRoutes(params.AppConfig, route);
@@ -57,13 +49,9 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
   DambaServices = (
     modules: IModule<any, any, any>[],
     AppConfig: IAppConfig<DS>,
-    params: IDambaParams<DS>,
   ) => {
     ServiceRegistry._init();
-
-    const root = params.express.Router();
-    const express = params.express as any;
-
+    const root = express.Router();
     const { route, extras, events } = DambaRoute<REQ, RES, NEXT, any>(
       { root, express },
       modules,
@@ -77,12 +65,6 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
     if (!params?.AppConfig) {
       throw new Error("Damba: AppConfig is required");
     }
-
-    if (typeof params.express !== "function") {
-      throw new Error(
-        `${params.AppConfig.appName}: express() factory is required`,
-      );
-    }
   }
 
   private registerMiddleware(
@@ -90,24 +72,23 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
     extras: any,
     database?: Database<DS>,
   ) {
-    const { AppConfig, queue } = params;
+    const { AppConfig } = params;
 
-    if (AppConfig.cors?.corsOptions && params.cors) {
-      this.app.use(params.cors(AppConfig.cors.corsOptions));
+    if (AppConfig.cors?.corsOptions) {
+      this.app.use(cors(AppConfig.cors.corsOptions));
     }
 
-    if (AppConfig.json && params.bodyParser?.json) {
-      this.app.use(params.bodyParser.json(AppConfig.json));
+    if (AppConfig.json) {
+      this.app.use(bodyParser.json(AppConfig.json));
     }
 
-    if (AppConfig.urlencoded && params.bodyParser?.urlencoded) {
-      this.app.use(params.bodyParser.urlencoded(AppConfig.urlencoded));
+    if (AppConfig.urlencoded) {
+      this.app.use(bodyParser.urlencoded(AppConfig.urlencoded));
     }
 
-    if (AppConfig.session && params.session) {
-      this.app.use(params.session(AppConfig.session));
+    if (AppConfig.session) {
+      this.app.use(session(AppConfig.session));
     }
-
     if (AppConfig.call?.helper) {
       if (database?.dataSource) {
         this.app.use(AppConfig.call.helper(extras, database.dataSource));
@@ -115,11 +96,10 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
         this.app.use(AppConfig.call.helper(extras));
       }
     }
-
-    if (queue) {
+    if (AppConfig.queue) {
       this.app.use((req: any, _res: any, next: any) => {
-        const tenant = req.header(queue.tenant) ?? "default";
-        const correlationId = req.header(queue.correlation) ?? undefined;
+        const tenant = req.header(AppConfig.queue?.trace?.tenant) ?? "default";
+        const correlationId = req.header(AppConfig.queue?.trace?.correlation) ?? undefined;
         try {
           return runWithQueueContext({ keyPrefix: tenant, correlationId }, () =>
             next(),
@@ -167,7 +147,6 @@ export class DambaApp<REQ = any, RES = any, NEXT = any, DS = any, IO = any> {
     if (AppConfig.call?.welcome) {
       this.app.get("/", AppConfig.call.welcome(AppConfig));
     }
-
     if (AppConfig.path?.basic && route) {
       this.app.use(AppConfig.path.basic, route);
     }

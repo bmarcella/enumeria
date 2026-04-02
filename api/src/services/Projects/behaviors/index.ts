@@ -5,11 +5,16 @@ import { CurrentSetting } from '@Damba/v2/Entity/UserDto';
 import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { DEvent } from '@Damba/v2/service/DEvent';
 import { Behavior, DambaApi } from '@Damba/v2/service/DambaService';
-import { ProjectDto } from '../dtos/ProjectsDto';
+import {
+  ApplicationDto,
+  ProjectDto,
+  ProjectDtoWithApps,
+  UpdateProjectStepDto,
+} from '../dtos/ProjectsDto';
 import { Application } from '@Database/entities/Application';
 import { Modules } from '@Database/entities/Modules';
 import { AppServices } from '@Database/entities/AppServices';
-import { Project } from '@Database/entities/Project';
+import { BuildStatus, BuldingType, Project } from '@Database/entities/Project';
 import { DQueues } from '@Common/Damba/core/Queues';
 
 export const getMyProjects: Behavior = (api?: DambaApi) => {
@@ -25,59 +30,6 @@ export const getMyOrgProjects: Behavior = (api?: DambaApi) => {
     const { orgId } = e.in.data;
     const projects = await e.in.extras.projects.getMyOrgProjects(orgId, e);
     return e.out.json(projects);
-  };
-};
-
-export const saveProject: Behavior = (api?: DambaApi) => {
-  return async (e: DEvent) => {
-    try {
-      const { userId } = e.in.data;
-      const form = e.in.body as ProjectDto;
-      const org = await e.in.data.organization;
-      let proj = {
-        name: form.name,
-        description: form.description,
-        environments: form.envs as DambaEnvironmentType[],
-        organization: org,
-        created_by: userId,
-      } as Project;
-
-      proj = (await api?.DSave(proj)) as any;
-      if (!proj) return e.out.status(500).send({ message: ErrorMessage.INTERNAL_SERVER_ERROR });
-
-      // Save template App
-      const app = (await e.in.extras.applications.saveAppTemplate(e, proj)) as Application;
-      if (!app)
-        return e.out
-          .status(500)
-          .send({ message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Application' });
-
-      const mod = (await e.in.extras.modules.saveModuleTemplate(e, app)) as Modules;
-      if (!mod)
-        return e.out
-          .status(500)
-          .send({ message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Module' });
-      const serv = (await e.in.extras.services.saveServicesTemplate(e, mod)) as AppServices;
-      if (!serv)
-        return e.out
-          .status(500)
-          .send({ message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Service' });
-      proj = (await api?.DSave(proj)) as any;
-
-      const setting: CurrentSetting = {
-        env: DambaEnvironmentType.DEV,
-        orgId: org.id,
-        projId: proj.id,
-        appId: app?.id,
-        moduleId: mod.id,
-        servId: serv.id,
-      };
-      e.in.extras.users.setCurrentSetting(e, userId, setting);
-      return e.out.json({ project: proj, setting });
-    } catch (error) {
-      console.log(error);
-      return e.out.status(500).json({ message: ErrorMessage.INTERNAL_SERVER_ERROR, error });
-    }
   };
 };
 
@@ -153,6 +105,149 @@ export const getStatsByProjectId: Behavior = (api?: DambaApi) => {
       return e.out.json({ totalApps, totalContributors });
     } catch (error) {
       return e.out.status(500).json({ error: ErrorMessage.INTERNAL_SERVER_ERROR });
+    }
+  };
+};
+
+export const saveProject: Behavior = (api?: DambaApi) => {
+  return async (e: DEvent) => {
+    try {
+      const { userId } = e.in.data;
+      const form = e.in.body as ProjectDto;
+      const org = await e.in.data.organization;
+      let proj = {
+        name: form.name,
+        description: form.description,
+        environments: form.envs as DambaEnvironmentType[],
+        organization: org,
+        created_by: userId,
+      } as Project;
+
+      proj = (await api?.DSave(proj)) as any;
+      if (!proj) return e.out.status(500).send({ message: ErrorMessage.INTERNAL_SERVER_ERROR });
+
+      // Save template App
+      const app = (await e.in.extras.applications.saveAppTemplate(e, proj)) as Application;
+      if (!app)
+        return e.out
+          .status(500)
+          .send({ message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Application' });
+
+      const mod = (await e.in.extras.modules.saveModuleTemplate(e, app)) as Modules;
+      if (!mod)
+        return e.out
+          .status(500)
+          .send({ message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Module' });
+      const serv = (await e.in.extras.services.saveServicesTemplate(e, mod)) as AppServices;
+      if (!serv)
+        return e.out
+          .status(500)
+          .send({ message: ErrorMessage.INTERNAL_SERVER_ERROR, entity: 'Service' });
+      proj = (await api?.DSave(proj)) as any;
+
+      const setting: CurrentSetting = {
+        env: DambaEnvironmentType.DEV,
+        orgId: org.id,
+        projId: proj.id,
+        appId: app?.id,
+        moduleId: mod.id,
+        servId: serv.id,
+      };
+      e.in.extras.users.setCurrentSetting(e, userId, setting);
+      return e.out.json({ project: proj, setting });
+    } catch (error) {
+      console.log(error);
+      return e.out.status(500).json({ message: ErrorMessage.INTERNAL_SERVER_ERROR, error });
+    }
+  };
+};
+
+export const saveProjectWithApp: Behavior = (api?: DambaApi) => {
+  return async (e: DEvent) => {
+    try {
+      const { userId } = e.in.data;
+      const form = e.in.body as ProjectDtoWithApps;
+      const apps = form.applications as ApplicationDto[];
+      const org = await e.in.data.organization;
+      let proj = {
+        name: form.name,
+        description: form.description,
+        environments: form.envs as DambaEnvironmentType[],
+        organization: org,
+        created_by: userId,
+        buildingType: BuldingType.manual,
+      } as Project;
+
+      proj = (await api?.DSave(proj)) as any;
+      if (!proj) return e.out.status(500).send({ message: ErrorMessage.INTERNAL_SERVER_ERROR });
+
+      const packages: ApplicationDto[] = [
+        {
+          name: `${proj.name} - Database`,
+          description: `Database package for ${proj.name}`,
+          type_app: 'package-entities',
+        },
+        {
+          name: `${proj.name} - Validators`,
+          description: `Validators package for ${proj.name}`,
+          type_app: 'package-validators',
+        },
+        {
+          name: `${proj.name} - Policies & Middlewares`,
+          description: `Policies & Middlewares package for ${proj.name}`,
+          type_app: 'package-policies-middlewares',
+        },
+      ];
+      apps.push(...packages);
+      const newApps = await Promise.all(
+        apps.map((app) => e.in.extras.applications.saveAppTemplateForProject(e, proj, app)),
+      );
+      const appsCreated = await api?.DRepository().DSaveMany(Application, newApps);
+      const setting: CurrentSetting = {
+        env: DambaEnvironmentType.DEV,
+        orgId: org.id,
+        projId: proj.id,
+        appId: appsCreated?.[0]?.id,
+        moduleId: '',
+        servId: '',
+      };
+      e.in.extras.users.setCurrentSetting(e, userId, setting);
+      return e.out.json({ project: proj, setting });
+    } catch (error) {
+      console.log(error);
+      return e.out.status(500).json({ message: ErrorMessage.INTERNAL_SERVER_ERROR, error });
+    }
+  };
+};
+
+export const updateProjectStep: Behavior = (api?: DambaApi) => {
+  return async (e: DEvent) => {
+    try {
+      const projectId = api?.params()?.id;
+      if (!projectId) return e.out.status(400).json({ error: 'Missing project id' });
+
+      const body = e.in.body as UpdateProjectStepDto;
+      if (!body.step) return e.out.status(400).json({ error: 'Missing step' });
+
+      const project = await e.in.DRepository.DGet1(Project, { where: { id: projectId } });
+      if (!project) return e.out.status(404).json({ error: 'Project not found' });
+
+      const update: Partial<Project> = { lastCompletedStep: body.step };
+      if (
+        body.buildStatus &&
+        Object.values(BuildStatus).includes(body.buildStatus as BuildStatus)
+      ) {
+        update.buildStatus = body.buildStatus as BuildStatus;
+      }
+
+      await e.in.DRepository.DUpdate(Project, { id: projectId }, update);
+      return e.out.json({
+        ok: true,
+        lastCompletedStep: body.step,
+        buildStatus: update.buildStatus,
+      });
+    } catch (error) {
+      return e.out.status(500).json({ error: 'Failed to update project step', detail: error });
     }
   };
 };

@@ -3,7 +3,6 @@
 
 import { auth, createService, DEvent } from '@App/damba.import';
 import { AppServices } from '@Database/entities/AppServices';
-import { Entities } from '@Database/entities/CanvasBox';
 import { CurrentSetting } from '@Damba/v2/Entity/UserDto';
 import { Application } from '@Database/entities/Application';
 import { Modules } from '@Database/entities/Modules';
@@ -87,18 +86,8 @@ api.DGet(
   '/:id/entity/:env/env',
   async (e: DEvent) => {
     const servId = api.params()?.id;
-    const env = api.params()?.env;
-    const objs = await e.in.DRepository.DGet(
-      Entities,
-      {
-        where: {
-          env,
-          servId,
-        },
-      },
-      true,
-    );
-    e.out.send(objs);
+
+    e.out.send({ message: 'Not implemented yet', servId });
   },
   {},
   [api.middlewares.DCheckIfExist, CheckEnv],

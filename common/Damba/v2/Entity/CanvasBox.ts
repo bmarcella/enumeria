@@ -1,8 +1,6 @@
-
 import { BaseEntity } from "./project";
-import { TypeAttbutesTypeOrm } from './TypeAttributesTypeOrm';
+import { TypeAttbutesTypeOrm } from "./TypeAttributesTypeOrm";
 import { DambaEnvironmentType } from "./env";
-
 
 export interface ICanvasBoxStyle {
   fillColor: string;
@@ -10,7 +8,7 @@ export interface ICanvasBoxStyle {
   strokeWidth: number;
   opacity: number;
   borderRadius: number;
-  backgroundColor : string;
+  backgroundColor: string;
 }
 
 export interface Object extends BaseEntity {
@@ -19,7 +17,6 @@ export interface Object extends BaseEntity {
   y?: number;
   width?: number;
   height?: number;
-
 }
 
 export interface CanvasBoxAtributes extends BaseEntity {
@@ -33,9 +30,9 @@ export interface CanvasBoxAtributes extends BaseEntity {
   isMapped: boolean;
   isArray?: boolean;
   isId?: boolean;
-  isGenerateAuto?: boolean;     // consider: rename to isGenerated?
+  isGenerateAuto?: boolean; // consider: rename to isGenerated?
   isParent?: boolean;
-  
+
   // DB column options
   nullable?: boolean;
   unique?: boolean;
@@ -49,13 +46,13 @@ export interface CanvasBoxAtributes extends BaseEntity {
   indexed?: boolean;
 
   // validation / UX
-  required?: boolean;          // UI-level required (separate from nullable)
+  required?: boolean; // UI-level required (separate from nullable)
   min?: number;
   max?: number;
   pattern?: string;
   label?: string;
   hint?: string;
-  mask?: boolean;              // obfuscate in forms
+  mask?: boolean; // obfuscate in forms
   readOnly?: boolean;
   hidden?: boolean;
 
@@ -66,8 +63,8 @@ export interface CanvasBoxAtributes extends BaseEntity {
   // relations
   relation?: {
     type: RelationshipType;
-    targetEntity: string;           // entity id or name
-    targetEntityAttribute: string;  // attribute id or name
+    targetEntity: string; // entity id or name
+    targetEntityAttribute: string; // attribute id or name
     eager?: boolean;
     joinTable?: boolean;
     cascade?: boolean | [];
@@ -83,11 +80,11 @@ export interface CanvasBoxAtributes extends BaseEntity {
     };
 
     // ADD: cardinality & referential actions
-    onDelete?: 'RESTRICT' | 'CASCADE' | 'SET NULL';
-    onUpdate?: 'RESTRICT' | 'CASCADE' | 'SET NULL';
+    onDelete?: "RESTRICT" | "CASCADE" | "SET NULL";
+    onUpdate?: "RESTRICT" | "CASCADE" | "SET NULL";
     orphanRemoval?: boolean;
-    inverseSide?: string;   // mappedBy/inverse property
-    through?: string;       // explicit join table name for M:N
+    inverseSide?: string; // mappedBy/inverse property
+    through?: string; // explicit join table name for M:N
     joinTableOptions?: {
       name?: string;
       joinColumn?: string;
@@ -102,7 +99,6 @@ export interface CanvasBoxAtributes extends BaseEntity {
   height?: number;
 }
 
-
 export enum VisibilityTypeAttributes {
   PUBLIC = "public",
   PRIVATE = "private",
@@ -114,31 +110,30 @@ export enum RelationshipType {
   ONE_TO_ONE = "@OneToOne",
   MANY_TO_ONE = "@ManyToOne",
   ONE_TO_MANY = "@OneToMany",
-  MANY_TO_MANY = "@ManyToMany"
+  MANY_TO_MANY = "@ManyToMany",
 }
 
 export const RelationshipTypeEnum = RelationshipType;
 
-export type CanvasBoxStatus =  'active' | 'archived';
-export type CanvasBoxORM =  'typeorm';
+export type CanvasBoxStatus = "active" | "archived";
+export type CanvasBoxORM = "typeorm";
 
 export enum CanvasBoxClassification {
-  PUBLIC = 'public',
-  INTERNAL = 'internal',
-  RESTRICTED = 'restricted',
-  CONFIDENTIAL = 'confidential',
+  PUBLIC = "public",
+  INTERNAL = "internal",
+  RESTRICTED = "restricted",
+  CONFIDENTIAL = "confidential",
 }
 
 export interface CanvasBoxMapConfig {
-  
-   // persistence & mapping
+  // persistence & mapping
   tableName?: string;
   schema?: string;
   namespace?: string;
   pluralName?: string;
   slug?: string;
-  softDelete?: boolean;      // enable @DeleteDateColumn
-  versioned?: boolean;       // optimistic locking/version column
+  softDelete?: boolean; // enable @DeleteDateColumn
+  versioned?: boolean; // optimistic locking/version column
   uniqueConstraints?: string[][]; // [['email'], ['firstName','lastName']]
   indexes?: { name?: string; columns: string[]; unique?: boolean }[];
   orm?: CanvasBoxORM;
@@ -150,7 +145,7 @@ export interface CanvasBoxDiagramConfig {
   visibility: VisibilityTypeClass;
   isAbstract?: boolean;
   isAuth?: boolean;
-    // (legacy login props—consider removing if these are entities, not app creds)
+  // (legacy login props—consider removing if these are entities, not app creds)
   username?: string[];
   password?: string;
   color?: string;
@@ -161,12 +156,11 @@ export interface CanvasBoxDiagramConfig {
 }
 
 export enum EntityStereotype {
-  ENTITY = '<<entity>>',
-  MODEL = '<<model>>',
-  DTO = '<<dto>>',
-  schema = '<<schema>>',
+  ENTITY = "<<entity>>",
+  MODEL = "<<model>>",
+  DTO = "<<dto>>",
+  SCHEMA = "<<schema>>",
 }
-
 
 export interface CanvasBox extends Object {
   // ignore this field
@@ -193,19 +187,16 @@ export interface CanvasBox extends Object {
   // dont ignore these fields
   attributes?: CanvasBoxAtributes[];
 
-
-   // ignore these fields
-  status?: CanvasBoxStatus ;
+  // ignore these fields
+  status?: CanvasBoxStatus;
   mapConfig?: CanvasBoxMapConfig;
   diagramConfig?: CanvasBoxDiagramConfig;
 
   // security & validation
 
   rules?: Record<string, unknown>;
-   // prefer id over object to avoid recursion
+  // prefer id over object to avoid recursion
   mixins?: string[];
-
-
 }
 
 export enum VisibilityTypeClass {
@@ -214,5 +205,3 @@ export enum VisibilityTypeClass {
   PROTECTED = "protected",
   IMPLEMENTATION = "implementation",
 }
-
-

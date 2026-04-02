@@ -177,22 +177,29 @@ api.DGet('/logout', (e: DEvent) => {
   req.session.destroy(() => res.clearCookie('connect.sid').sendStatus(204));
 });
 
-api.DGet('/refreshToken', async (e: DEvent) => {
+api.DGet('/refreshToken/:refresh_token/strategy/:strategy', async (e: DEvent) => {
   const req = e.in as Request;
   const res = e.out as Response;
+  const strategy = req.params.strategy;
   try {
-    const rt = req.session.tokens?.refresh_token;
+    const rt = req.params.refresh_token;
     if (!rt) return res.status(400).json({ error: ErrorMessage.REFRESH_TOKEN_MISSING });
-    const { credentials } = await req.oauth2Google.refreshToken(rt);
-    // Update access token/expiry in session
-    req.session.tokens = {
-      ...req.session.tokens,
-      access_token: credentials.access_token ?? req.session.tokens?.access_token,
-      expiry_date: credentials.expiry_date ?? req.session.tokens?.expiry_date,
-      id_token: credentials.id_token ?? req.session.tokens?.id_token,
-      scope: credentials.scope ?? req.session.tokens?.scope,
-    };
-    req.session.save(() => res.sendStatus(204));
+    let credentials;
+    switch (strategy) {
+      case 'google':
+        credentials = await req.oauth2Google.refreshToken(rt);
+        break;
+      default:
+        return res.status(400).json({ error: ErrorMessage.NOT_ATHORIZED });
+    }
+    res.status(200).json({
+      tokens: {
+        access_token: `google|${credentials.access_token}|${credentials.access_token}`,
+        refresh_token: credentials.refresh_token!,
+        expiry_date: credentials.expiry_date,
+        scope: credentials.scope,
+      },
+    });
   } catch (e) {
     console.error(e);
     res.status(401).json({ error: ErrorMessage.REFRESH_TOKEN_FAILED });

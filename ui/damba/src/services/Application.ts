@@ -9,3 +9,7 @@ export const fetchModulesByAppId = (id_application: string): Promise<any> => {
   const url = `${endpointConfig.modules}/${id_application}/application`;
    return ApiGet(url);
 }
+
+export const fetchAppTree = (appId: string): Promise<any> => {
+  return ApiGet(`${endpointConfig.applications}/${appId}/tree`);
+}

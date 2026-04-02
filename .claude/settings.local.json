@@ -2,7 +2,22 @@
   "permissions": {
     "allow": [
       "Bash(head -10 grep -n \"@JoinTable\\\\|@ManyToMany\\\\|tableName\\\\|joinTable\" C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/packages/database/src/entities/Policy/index.ts)",
-      "Bash(/dev/null grep:*)"
+      "Bash(/dev/null grep:*)",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria -name Dashboard.tsx -path */Project/* -type f)",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria -name project.ts -path */v2/Entity/* -type f)",
+      "Bash(grep -l \"CanvasBox\\\\|Entities\" /c/Users/bmarc/OneDrive/Documents/Projects/enumeria/ui/damba/src/**/*.ts /c/Users/bmarc/OneDrive/Documents/Projects/enumeria/ui/damba/src/**/*.tsx)",
+      "Bash(npx tsc:*)",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/common/Damba/v2/Entity -type f -name *.ts)",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/ui/damba/src -type f -name *[Dd]ata[Mm]odeler*)",
+      "Bash(grep -r \"dataModelerEntities\\\\|dataModelerRelationships\" C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/ui/damba/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"useManualPipelineStore\\\\|ManualPipeline\" C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/ui/damba/src --include=*.ts --include=*.tsx)",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/ui/damba/src -type f \\\\\\(-name *.types.ts -o -name *types*.ts -o -name CanvasBox* \\\\\\))",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/ui/damba/src -path */common/* -name *CanvasBox* -o -path */common/* -name *Entity*)",
+      "Bash(grep -r export.*CanvasBox C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/ui/damba/src --include=*.ts --include=*.tsx)",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/api -type f -name *data*modeler* -o -name *entity* -o -name *entities*)",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/api/src -type f \\\\\\(-name *data*modeler* -o -name *entity* \\\\\\))",
+      "Bash(find C:/Users/bmarc/OneDrive/Documents/Projects/enumeria/api/src -type f -name *.controller.ts)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

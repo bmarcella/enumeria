@@ -12,6 +12,8 @@ packages/database/node_modules
 packages/validators/node_modules
 packages/validators/dist
 packages/database/dist
+common/Damba/v2/node_modules
+common/Damba/v2/dist
 dist/
 build/
 .env
@@ -23,4 +25,5 @@ aws.txt
 /.metadata/
 /api/.env
 /ui/template
+/.claude
 

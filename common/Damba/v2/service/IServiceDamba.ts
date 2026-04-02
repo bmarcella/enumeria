@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RouteKey } from "./DambaHelper";
-import { DambaApi, DExtrasHandler, Extras } from "./DambaService";
+import { DExtrasHandler } from "./DambaService";
 import { DEvent } from "./DEvent";
 export type TimeoutType = {
   in?: number;

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { DEvent } from "./DEvent";
-import { ServiceConfig } from "@Damba/v2/service/ServiceConfig";
 import { AsyncLocalStorage } from "async_hooks";
 import { IDActionConfig } from "./IServiceDamba";
+import { ServiceConfig } from "./ServiceConfig";
 
 export interface DambaExecutionContext<REQ, RES, NEXT> {
   event: DEvent<REQ, RES, NEXT>;

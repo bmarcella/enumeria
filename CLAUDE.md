@@ -9,19 +9,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cd api
 npm run dev          # Start dev server with hot reload
 npm run build        # TypeScript compile + Docker build
-npm run test         # Run Jest tests
+npm run test         # Run Jest tests (Jest + ts-jest)
 npm run format       # Prettier format
 npm run format:check # Check formatting without writing
 ```
 
 ### Workers (BullMQ background jobs)
+Workers run from `api/` (same package.json):
 ```bash
-cd workers
-npm run workers      # Run all workers concurrently
-npm run worker:create-entity
-npm run worker:update-entity
-npm run worker:create-project
-npm run worker:run-agent
+cd api
+npm run workers                      # Run all 4 workers concurrently
+npm run worker:run-agent             # AI agent execution
+npm run worker:create-project        # Project creation
+npm run worker:delete-project        # Project deletion
+npm run worker:create-project-pipeline  # Project pipeline
 ```
 
 ### UI (React frontend)
@@ -41,7 +42,17 @@ npm run build # Compile TypeScript
 
 ### Launch all services (Windows)
 ```bash
-./launch.bat  # Starts Redis (Docker), API, Workers, and UI
+./launch.bat          # Starts Redis (Docker), API, Workers, and UI
+./launch.bat api      # Start only API
+./launch.bat workers  # Start only workers
+./launch.bat stop     # Stop all services
+```
+
+### Docker services
+```bash
+docker-compose up redis    # Redis on port 6379
+docker-compose up ollama   # Ollama LLM on port 11434
+docker-compose up gitlab   # GitLab on ports 80/443/22
 ```
 
 ## Architecture
@@ -53,20 +64,88 @@ This is a monorepo for the **Damba framework** — an Express-based, schema-driv
 | Directory | Purpose |
 |-----------|---------|
 | `api/` | Main Express backend. Registers all services, configures middleware, starts the server. |
-| `workers/` | BullMQ job workers — entity CRUD, AI agent execution, project provisioning. |
 | `common/Damba/v2/` | The Damba framework core. Service registry, route generation, DAO abstraction, auth, Redis, NATS, Socket.io. |
 | `common/Damba/v1/` | Legacy framework internals (still used for auth). |
 | `packages/database/` | TypeORM entities and DataSource initialization. All DB entities live here. |
 | `packages/validators/` | Zod validation schemas shared across packages. |
+| `packages/policies/` | Policies and middlewares shared across packages. |
 | `ui/damba/` | React 19 + Vite + Tailwind CSS frontend. |
 | `DambaCli/` | CLI scaffolding tool that creates service directory structures. |
 | `AppTest/` | Integration tests. |
 
+### TypeScript Path Aliases (api/tsconfig.json)
+
+```
+@App/*        → api/src/*
+@Damba/*       → common/Damba/*
+@Common/*      → common/*
+@Database/*    → packages/database/src/*
+@Validators/*  → packages/validators/src/*
+```
+
+### Request Flow
+
+```
+Client Request
+    → Express App (Damba.start())
+    → CORS, Body Parser, Session, Queue Context (tenant + correlationId)
+    → Module Middleware (IModule.middleware[]) — runs for ALL services in a module
+    → Service Middleware (createDambaService.middlewares[]) — runs for ALL routes in a service
+    → Route Middleware (timeout, Zod validators, custom DEvent middleware)
+    → Handler (DEventHandler / Behavior)
+    → Response (or Error → ErrorHandler)
+```
+
 ### How the API server is composed
 
-`api/src/index.ts` calls `Damba.start()` (from `common/Damba/v2/`) with an `AppConfig` object. That config references an `_SPS_INDEX_` array — a Service Provider Index — which lists every service module.
+`api/src/index.ts` calls `Damba.start()` (from `common/Damba/v2/`) with modules (e.g., `indexModule`, `AgentModule`), `AppConfig`, Google OAuth, and the TypeORM DataSource.
 
-Each service module exports a Damba service created via `createService(path, Entity?)`. The framework auto-generates CRUD routes from the TypeORM entity and mounts any manually declared routes. Routes can attach **behaviors** (pre/post processors) and **extras** (runtime metadata injected on `req.extras`).
+**Modules** group services and apply shared middleware:
+```ts
+export const TodoModule: IModule = {
+  name: 'todos',
+  services: { ...TodoService, ...TagService },
+  middleware: [authorize(pubKey, jwt, ['user'])],
+};
+```
+
+**Services** are created via `createDambaService({ service, behaviors, events, queues })`. Each exports an `IServiceProvider` keyed by mount path. The framework auto-generates CRUD routes from the TypeORM entity and mounts any manually declared routes.
+
+**BehaviorHooks** define individual routes (path + method + handler + validators):
+```ts
+const hook = {
+  '/': {
+    method: Http.GET,
+    behavior: getAllTodos,
+    config: { validators: { body: zodSchema } },
+  },
+};
+```
+
+Multiple hooks are spread into a `BehaviorsChainLooper` and passed to `createDambaService`.
+
+### Auto-Generated CRUD
+
+When a service has an `entity`, Damba auto-generates routes at `/{service}/damba`:
+- `GET /damba` — Fetch all
+- `GET /damba/:id` — Fetch one
+- `GET /damba/:id/:relation` — Fetch relation
+- `POST /damba` — Create
+- `PATCH /damba/:id` — Partial update
+- `PUT /damba/:id` — Full replace
+- `DELETE /damba/:id` — Delete (if enabled)
+
+Each CRUD operation supports `before[]` and `after[]` hooks for pre/post processing.
+
+### DAO (Data Access)
+
+`DambaRepository` wraps TypeORM. Access via `e.in.DRepository` or `api.DRepository()`:
+- `DSave`, `DGet`, `DGetAll`, `DUpdate`, `DDelete` — standard CRUD
+- `DGetPage` — pagination
+- `DGetWithRelations` — eager load relations
+- `QueryBuilder` — TypeORM query builder
+- `DSoftDelete`, `DRestore` — soft delete support
+- `DQuery` — raw SQL
 
 ### Middleware injected on every request
 
@@ -78,9 +157,27 @@ Each service module exports a Damba service created via `createService(path, Ent
 - `tavily` — Tavily search client
 - Tenant header and correlation ID for queue context propagation
 
+### Policies
+
+```ts
+import { Policy, allPolicies, anyPolicy } from '@Damba/v2/policies';
+```
+Policies are async functions returning `{ ok: true }` or `{ ok: false, status, code, message }`. Compose with `allPolicies()` (AND) or `anyPolicy()` (OR) and use as route middleware.
+
+### AsyncLocalStorage Context
+
+`DambaContext` provides per-request state via `AsyncLocalStorage`:
+- `DambaContext.require()` — get context (throws if outside request)
+- `DambaContext.req()` / `DambaContext.res()` — shorthand access
+- `DambaContext.setState(key, value)` / `DambaContext.getState(key)` — per-request state
+
+### Real-Time (Socket.io) + Queues
+
+Services can export `events` (Socket.io event handlers) and `queues` (BullMQ queue behaviors with `completed`/`progress` event handlers). Socket events can enqueue jobs and emit results back via `emitToRequest`.
+
 ### Workers
 
-Workers in `workers/src/workers/` are BullMQ processors. They receive jobs from the same Redis instance. Each worker file registers one or more queue processors. Context (tenant, correlation ID) is passed via job data headers.
+Worker scripts in `api/src/workers/` are BullMQ processors. They receive jobs from the same Redis instance. Context (tenant, correlation ID) is passed via job data headers.
 
 ### AI integration
 

@@ -54,6 +54,10 @@ export const createRelationship = (data: any): Promise<any> => {
     return ApiPost(endpointConfig.dataModelerRelationships, data)
 }
 
+export const updateRelationship = (relationshipId: string, data: any): Promise<any> => {
+    return ApiPut(`${endpointConfig.dataModelerRelationships}/${relationshipId}`, data)
+}
+
 export const deleteRelationship = (relationshipId: string): Promise<any> => {
     return ApiDelete(`${endpointConfig.dataModelerRelationships}/${relationshipId}`)
 }

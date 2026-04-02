@@ -8,7 +8,7 @@ const StepEntities = () => {
     if (!entities.length) return <p className="text-gray-500">No entities generated yet.</p>
 
     return (
-        <div className="h-[600px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div className="h-[calc(100vh-12rem)] min-h-[600px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
             <DataModelerView initialEntities={entities} />
         </div>
     )

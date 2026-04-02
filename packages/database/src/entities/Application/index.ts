@@ -18,6 +18,12 @@ import { Policy } from "../Policy";
 import { Middleware } from "../Middleware";
 import { Validators } from "../Validators";
 import { AppFile } from "../AppFile";
+import { DataModelEntity } from "../datamodeler/DataModelEntity";
+
+export enum BuldingType {
+  ai = "ai",
+  manual = "manual",
+}
 
 type TypeApp =
   | "ui"
@@ -139,6 +145,14 @@ export class Application extends AppBaseEntity {
   @OneToMany(() => AppFile, (f) => f.application, { cascade: true })
   files?: AppFile[];
 
+  @Column({
+    type: "enum",
+    enum: BuldingType,
+    nullable: true,
+    default: BuldingType.ai,
+  })
+  buildingType?: BuldingType;
+
   @BeforeInsert()
   setDefaults() {
     if (!this.secretKey) {
@@ -151,4 +165,10 @@ export class Application extends AppBaseEntity {
       this.type_app = "api";
     }
   }
+
+  @OneToMany(() => DataModelEntity, (o) => o.application, {
+    cascade: true,
+    nullable: true,
+  })
+  dataModelEntities?: DataModelEntity[];
 }

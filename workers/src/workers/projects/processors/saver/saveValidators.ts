@@ -37,7 +37,7 @@ export const saveValidatorCodeFile = async (
     fileExtension: 'ts',
     data: { content },
     stereotype: DStereotype.VALIDATOR,
-    ...baseMeta(targetApp, project),
+    ...baseMeta(targetApp, project, DambaEnvironmentType.DEV),
   });
 };
 
@@ -55,7 +55,7 @@ export const saveGlobalValidatorsForApp = async (
     contextApp.description ?? '',
     project.description ?? '',
     project.initialPrompt ?? '',
-    ((project as any).environments?.[0] ?? DambaEnvironmentType.DEV),
+    (project as any).environments?.[0] ?? DambaEnvironmentType.DEV,
     entityNames,
   );
   return Promise.all(
@@ -67,7 +67,7 @@ export const saveGlobalValidatorsForApp = async (
         application: targetApp,
         projId: project.id,
         orgId: (project as any).organization?.id,
-        environment: undefined,
+        environment: DambaEnvironmentType.DEV,
         created_by: project.created_by,
       } as Partial<Validators>) as Promise<Validators>);
 

@@ -10,7 +10,6 @@ import {
 import { DambaMeta } from "../BaseEntity";
 import { Modules } from "../Modules";
 import { Extra } from "../Extra";
-import { Behavior } from "../Behaviors";
 import { BehaviorChain } from "../Behaviors/BehaviorChain";
 
 @Entity("app_services")

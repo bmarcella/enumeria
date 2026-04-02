@@ -2,6 +2,7 @@
 import { DStereotype } from "@Damba/v2/model/DStereotype";
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 import { AppBaseEntity } from "../BaseEntity";
+import { DambaEnvironmentType } from "@Damba/v2/Entity/env";
 
 @Entity("codeFile")
 export class CodeFile extends AppBaseEntity {
@@ -37,4 +38,12 @@ export class CodeFile extends AppBaseEntity {
 
   @Column({ type: "jsonb", nullable: true })
   data!: any;
+
+  @Column({
+    type: "enum",
+    enum: DambaEnvironmentType,
+    nullable: false,
+    default: DambaEnvironmentType.DEV,
+  })
+  environment!: DambaEnvironmentType;
 }

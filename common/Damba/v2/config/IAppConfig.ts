@@ -68,7 +68,13 @@ export type SocketConfig<S = any, IO = any> = {
   events?: Record<string, (socket: S, payload: any) => void>;
 };
 
-export type QueueConfig = any;
+export type QueueConfig = {
+  'basic' : any,
+   trace?: {
+        tenant: string,
+        correlation: string,
+   }
+};
 
 export interface IAppConfig<DS = any, S = any, IO = any> {
   appName: string;

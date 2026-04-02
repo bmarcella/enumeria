@@ -24,7 +24,6 @@ import { ChatOllama } from '@langchain/ollama';
 import { TavilySearch } from '@langchain/tavily';
 import { ChatOpenAI } from '@langchain/openai';
 import { socketConfig } from './SocketConfig';
-import IORedis from 'ioredis';
 import { QueueConfig } from './QueueConfig';
 import { oauth2Google } from './google.auth';
 import { authorizeSocket } from '@Damba/v2/auth/SocketAuthMiddleware';
@@ -104,31 +103,22 @@ export const AppConfig: IAppConfig<DataSource> = {
         model: 'gpt-4o-mini',
         temperature: 0.2,
       });
-      const smtpUser = mustEnv('SMTP_USER');
-      const smtpPass = mustEnv('SMTP_PASSWORD'); // <-- add this env var (or rename to your existing one)
-      const mail = new Mail(nodemailer, smtpUser, smtpPass);
       const ollama = new ChatOllama({
         temperature: 0,
         model: 'qwen2.5-coder:32b-instruct',
-      });
-
-      const redis = new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
-        maxRetriesPerRequest: null,
       });
 
       const tavily = new TavilySearch({
         maxResults: 5,
         tavilyApiKey: process.env.TAVILY_API_KEY,
       });
-
       return (req: Request, _res: Response, next: NextFunction) => {
         req.extras = extras;
         req.DRepository = DRepo;
-        req.openAi = openAi;
         req.oauth2Google = oauth2Google;
+        req.openAi = openAi;
         req.ollama = ollama;
         req.tavily = tavily;
-        req.redis = redis;
         next();
       };
     },

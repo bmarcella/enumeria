@@ -13,6 +13,11 @@ import { Application } from "../Application";
 import { DambaEnvironmentType } from "@Damba/v2/Entity/env";
 import { ChatAi } from "../ChatAi";
 
+export enum BuldingType {
+  ai = "ai",
+  manual = "manual",
+}
+
 export enum BuildStatus {
   INITIALIZING = "initializing",
   PENDING = "pending",
@@ -67,6 +72,14 @@ export class Project extends AppBaseEntity {
     nullable: true,
   })
   applications!: Application[];
+
+  @Column({
+    type: "enum",
+    enum: BuldingType,
+    nullable: true,
+    default: BuldingType.ai,
+  })
+  buildingType?: BuldingType;
 
   @Column({
     type: "enum",

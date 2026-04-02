@@ -66,22 +66,26 @@ export const saveApplications = async (
 
   // Ensure at least one API and one UI app exist
   if (apis.length === 0) {
-    const [defaultApi] = (await dao.DSaveMany(Application, [{
-      ...base,
-      name: `${project.name} API`,
-      description: `Main API for ${project.name}`,
-      type_app: 'api',
-    }] as Partial<Application>[])) as Application[];
+    const [defaultApi] = (await dao.DSaveMany(Application, [
+      {
+        ...base,
+        name: `${project.name} API`,
+        description: `Main API for ${project.name}`,
+        type_app: 'api',
+      },
+    ] as Partial<Application>[])) as Application[];
     apis = [defaultApi];
   }
 
   if (uis.length === 0) {
-    const [defaultUi] = (await dao.DSaveMany(Application, [{
-      ...base,
-      name: `${project.name} UI`,
-      description: `Frontend for ${project.name}`,
-      type_app: 'ui',
-    }] as Partial<Application>[])) as Application[];
+    const [defaultUi] = (await dao.DSaveMany(Application, [
+      {
+        ...base,
+        name: `${project.name} UI`,
+        description: `Frontend for ${project.name}`,
+        type_app: 'ui',
+      },
+    ] as Partial<Application>[])) as Application[];
     uis = [defaultUi];
   }
 

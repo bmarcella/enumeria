@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { callLLMForModules } from '@App/workers/LmmUtils';
-import { DambaRepository } from '@Damba/v2/dao';import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
+import { DambaRepository } from '@Damba/v2/dao';
+import { DambaEnvironmentType } from '@Damba/v2/Entity/env';
 import { DStereotype } from '@Damba/v2/model/DStereotype';
 import { AppServices } from '@Database/entities/AppServices';
 import { Application } from '@Database/entities/Application';
@@ -27,7 +28,11 @@ export const saveModulesForApp = async (
 
   // Save one module per LLM result (not duplicated per environment).
   // Skip modules that already exist for this app+project (handles retries).
-  const existing = (await dao.DGet(Modules, { where: { projId: project.id, application: { id: app.id } } }, true)) as Modules[];
+  const existing = (await dao.DGet(
+    Modules,
+    { where: { projId: project.id, application: { id: app.id } } },
+    true,
+  )) as Modules[];
   const existingNames = new Set(existing.map((m) => m.name));
 
   const toSave = modules.filter((mod) => !existingNames.has(mod.name));

@@ -3,17 +3,18 @@ import { DBEnv } from "./IDb";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type InitableConnection = { initialize: () => Promise<any> };
-export type ConnectionCtor<DS extends InitableConnection = InitableConnection> = new (options: any) => DS;
+export type ConnectionCtor<DS extends InitableConnection = InitableConnection> =
+  new (options: any) => DS;
 
 export function AppDataSource(
   DT: new (...args: any[]) => any,
   p: DBEnv,
   entities: any[],
   synchronize = true,
-  logging = false,
+  logging = true,
   subscribers: any[] = [],
   migrations: any[] = [],
-  extraOptions: Record<string, any> = {}
+  extraOptions: Record<string, any> = {},
 ): typeof DT {
   const port = Number(mustEnv("DB_PORT"));
   if (!Number.isFinite(port))

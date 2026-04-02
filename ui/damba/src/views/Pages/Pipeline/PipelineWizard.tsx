@@ -256,7 +256,7 @@ export const PipelineWizardBase = () => {
             setProject(projectId)
         }
         reset()
-        navigate('/projects')
+        navigate('/workspace')
     }
 
     // ── Redirect if no active pipeline ──────────────────────────────────

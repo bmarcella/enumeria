@@ -4,6 +4,7 @@ import { CreateProjectStep } from '@Damba/core/CreateProjectStep';
 import { AppServices } from '@Database/entities/AppServices';
 import { Project } from '@Database/entities/Project';
 import { DataSource } from 'typeorm';
+
 import {
   saveBehaviorsForService,
   saveModulesForApp,
@@ -58,7 +59,13 @@ export const buildProjectHierarchy = async (
 
   // ── 1. Global middlewares (15%) → saved to policies package ─────────────────
   for (const api of hierarchyApps) {
-    const globalMiddlewares = await saveGlobalMiddlewaresForApp(llm, api, project, dao, policiesTargetApp);
+    const globalMiddlewares = await saveGlobalMiddlewaresForApp(
+      llm,
+      api,
+      project,
+      dao,
+      policiesTargetApp,
+    );
     allGlobalMiddlewares.push(...globalMiddlewares);
   }
 
@@ -129,20 +136,16 @@ export const buildProjectHierarchy = async (
   });
 
   // ── 5. App-level files for ALL apps (65%) ─────────────────────────────────
-  const allApps = [
-    ...hierarchyApps,
-    ...uis,
-    databasePkg,
-    validatorsPkg,
-    policiesPkg,
-  ].filter(Boolean) as Application[];
+  const allApps = [...hierarchyApps, ...uis, databasePkg, validatorsPkg, policiesPkg].filter(
+    Boolean,
+  ) as Application[];
 
   const allFiles = await Promise.all(
     allApps.map((app) => {
       const mods = hierarchyApps.includes(app)
         ? allModules.filter((m) => m.application?.id === app.id)
         : [];
-      return saveFilesForApp(llm, app, project, mods, dao);
+      return saveFilesForApp(app, project, mods, dao);
     }),
   );
 
@@ -178,18 +181,7 @@ export const buildProjectHierarchy = async (
   for (const { svc, mod, api } of allServices) {
     const extras = await saveExtrasForService(llm, svc, mod, api, project, dao);
     totalExtras += extras.length;
-    const behaviors = await saveBehaviorsForService(
-      llm,
-      svc,
-      mod,
-      api,
-      project,
-      dao,
-      allGlobalMiddlewares,
-      globalValidators,
-      policiesTargetApp,
-    );
-    totalBehaviors += behaviors.length;
+    await saveBehaviorsForService(svc, mod, api, project, dao);
   }
 
   await job.updateProgress({
@@ -197,7 +189,7 @@ export const buildProjectHierarchy = async (
     data: { behaviorCount: totalBehaviors, extraCount: totalExtras },
     step: CreateProjectStep.BEHAVIORS_EXTRAS_GENERATED,
     pct: 90,
-    message: `Generated ${totalBehaviors} behavior(s) and ${totalExtras} extra(s)`,
+    message: `behavior(s) Generated  and ${totalExtras} extra(s)`,
   });
 
   // ── 8. Damba common files (95%) ───────────────────────────────────────────

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from 'react'
 
-import AppView from './Pages/App/AppView'
 import { useApplicationStore } from '@/stores/useApplicationStore'
 import DambaEditorView from './Pages/Editor/DambaEditorView'
 import OrgView from './Pages/Org/OrgView'
@@ -72,7 +71,15 @@ export const InProjectViewBase = () => {
     const renderView = (key: SidebarMenuKey | string) => {
         switch (key) {
             case appName:
-                return <div className="p-4 h-full overflow-y-auto"><AppView /></div>
+                return (
+                    <div className="p-4 h-full overflow-y-auto flex items-center justify-center">
+                        <div className="text-center">
+                            <HiOutlineViewGrid className="text-4xl text-gray-400 mx-auto mb-3" />
+                            <p className="text-sm text-gray-300">Open the Workspace for full app management</p>
+                            <a href="/workspace" className="text-xs text-blue-400 hover:underline mt-2 inline-block">Go to Workspace</a>
+                        </div>
+                    </div>
+                )
             case SidebarMenuKey.Editor:
                 return <DambaEditorView />
             case SidebarMenuKey.Organition:
